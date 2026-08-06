@@ -67,6 +67,7 @@ class MetalGpuBuffer extends GpuBuffer {
         if (MetalNativeBridge.isNullHandle(this.nativeHandle)) {
             throw new IllegalStateException("Failed to create Metal buffer (size=" + this.allocationSize + ", resourceOptions=" + this.resourceOptions + ", device=" + this.device.getClass().getSimpleName() + ")");
         }
+        Stats.recordUsage(usage, size, this.allocationSize);
 
         if (this.cpuAccessible) {
             MemorySegment contents = MetalNativeBridge.metallum_get_buffer_contents(this.nativeHandle);

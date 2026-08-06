@@ -52,6 +52,12 @@ final class MetalCommandEncoder implements CommandEncoder {
     private MTLCommandEncoder currentEncoder;
     private MemorySegment renderColorAttachment = MemorySegment.NULL;
     private MemorySegment renderDepthAttachment = MemorySegment.NULL;
+    private double lastLayerWidth = -1;
+    private double lastLayerHeight = -1;
+    private long frameTimeSamples = 0;
+    private long frameTimeSumUs = 0;
+    private long frameTimeMaxUs = 0;
+    private long frameTimeNotDone = 0;
     private final Long2ObjectOpenHashMap<java.util.ArrayDeque<MemorySegment>> dynamicBackingPool = new Long2ObjectOpenHashMap<>();
     private static final int MAX_POOLED_DYNAMIC_BACKINGS_PER_SIZE = 8;
     @Nullable
@@ -120,7 +126,7 @@ final class MetalCommandEncoder implements CommandEncoder {
             commandBuffer.commitWithSignal(completedSemaphore);
 
             toClose = inFlight[slot];
-            inFlight[slot] = new InFlight(currentSubmitIndex, commandBuffer, completedSemaphore);
+            inFlight[slot] = new InFlight(currentSubmitIndex, commandBuffer, completedSemaphore, System.nanoTime());
             commandBuffer = null;
         }
         currentSubmitIndex++;
@@ -130,11 +136,16 @@ final class MetalCommandEncoder implements CommandEncoder {
         }
 
         if (toClose != null) {
+            sampleFrameTime(toClose);
             toClose.buffer.close();
         }
 
         transientMemory.rotate();
         destroyQueue.rotate();
+
+        if (Diagnostics.shouldRun("stats", 60_000L)) {
+            Metallum.LOGGER.error("[diag] " + Stats.snapshot());
+        }
     }
 
     MTLRenderCommandEncoder renderCommandEncoder(
@@ -283,8 +294,57 @@ final class MetalCommandEncoder implements CommandEncoder {
         }
     }
 
+    /**
+     * 按呈现纹理的像素尺寸配置 CAMetalLayer（drawableSize / present 模式）。
+     * 首次 present 与窗口 resize 时各调用一次（尺寸变化才调用，避免每帧 FFM 开销）。
+     * 若 drawableSize 与 render target 不匹配，呈现会缩放/模糊；iOS 上 present 模式
+     * 由 Swift 侧按平台分支处理（macOS displaySyncEnabled，iOS allowsNextDrawableTimeout）。
+     */
+    private void configureLayerIfNeeded(final MetalGpuTexture source) {
+        int width = source.getWidth(0);
+        int height = source.getHeight(0);
+        if (width == lastLayerWidth && height == lastLayerHeight) {
+            return;
+        }
+        MemorySegment layer = device.metalLayer();
+        if (!MetalNativeBridge.isNullHandle(layer)) {
+            MetalNativeBridge.metallum_configure_layer(layer, width, height, 0);
+        }
+        lastLayerWidth = width;
+        lastLayerHeight = height;
+    }
+
+    /**
+     * 流水线帧耗时采样：submit() 轮转释放 InFlight 时，观测该次提交从入队到
+     * 观测时刻的耗时（含 GPU 执行，上界=释放时点）与完成状态。5s 窗口聚合后
+     * error 级输出（iOS 上每帧日志会卡死，必须节流）。
+     */
+    private void sampleFrameTime(final InFlight done) {
+        long elapsedUs = Math.max(0L, (System.nanoTime() - done.submitNanos) / 1000L);
+        frameTimeSamples++;
+        frameTimeSumUs += elapsedUs;
+        frameTimeMaxUs = Math.max(frameTimeMaxUs, elapsedUs);
+        if (!done.buffer.isCompleted()) {
+            frameTimeNotDone++;
+        }
+
+        if (Diagnostics.shouldRun("frame_time", 5_000L) && frameTimeSamples > 0) {
+            long avgUs = frameTimeSumUs / frameTimeSamples;
+            Metallum.LOGGER.error("[diag] frame_time samples={} avg={}ms max={}ms gpuBehind={}",
+                    frameTimeSamples,
+                    String.format("%.1f", avgUs / 1000.0),
+                    String.format("%.1f", frameTimeMaxUs / 1000.0),
+                    frameTimeNotDone);
+            frameTimeSamples = 0;
+            frameTimeSumUs = 0;
+            frameTimeMaxUs = 0;
+            frameTimeNotDone = 0;
+        }
+    }
+
     void presentTextureToDrawable(final MemorySegment drawable, final GpuTextureView textureView) {
         MetalGpuTexture source = (MetalGpuTexture) textureView.texture();
+        configureLayerIfNeeded(source);
         flushPendingClear(source);
         submitRenderPass();
         endEncoder();
@@ -803,6 +863,6 @@ final class MetalCommandEncoder implements CommandEncoder {
                 && height == depth.getHeight(0);
     }
 
-    private record InFlight(long index, MTLCommandBuffer buffer, MemorySegment completedSemaphore) {
+    private record InFlight(long index, MTLCommandBuffer buffer, MemorySegment completedSemaphore, long submitNanos) {
     }
 }

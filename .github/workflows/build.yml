@@ -8,6 +8,8 @@ run-name: ${{ github.ref_name }}
 on:
   workflow_dispatch:
   push:
+    branches:
+      - 'mc/1.21.11'
     tags:
       - 'v*'
 

@@ -144,7 +144,7 @@ final class MetalCommandEncoder implements CommandEncoder {
         destroyQueue.rotate();
 
         if (Diagnostics.shouldRun("stats", 60_000L)) {
-            Metallum.LOGGER.error("[diag] " + Stats.snapshot());
+            DiagLog.log("%s", Stats.snapshot());
         }
     }
 
@@ -330,10 +330,10 @@ final class MetalCommandEncoder implements CommandEncoder {
 
         if (Diagnostics.shouldRun("frame_time", 5_000L) && frameTimeSamples > 0) {
             long avgUs = frameTimeSumUs / frameTimeSamples;
-            Metallum.LOGGER.error("[diag] frame_time samples={} avg={}ms max={}ms gpuBehind={}",
+            DiagLog.log("frame_time samples=%d avg=%.1fms max=%.1fms gpuBehind=%d",
                     frameTimeSamples,
-                    String.format("%.1f", avgUs / 1000.0),
-                    String.format("%.1f", frameTimeMaxUs / 1000.0),
+                    avgUs / 1000.0,
+                    frameTimeMaxUs / 1000.0,
                     frameTimeNotDone);
             frameTimeSamples = 0;
             frameTimeSumUs = 0;

@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>开关：-Dmetallum.diag=false 可关闭全部诊断日志（默认开启）。
  */
-final class Diagnostics {
+public final class Diagnostics {
     private static final boolean ENABLED = Boolean.parseBoolean(System.getProperty("metallum.diag", "true"));
     private static final Set<String> ONCE = ConcurrentHashMap.newKeySet();
     private static final java.util.concurrent.ConcurrentHashMap<String, Long> LAST_RUN = new java.util.concurrent.ConcurrentHashMap<>();
@@ -22,7 +22,7 @@ final class Diagnostics {
     private Diagnostics() {
     }
 
-    static boolean isEnabled() {
+    public static boolean isEnabled() {
         return ENABLED;
     }
 
@@ -39,7 +39,7 @@ final class Diagnostics {
      * 时间窗口节流：同一 key 在 intervalMs 内只执行一次（用于高频路径的
      * 采样式诊断——如读回纹理、统计 draw 数）。
      */
-    static boolean shouldRun(final String key, final long intervalMs) {
+    public static boolean shouldRun(final String key, final long intervalMs) {
         if (!ENABLED) {
             return false;
         }

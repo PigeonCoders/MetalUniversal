@@ -29,6 +29,10 @@ public class Metallum implements ModInitializer, PreLaunchEntrypoint {
 
     @Override
     public void onInitialize() {
+        // 诊断日志独立文件（gameDir/logs/metallum-diag.log）：与 latest.log 同目录，
+        // 避免 iOS 上 error 级日志刷屏主日志（卡死先例，见 AGENTS §12）。
+        com.metallum.client.metal.render.DiagLog.init(
+                net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve("logs"));
         // Sodium 0.8.x（1.21.11 时代）直接调用 GL API，无后端抽象（0.9.x 的
         // DrawBackend/VK_INDIRECT 体系是 26.x 才有的）：Metal 后端下 Sodium 无法工作。
         // macOS/iOS 上 Sodium 本身也不受支持，这里仅提示，不阻断启动。

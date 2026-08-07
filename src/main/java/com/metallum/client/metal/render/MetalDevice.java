@@ -137,6 +137,7 @@ final class MetalDevice implements GpuDevice {
         if (size <= 0L) {
             throw new IllegalArgumentException("Metal buffer size must be > 0 (got " + size + ")");
         }
+        sampleCreateBufferStack();
         return new MetalGpuBuffer(this, usage, size);
     }
 
@@ -158,6 +159,27 @@ final class MetalDevice implements GpuDevice {
     @Override
     public boolean isDebuggingEnabled() {
         return false;
+    }
+
+    /**
+     * createBuffer 调用栈采样（前 5 次，节流）：定位高频 GPU 缓冲创建的 MC 侧来源
+     * （如 CompiledSectionMesh.uploadMeshLayer 的每帧重建 / 实体与 UI 上传路径）。
+     */
+    private static final java.util.concurrent.atomic.AtomicInteger CREATE_BUFFER_STACK_SAMPLES =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    private void sampleCreateBufferStack() {
+        if (CREATE_BUFFER_STACK_SAMPLES.getAndIncrement() >= 5) {
+            return;
+        }
+        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+        StringBuilder sb = new StringBuilder("createBuffer stack sample #")
+                .append(CREATE_BUFFER_STACK_SAMPLES.get()).append(':');
+        int frames = 0;
+        for (int i = 3; i < stack.length && frames < 12; i++, frames++) {
+            sb.append("\n  ").append(stack[i]);
+        }
+        DiagLog.log("%s", sb);
     }
 
     boolean useLabels() {
@@ -272,8 +294,10 @@ final class MetalDevice implements GpuDevice {
         long key = composePoolKey(size, resourceOptions);
         Deque<MemorySegment> bucket = bufferPool.get(key);
         if (bucket != null && !bucket.isEmpty()) {
+            Stats.recordPoolHit();
             return bucket.pop();
         }
+        Stats.recordPoolMiss();
         return MemorySegment.NULL;
     }
 
@@ -283,6 +307,7 @@ final class MetalDevice implements GpuDevice {
             Deque<MemorySegment> bucket = bufferPool.computeIfAbsent(key, k -> new ArrayDeque<>());
             if (bucket.size() < MAX_POOLED_BUFFERS_PER_SIZE) {
                 bucket.push(handle);
+                Stats.recordPoolReturn();
             } else {
                 MetalNativeBridge.metallum_release_object(handle);
             }

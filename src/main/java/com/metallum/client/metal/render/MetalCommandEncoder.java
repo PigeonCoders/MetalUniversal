@@ -54,6 +54,13 @@ final class MetalCommandEncoder implements CommandEncoder {
     private MemorySegment renderDepthAttachment = MemorySegment.NULL;
     private double lastLayerWidth = -1;
     private double lastLayerHeight = -1;
+    /**
+     * 单帧耗时采样（P3）：submit() 相邻两次提交间隔视为一帧（间隔 >500ms 视为跳帧，
+     * 不计入）。gpuBehind 观测 3 帧前提交是否未完成（GPU 落后检测）。5s 窗口聚合
+     * 输出 fps/avg/max，走 DiagLog（iOS 上每帧日志会卡死，必须节流）。
+     */
+    private static final long MAX_FRAME_SAMPLE_US = 500_000L;
+    private long lastSubmitNanos = 0L;
     private long frameTimeSamples = 0;
     private long frameTimeSumUs = 0;
     private long frameTimeMaxUs = 0;
@@ -125,8 +132,19 @@ final class MetalCommandEncoder implements CommandEncoder {
             MemorySegment completedSemaphore = submitSemaphores[slot];
             commandBuffer.commitWithSignal(completedSemaphore);
 
+            long now = System.nanoTime();
+            if (lastSubmitNanos != 0L) {
+                long frameUs = Math.max(0L, (now - lastSubmitNanos) / 1000L);
+                if (frameUs <= MAX_FRAME_SAMPLE_US) {
+                    frameTimeSamples++;
+                    frameTimeSumUs += frameUs;
+                    frameTimeMaxUs = Math.max(frameTimeMaxUs, frameUs);
+                }
+            }
+            lastSubmitNanos = now;
+
             toClose = inFlight[slot];
-            inFlight[slot] = new InFlight(currentSubmitIndex, commandBuffer, completedSemaphore, System.nanoTime());
+            inFlight[slot] = new InFlight(currentSubmitIndex, commandBuffer, completedSemaphore);
             commandBuffer = null;
         }
         currentSubmitIndex++;
@@ -136,12 +154,27 @@ final class MetalCommandEncoder implements CommandEncoder {
         }
 
         if (toClose != null) {
-            sampleFrameTime(toClose);
+            if (!toClose.buffer.isCompleted()) {
+                frameTimeNotDone++;
+            }
             toClose.buffer.close();
         }
 
         transientMemory.rotate();
         destroyQueue.rotate();
+
+        if (Diagnostics.shouldRun("frame_time", 5_000L) && frameTimeSamples > 0) {
+            long avgUs = frameTimeSumUs / frameTimeSamples;
+            DiagLog.log("frame_time fps=%.1f avg=%.2fms max=%.2fms gpuBehind=%d",
+                    1_000_000.0 / avgUs,
+                    avgUs / 1000.0,
+                    frameTimeMaxUs / 1000.0,
+                    frameTimeNotDone);
+            frameTimeSamples = 0;
+            frameTimeSumUs = 0;
+            frameTimeMaxUs = 0;
+            frameTimeNotDone = 0;
+        }
 
         if (Diagnostics.shouldRun("stats", 60_000L)) {
             DiagLog.log("%s", Stats.snapshot());
@@ -312,34 +345,6 @@ final class MetalCommandEncoder implements CommandEncoder {
         }
         lastLayerWidth = width;
         lastLayerHeight = height;
-    }
-
-    /**
-     * 流水线帧耗时采样：submit() 轮转释放 InFlight 时，观测该次提交从入队到
-     * 观测时刻的耗时（含 GPU 执行，上界=释放时点）与完成状态。5s 窗口聚合后
-     * error 级输出（iOS 上每帧日志会卡死，必须节流）。
-     */
-    private void sampleFrameTime(final InFlight done) {
-        long elapsedUs = Math.max(0L, (System.nanoTime() - done.submitNanos) / 1000L);
-        frameTimeSamples++;
-        frameTimeSumUs += elapsedUs;
-        frameTimeMaxUs = Math.max(frameTimeMaxUs, elapsedUs);
-        if (!done.buffer.isCompleted()) {
-            frameTimeNotDone++;
-        }
-
-        if (Diagnostics.shouldRun("frame_time", 5_000L) && frameTimeSamples > 0) {
-            long avgUs = frameTimeSumUs / frameTimeSamples;
-            DiagLog.log("frame_time samples=%d avg=%.1fms max=%.1fms gpuBehind=%d",
-                    frameTimeSamples,
-                    avgUs / 1000.0,
-                    frameTimeMaxUs / 1000.0,
-                    frameTimeNotDone);
-            frameTimeSamples = 0;
-            frameTimeSumUs = 0;
-            frameTimeMaxUs = 0;
-            frameTimeNotDone = 0;
-        }
     }
 
     void presentTextureToDrawable(final MemorySegment drawable, final GpuTextureView textureView) {
@@ -863,6 +868,6 @@ final class MetalCommandEncoder implements CommandEncoder {
                 && height == depth.getHeight(0);
     }
 
-    private record InFlight(long index, MTLCommandBuffer buffer, MemorySegment completedSemaphore, long submitNanos) {
+    private record InFlight(long index, MTLCommandBuffer buffer, MemorySegment completedSemaphore) {
     }
 }

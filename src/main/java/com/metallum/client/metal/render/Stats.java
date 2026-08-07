@@ -7,6 +7,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class Stats {
     private static final AtomicLong CREATED_BUFFERS = new AtomicLong();
+    private static final AtomicLong POOL_HIT = new AtomicLong();
+    private static final AtomicLong POOL_MISS = new AtomicLong();
+    private static final AtomicLong POOL_RETURN = new AtomicLong();
 
     private static final ConcurrentHashMap<Integer, UsageStats> USAGE_STATS = new ConcurrentHashMap<>();
 
@@ -24,6 +27,18 @@ public class Stats {
         stats.allocatedBytes.addAndGet(allocatedSize);
 
         CREATED_BUFFERS.incrementAndGet();
+    }
+
+    public static void recordPoolHit() {
+        POOL_HIT.incrementAndGet();
+    }
+
+    public static void recordPoolMiss() {
+        POOL_MISS.incrementAndGet();
+    }
+
+    public static void recordPoolReturn() {
+        POOL_RETURN.incrementAndGet();
     }
 
     /**
@@ -52,6 +67,11 @@ public class Stats {
 
         sb.append(" | sum count=").append(totalCount)
                 .append(String.format(" req=%.1fMB alloc=%.1fMB", totalRequested / 1048576.0, totalAllocated / 1048576.0));
+
+        long hit = POOL_HIT.get();
+        long miss = POOL_MISS.get();
+        sb.append(String.format(" | poolHit=%d poolMiss=%d poolReturn=%d poolHitRate=%.0f%%",
+                hit, miss, POOL_RETURN.get(), hit + miss > 0L ? 100.0 * hit / (hit + miss) : 0.0));
         return sb.toString();
     }
 }

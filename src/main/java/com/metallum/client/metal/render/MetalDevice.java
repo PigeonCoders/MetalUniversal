@@ -168,8 +168,19 @@ final class MetalDevice implements GpuDevice {
     private static final java.util.concurrent.atomic.AtomicInteger CREATE_BUFFER_STACK_SAMPLES =
             new java.util.concurrent.atomic.AtomicInteger();
 
+    /**
+     * 运行期标志：首次 present（第一帧渲染提交）后置位。
+     * 启动期（Minecraft.<init> → RenderSystem.initRenderer）的一次性缓冲会消耗前几次采样，
+     * 故采样只在运行期生效（AGENTS §11 已知缺陷修复）。
+     */
+    private volatile boolean runtimeStarted;
+
+    void markRuntimeStarted() {
+        this.runtimeStarted = true;
+    }
+
     private void sampleCreateBufferStack() {
-        if (CREATE_BUFFER_STACK_SAMPLES.getAndIncrement() >= 5) {
+        if (!this.runtimeStarted || CREATE_BUFFER_STACK_SAMPLES.getAndIncrement() >= 5) {
             return;
         }
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();

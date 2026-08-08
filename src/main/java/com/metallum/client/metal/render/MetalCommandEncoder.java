@@ -61,6 +61,7 @@ final class MetalCommandEncoder implements CommandEncoder {
      */
     private static final long MAX_FRAME_SAMPLE_US = 500_000L;
     private long lastSubmitNanos = 0L;
+    private boolean skipNextFrameSample;
     private long frameTimeSamples = 0;
     private long frameTimeSumUs = 0;
     private long frameTimeMaxUs = 0;
@@ -134,18 +135,24 @@ final class MetalCommandEncoder implements CommandEncoder {
 
             long now = System.nanoTime();
             if (lastSubmitNanos != 0L) {
-                long frameUs = Math.max(0L, (now - lastSubmitNanos) / 1000L);
-                if (frameUs <= MAX_FRAME_SAMPLE_US) {
-                    frameTimeSamples++;
-                    frameTimeSumUs += frameUs;
-                    frameTimeMaxUs = Math.max(frameTimeMaxUs, frameUs);
+                if (!skipNextFrameSample) {
+                    long frameUs = Math.max(0L, (now - lastSubmitNanos) / 1000L);
+                    if (frameUs <= MAX_FRAME_SAMPLE_US) {
+                        frameTimeSamples++;
+                        frameTimeSumUs += frameUs;
+                        frameTimeMaxUs = Math.max(frameTimeMaxUs, frameUs);
+                    }
                 }
             }
             lastSubmitNanos = now;
+            skipNextFrameSample = false;
 
             toClose = inFlight[slot];
             inFlight[slot] = new InFlight(currentSubmitIndex, commandBuffer, completedSemaphore);
             commandBuffer = null;
+        } else {
+            // 空帧（无命令缓冲）：不推进时间基准，下次提交的间隔若跨越空帧则跳过采样
+            skipNextFrameSample = true;
         }
         currentSubmitIndex++;
 
@@ -348,6 +355,7 @@ final class MetalCommandEncoder implements CommandEncoder {
     }
 
     void presentTextureToDrawable(final MemorySegment drawable, final GpuTextureView textureView) {
+        device.markRuntimeStarted();
         MetalGpuTexture source = (MetalGpuTexture) textureView.texture();
         configureLayerIfNeeded(source);
         flushPendingClear(source);

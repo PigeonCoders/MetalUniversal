@@ -250,11 +250,6 @@ public final class MetalNativeBridge {
                     "metallum_MTLRenderCommandEncoder_drawIndexedPrimitives",
                     FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, LONG, LONG, LONG, ValueLayout.ADDRESS, LONG, LONG, LONG, LONG)
             );
-            MTLRenderCommandEncoderMultiDrawIndexed = downcall(
-                    lookup,
-                    "metallum_MTLRenderCommandEncoder_multiDrawIndexed",
-                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, LONG, LONG, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, LONG, LONG, LONG)
-            );
             MTLRenderCommandEncoderDrawIndexedPrimitivesIndirect = downcall(
                     lookup,
                     "metallum_MTLRenderCommandEncoder_drawIndexedPrimitivesIndirect",
@@ -562,7 +557,6 @@ public final class MetalNativeBridge {
     private static final MethodHandle MTLRenderCommandEncoderClearDraw;
     private static final MethodHandle MTLRenderCommandEncoderDrawPrimitives;
     private static final MethodHandle MTLRenderCommandEncoderDrawIndexedPrimitives;
-    private static final MethodHandle MTLRenderCommandEncoderMultiDrawIndexed;
     private static final MethodHandle MTLRenderCommandEncoderDrawIndexedPrimitivesTriangleFan;
     private static final MethodHandle MTLRenderCommandEncoderDrawIndexedPrimitivesIndirect;
     private static final MethodHandle MTLRenderCommandEncoderDrawPrimitivesIndirect;
@@ -1237,36 +1231,6 @@ public final class MetalNativeBridge {
             );
         } catch (Throwable throwable) {
             throw bridgeFailure("metallum_MTLRenderCommandEncoder_drawIndexedPrimitives", throwable);
-        }
-    }
-
-    public static void MTLRenderCommandEncoder_multiDrawIndexed(
-            final MemorySegment encoder,
-            final long primitiveType,
-            final long indexType,
-            final MemorySegment indexBuffer,
-            final MemorySegment firstIndexOffsets,
-            final MemorySegment indexCounts,
-            final MemorySegment vertexOffsets,
-            final long drawCount,
-            final long instanceCount,
-            final long baseInstance
-    ) {
-        try {
-            MTLRenderCommandEncoderMultiDrawIndexed.invokeExact(
-                    segment(encoder),
-                    primitiveType,
-                    indexType,
-                    segment(indexBuffer),
-                    segment(firstIndexOffsets),
-                    segment(indexCounts),
-                    segment(vertexOffsets),
-                    drawCount,
-                    instanceCount,
-                    baseInstance
-            );
-        } catch (Throwable throwable) {
-            throw bridgeFailure("metallum_MTLRenderCommandEncoder_multiDrawIndexed", throwable);
         }
     }
 

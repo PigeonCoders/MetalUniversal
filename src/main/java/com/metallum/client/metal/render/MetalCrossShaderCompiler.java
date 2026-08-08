@@ -80,9 +80,9 @@ final class MetalCrossShaderCompiler {
                 attributeLocations.put(attributeNames.get(i), i);
             }
 
-            MslShader vertexMsl = spirvToMsl(vertexSpirv, attributeFormats, enablePointSize, true, bindingPlan, attributeLocations);
+            MslShader vertexMsl = spirvToMsl(vertexSpirv, attributeFormats, enablePointSize, true, bindingPlan, attributeLocations, pipeline.getLocation().toString() + " vertex");
             Map<String, Integer> vertexOutputLocations = vertexMsl.outputLocations();
-            MslShader fragmentMsl = spirvToMsl(fragmentSpirv, Map.of(), true, enableFragDepth, bindingPlan, vertexOutputLocations);
+            MslShader fragmentMsl = spirvToMsl(fragmentSpirv, Map.of(), true, enableFragDepth, bindingPlan, vertexOutputLocations, pipeline.getLocation().toString() + " fragment");
 
             // SPIRV-Cross 保留 GLSL 参数名：terrain.fsh 的 sampleNearest(sampler2D sampler, ...)
             // 生成的 MSL 中 texture2d<float> sampler 会遮蔽内置类型名 sampler → 参数改名
@@ -327,7 +327,8 @@ final class MetalCrossShaderCompiler {
             final boolean enablePointSize,
             final boolean enableFragDepth,
             final BindingPlan bindingPlan,
-            final Map<String, Integer> stageLocationMap
+            final Map<String, Integer> stageLocationMap,
+            final String stageLabel
     ) throws ShaderCompileException {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer spirvWords = spirvBytes.asIntBuffer();
@@ -441,6 +442,8 @@ final class MetalCrossShaderCompiler {
                             "out.gl_Position.y = -(out.gl_Position.y);",
                             "out.gl_Position.z = (out.gl_Position.z + out.gl_Position.w) * 0.5;    // Adjust clip-space for Metal\n    out.gl_Position.y = -(out.gl_Position.y);"
                     );
+                } else if (stageLabel != null) {
+                    DiagLog.log("[diag] Z clip-space remap MISS on %s: FLIP_VERTEX_Y pattern not found, z is NOT remapped to [0,1] (depth may be wrong)", stageLabel);
                 }
                 return new MslShader(msl, activeResources, outputLocations, integerInputs);
             } finally {

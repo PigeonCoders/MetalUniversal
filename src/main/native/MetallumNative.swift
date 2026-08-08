@@ -1204,36 +1204,6 @@ public func metallum_MTLRenderCommandEncoder_drawIndexedPrimitives(
     )
 }
 
-@_cdecl("metallum_MTLRenderCommandEncoder_multiDrawIndexed")
-public func metallum_MTLRenderCommandEncoder_multiDrawIndexed(
-    _ encoder: MTLRenderCommandEncoder,
-    _ primitiveType: MTLPrimitiveType,
-    _ indexType: MTLIndexType,
-    _ indexBuffer: MTLBuffer,
-    _ firstIndexOffsets: UnsafePointer<Int>,
-    _ indexCounts: UnsafePointer<Int32>,
-    _ vertexOffsets: UnsafePointer<Int32>,
-    _ drawCount: Int,
-    _ instanceCount: Int,
-    _ baseInstance: Int
-) {
-    for i in 0..<drawCount {
-        let indexCount = Int(indexCounts[i])
-        if indexCount > 0 {
-            encoder.drawIndexedPrimitives(
-                type: primitiveType,
-                indexCount: indexCount,
-                indexType: indexType,
-                indexBuffer: indexBuffer,
-                indexBufferOffset: firstIndexOffsets[i],
-                instanceCount: instanceCount,
-                baseVertex: Int(vertexOffsets[i]),
-                baseInstance: baseInstance
-            )
-        }
-    }
-}
-
 @_cdecl("metallum_MTLRenderCommandEncoder_drawIndexedPrimitivesIndirect")
 public func metallum_MTLRenderCommandEncoder_drawIndexedPrimitivesIndirect(
     _ encoder: MTLRenderCommandEncoder,

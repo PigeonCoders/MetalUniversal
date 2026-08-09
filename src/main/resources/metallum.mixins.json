@@ -13,7 +13,8 @@
     "sodium.GlBufferMixin",
     "sodium.GLRenderDeviceMixin",
     "sodium.RenderSectionManagerMixin",
-    "sodium.GlContextInfoMixin"
+    "sodium.GlContextInfoMixin",
+    "sodium.DefaultChunkRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

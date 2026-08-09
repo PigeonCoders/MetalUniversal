@@ -28,7 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Environment(EnvType.CLIENT)
-final class MetalCrossShaderCompiler {
+public final class MetalCrossShaderCompiler {
     private static final int MSL_VERSION_4_0 = 0x040000;
     private static final Pattern VERTEX_ENTRY_PATTERN = Pattern.compile("\\bvertex\\s+\\w+\\s+(\\w+)\\s*\\(");
     private static final Pattern FRAGMENT_ENTRY_PATTERN = Pattern.compile("\\bfragment\\s+\\w+\\s+(\\w+)\\s*\\(");
@@ -647,5 +647,66 @@ final class MetalCrossShaderCompiler {
         if (result != Spvc.SPVC_SUCCESS) {
             throw new ShaderCompileException("SPIRV-Cross error at " + stage + ": " + result);
         }
+    }
+
+    /**
+     * GLSL 直编译入口（Sodium 适配层专用）：不经 RenderPipeline/ShaderSource 体系，
+     * 直接接收展开后的 GLSL 源码（#import/#define 预处理由调用方完成），产出 MSL 与
+     * 编译元数据。资源 binding 不预规划（无 UniformDescription 列表）：shaderc 的
+     * auto_bind_uniforms/auto_map_locations 决定编号，SPIRV-Cross 的 rebind 用空 plan
+     * （保留原始编号），由调用方（MetalSodiumCompiledPipeline）从 MSL 文本按名提取。
+     *
+     * <p>实测（Sodium 0.8.13 block_layer_opaque，GL 方言 + spvc MSL 4.0）：
+     * 普通 uniform 各自独立为 constant T& buffer 参数（非合成 UBO），ChunkData block
+     * 保留类型名（变量名被重命名），texture/sampler 同 index 配对——均按名可提取。
+     */
+    public static CompiledGlsl compileGlsl(
+            final String vertexGlsl,
+            final String fragmentGlsl,
+            final Map<String, VertexFormatElement.Type> attributeTypes,
+            final Map<String, Integer> attributeLocations,
+            final String name
+    ) {
+        try {
+            ByteBuffer vertexSpirv = shadercCompile(vertexGlsl, ShaderType.VERTEX, name);
+            ByteBuffer fragmentSpirv = shadercCompile(fragmentGlsl, ShaderType.FRAGMENT, name);
+
+            // Sodium 无 pipeline.uniforms 列表：空 plan → rebind 保留 shaderc 的 auto_bind 编号
+            BindingPlan emptyPlan = new BindingPlan(java.util.Map.of(), java.util.Map.of(), java.util.Map.of(), java.util.List.of());
+
+            MslShader vertexMsl = spirvToMsl(vertexSpirv, attributeTypes, false, false, emptyPlan, attributeLocations, name + " vertex");
+            Map<String, Integer> vertexOutputLocations = vertexMsl.outputLocations();
+            MslShader fragmentMsl = spirvToMsl(fragmentSpirv, java.util.Map.of(), false, false, emptyPlan, vertexOutputLocations, name + " fragment");
+
+            vertexMsl = new MslShader(sanitizeMsl(vertexMsl.source()), vertexMsl.activeResources(), vertexMsl.outputLocations(), vertexMsl.integerInputs());
+            fragmentMsl = new MslShader(sanitizeMsl(fragmentMsl.source()), fragmentMsl.activeResources(), fragmentMsl.outputLocations(), fragmentMsl.integerInputs());
+
+            String vertexEntryPoint = extractEntryPoint(vertexMsl.source(), VERTEX_ENTRY_PATTERN, "main0");
+            String fragmentEntryPoint = extractEntryPoint(fragmentMsl.source(), FRAGMENT_ENTRY_PATTERN, "main0");
+
+            return new CompiledGlsl(
+                    vertexMsl.source(),
+                    fragmentMsl.source(),
+                    vertexEntryPoint,
+                    fragmentEntryPoint,
+                    vertexMsl.integerInputs()
+            );
+        } catch (ShaderCompileException e) {
+            throw new IllegalStateException("Failed to compile Metal cross shader for " + name, e);
+        }
+    }
+
+    /**
+     * GLSL 直编译产物（Sodium 层）：MSL 源码 + entry point + 整型顶点输入名。
+     * 资源表（buffer/texture index 按名）由调用方从 MSL 文本提取——核心层不依赖
+     * Sodium 类型，保持分层。
+     */
+    public record CompiledGlsl(
+            String vertexMsl,
+            String fragmentMsl,
+            String vertexEntryPoint,
+            String fragmentEntryPoint,
+            Set<String> integerInputs
+    ) {
     }
 }

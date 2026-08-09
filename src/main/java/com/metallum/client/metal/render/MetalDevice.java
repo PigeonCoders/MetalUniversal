@@ -281,7 +281,7 @@ public final class MetalDevice implements GpuDevice {
         return 16;
     }
 
-    MemorySegment metalDeviceHandle() {
+    public MemorySegment metalDeviceHandle() {
         return this.metalDeviceHandle;
     }
 
@@ -434,7 +434,7 @@ public final class MetalDevice implements GpuDevice {
         return SAMPLER_IDENT_PATTERN.matcher(stripped).replaceAll("samplerTex");
     }
 
-    MemorySegment getOrCompileFunction(final String msl, final String entryPoint) {
+    public MemorySegment getOrCompileFunction(final String msl, final String entryPoint) {
         return this.functionCache.computeIfAbsent(
                 new MslFunctionKey(msl, entryPoint),
                 key -> MetalNativeBridge.metallum_create_shader_function(this.metalDeviceHandle, key.msl(), key.entryPoint())

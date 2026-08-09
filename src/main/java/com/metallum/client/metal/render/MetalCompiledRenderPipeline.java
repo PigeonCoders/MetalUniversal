@@ -153,43 +153,21 @@ final class MetalCompiledRenderPipeline implements CompiledRenderPipeline, AutoC
             final MTLPixelFormat colorFormat,
             final MTLPixelFormat depthFormat
     ) {
-        if (MetalNativeBridge.isNullHandle(this.vertexFunction) || MetalNativeBridge.isNullHandle(this.fragmentFunction)) {
-            return MemorySegment.NULL;
-        }
-
         // 1.21.11 无 ColorTargetState：blend/writeMask 直接来自 RenderPipeline
-        Optional<BlendFunction> blendFunction = this.pipeline.getBlendFunction();
         long writeMask = MTLColorWriteMask.from(this.pipeline.isWriteColor(), this.pipeline.isWriteAlpha());
 
-        try (MTLVertexDescriptor vertexDescriptor = buildVertexDescriptor(this.pipeline, this.firstAvailableVertexBufferSlot);
-             MTLRenderPipelineDescriptor pipelineDesc = new MTLRenderPipelineDescriptor()) {
-            pipelineDesc.setCompiledFunctions(this.vertexFunction, this.fragmentFunction);
-            pipelineDesc.setVertexDescriptor(vertexDescriptor);
-            pipelineDesc.setAttachmentFormats(colorFormat, depthFormat, MTLPixelFormat.Invalid);
-
-            if (blendFunction.isPresent()) {
-                var function = blendFunction.get();
-                pipelineDesc.setBlendState(
-                        MTLBlendFactor.from(function.sourceColor()),
-                        MTLBlendFactor.from(function.destColor()),
-                        MTLBlendOperation.from(),
-                        MTLBlendFactor.from(function.sourceAlpha()),
-                        MTLBlendFactor.from(function.destAlpha()),
-                        MTLBlendOperation.from(),
-                        writeMask
-                );
-            } else {
-                pipelineDesc.disableBlending(writeMask);
-            }
-
-            MemorySegment pipeline = MetalNativeBridge.metallum_MTLDevice_makeRenderPipelineState(
-                    this.device.metalDeviceHandle(),
-                    pipelineDesc.handle()
+        try (MTLVertexDescriptor vertexDescriptor = buildVertexDescriptor(this.pipeline, this.firstAvailableVertexBufferSlot)) {
+            return MetalPipelineSupport.makeRenderPipelineState(
+                    this.device,
+                    this.vertexFunction,
+                    this.fragmentFunction,
+                    vertexDescriptor,
+                    colorFormat,
+                    depthFormat,
+                    this.pipeline.getBlendFunction(),
+                    writeMask,
+                    this.pipeline.getLocation().toString()
             );
-            if (MetalNativeBridge.isNullHandle(pipeline)) {
-                Metallum.LOGGER.error("[metallum] Pipeline {} failed to build with depth format {}", this.pipeline.getLocation(), depthFormat);
-            }
-            return pipeline;
         }
     }
 

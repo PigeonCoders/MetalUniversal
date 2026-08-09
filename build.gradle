@@ -38,19 +38,46 @@ dependencies {
 	// modImplementation 触发 loom 的 mod 处理管线（Sodium 的 intermediary AW 需转换；
 	// 26.2 的 sodium 0.9.x AW 已 official 化，旧 `implementation` 写法才不报错）
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	// Sodium 0.8.13（Modrinth）用 loom 1.16.1 构建：modImplementation 会触发
-	// ArtifactMetadata 的 loom 版本检查（"Mod was built with a newer version of
-	// Loom (1.16.1), you are using Loom (1.13.6)"）→ 无法走 loom mod 处理管线。
-	// 编译/开发运行改用 loom-cache 中已生成的 named(remapped) 产物（loom remap
-	// 管线遗留，intermediary→mojmap）：发布时 loom remapJar 会把我们代码中的
-	// MC 类型引用映射回 intermediary，与用户安装的 sodium jar 匹配。
-	def sodiumRemappedJar = file(".gradle/loom-cache/remapped_mods/remapped/maven/modrinth/sodium-4abd26ae/mc1.21.11-0.8.13-fabric/sodium-4abd26ae-mc1.21.11-0.8.13-fabric.jar")
-	if (!sodiumRemappedJar.exists()) {
-		throw new GradleException("Missing remapped Sodium jar at ${sodiumRemappedJar} — restore .gradle/loom-cache or remap maven.modrinth:sodium:${project.sodium_version} to named mappings")
+	// Sodium 0.8.13（Modrinth）用 loom 1.16.1 构建：原 jar 的 MANIFEST.MF 声明
+	// Fabric-Loom-Mixin-Remap-Type: static + Fabric-Loom-Version: 1.16.1 → loom 1.13.6
+	// 配置期 ArtifactMetadata.validateLoomVersion 抛 "built with a newer version of Loom"。
+	// 字节码实证：validateLoomVersion 仅在 MixinRemapType.STATIC 时调用，且声明版本
+	// 等于 "0.0.0+unknown" 时直接跳过 → 配置期 repack 改该属性，即可走 modImplementation
+	// 正常 remap 管线（loom 自动把 intermediary 依赖 remap 到 named 供编译/运行），
+	// 废弃 loom-cache 遗留产物引用（CI 无 loom-cache 会失败）。
+	configurations { sodiumOriginal }
+	dependencies { sodiumOriginal "maven.modrinth:sodium:${project.sodium_version}" }
+	def sodiumRepackedJar = file(".gradle/sodium-repacked/sodium-repacked.jar")
+	if (!sodiumRepackedJar.exists()) {
+		// 配置期同步生成（modImplementation 需在配置期拿到文件）；仅改一个 manifest 属性。
+		// 用 Java Zip API 重写（保留全部条目，仅改 MANIFEST.MF 的 Fabric-Loom-Version）
+		def srcJar = configurations.sodiumOriginal.singleFile
+		sodiumRepackedJar.parentFile.mkdirs()
+		def tmpJar = file(sodiumRepackedJar.path + ".tmp")
+		def src = new java.util.zip.ZipFile(srcJar)
+		def out = new java.util.zip.ZipOutputStream(new java.io.FileOutputStream(tmpJar))
+		def entries = src.entries()
+		while (entries.hasMoreElements()) {
+			def entry = entries.nextElement()
+			out.putNextEntry(new java.util.zip.ZipEntry(entry.name))
+			if (entry.name == "META-INF/MANIFEST.MF") {
+				def text = src.getInputStream(entry).getText("UTF-8")
+				text = text.replace("Fabric-Loom-Version: 1.16.1", "Fabric-Loom-Version: 0.0.0+unknown")
+				out.write(text.getBytes("UTF-8"))
+			} else {
+				out << src.getInputStream(entry)
+			}
+			out.closeEntry()
+		}
+		src.close()
+		out.close()
+		tmpJar.renameTo(sodiumRepackedJar)
 	}
-	compileOnly files(sodiumRemappedJar)
-	runtimeOnly files(sodiumRemappedJar)
-	testImplementation files(sodiumRemappedJar)
+	dependencies {
+		modImplementation files(sodiumRepackedJar)
+		runtimeOnly files(sodiumRepackedJar)
+		testImplementation files(sodiumRepackedJar)
+	}
 
 	// 1.21.11 的 MC 依赖树不含 lwjgl-vulkan（26.2 含，MetalRenderPass 的 indirect draw
 	// 结构体 VkDraw*IndirectCommand 需要它）；版本对齐 MC 1.21.11 的 LWJGL 3.3.4

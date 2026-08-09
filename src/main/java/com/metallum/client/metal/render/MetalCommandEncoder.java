@@ -33,7 +33,7 @@ import java.util.OptionalLong;
 import java.util.function.Supplier;
 
 @Environment(EnvType.CLIENT)
-final class MetalCommandEncoder implements CommandEncoder {
+public final class MetalCommandEncoder implements CommandEncoder {
     public static final int MAX_SUBMITS_IN_FLIGHT = 3;
     private final MetalDevice device;
     private long currentSubmitIndex = MAX_SUBMITS_IN_FLIGHT;
@@ -52,6 +52,8 @@ final class MetalCommandEncoder implements CommandEncoder {
     private MTLCommandEncoder currentEncoder;
     private MemorySegment renderColorAttachment = MemorySegment.NULL;
     private MemorySegment renderDepthAttachment = MemorySegment.NULL;
+    /** 当前活跃 render encoder 的 color attachment 格式（renderCommandEncoder 时更新，Sodium 绘制用）。 */
+    private MTLPixelFormat currentColorFormat = MTLPixelFormat.Invalid;
     private double lastLayerWidth = -1;
     private double lastLayerHeight = -1;
     /**
@@ -203,6 +205,9 @@ final class MetalCommandEncoder implements CommandEncoder {
     ) {
         MemorySegment colorAttachment = colorTextureView.nativeHandle();
         MemorySegment depthAttachment = depthTextureView == null ? MemorySegment.NULL : depthTextureView.nativeHandle();
+        // SODIUM-ADAPT：Sodium 绘制需与当前 MC pass 的 MTLPSO attachment 严格一致，
+        // 格式必须以 encoder 侧为准（唯一正确源）
+        this.currentColorFormat = ((MetalGpuTexture) colorTextureView.texture()).mtlPixelFormat();
         if (currentEncoder instanceof MTLRenderCommandEncoder enc
                 && MetalPipelineSupport.sameHandle(renderColorAttachment, colorAttachment)
                 && MetalPipelineSupport.sameHandle(renderDepthAttachment, depthAttachment)) {
@@ -243,6 +248,27 @@ final class MetalCommandEncoder implements CommandEncoder {
         renderColorAttachment = colorAttachment;
         renderDepthAttachment = depthAttachment;
         return encoder;
+    }
+
+    // ---- SODIUM-ADAPT：Sodium 绘制路径访问器（阶段 3） ----
+    // Sodium 的绘制发生在 MC 主 RenderPass 流程内（renderGroup 调用点），必须复用
+    // 当前活跃 render encoder（attachment 相同），并在其上覆盖 MTLPSO/状态/资源。
+    // currentEncoder 非 render 类型（如 blit 打断期间）返回 null → 调用方 fail-fast。
+
+    /** 当前活跃的 MTLRenderCommandEncoder（非 render encoder 时返回 null）。 */
+    @Nullable
+    public MTLRenderCommandEncoder activeRenderEncoder() {
+        return this.currentEncoder instanceof MTLRenderCommandEncoder renderEncoder ? renderEncoder : null;
+    }
+
+    /** 当前 render encoder 的 color attachment 格式（MTLPSO 构建必须与 encoder 一致）。 */
+    public MTLPixelFormat activeColorFormat() {
+        return this.currentColorFormat;
+    }
+
+    /** 当前 render encoder 是否带 depth attachment（决定 MTLPSO 的 depthFormat）。 */
+    public boolean activeHasDepth() {
+        return this.renderDepthAttachment != MemorySegment.NULL && this.currentEncoder instanceof MTLRenderCommandEncoder;
     }
 
     @Override

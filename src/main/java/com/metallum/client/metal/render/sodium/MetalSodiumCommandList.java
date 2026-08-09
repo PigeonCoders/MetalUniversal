@@ -2,6 +2,7 @@ package com.metallum.client.metal.render.sodium;
 
 import com.metallum.Metallum;
 import com.metallum.client.metal.render.MetalBackend;
+import com.metallum.client.metal.render.MetalCommandEncoder;
 import com.metallum.client.metal.render.MetalGpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.CommandEncoder;
@@ -35,7 +36,10 @@ import java.nio.ByteBuffer;
  * 的单例 encoder，与 MC 渲染流程共用 commandBuffer/fence/transientMemory），
  * 上传/拷贝走现成的 transient staging + blit 路径（与 writeToBuffer 同构）。
  *
- * <p>tessellation/VAO 相关方法在阶段 3（顶点格式与绘制接线）实现，当前 fail-fast。
+ * <p>tessellation 三方法（createTessellation/beginTessellating/deleteTessellation）
+ * 阶段 3 已实现：MetalSodiumTessellation 引用容器 + MetalSodiumDrawCommandList
+ * 状态应用与 multiDraw 映射；激活状态由 MetalSodiumShaderChunkRenderer.begin()
+ * 注册（activeSodiumState）。
  */
 @Environment(EnvType.CLIENT)
 public final class MetalSodiumCommandList implements CommandList {
@@ -200,17 +204,45 @@ public final class MetalSodiumCommandList implements CommandList {
 
     @Override
     public GlTessellation createTessellation(final GlPrimitiveType primitiveType, final TessellationBinding[] bindings) {
-        throw new UnsupportedOperationException("Sodium Metal tessellation 在阶段 3（顶点格式与绘制接线）实现");
+        return new MetalSodiumTessellation(primitiveType, bindings);
     }
 
     @Override
     public void deleteTessellation(final GlTessellation tessellation) {
-        throw new UnsupportedOperationException("Sodium Metal tessellation 在阶段 3（顶点格式与绘制接线）实现");
+        // NO-OP：MetalSodiumTessellation 只是引用容器，buffer 归 arena 释放
     }
 
     @Override
     public DrawCommandList beginTessellating(final GlTessellation tessellation) {
-        throw new UnsupportedOperationException("Sodium Metal tessellation 在阶段 3（顶点格式与绘制接线）实现");
+        MetalSodiumActiveState state = activeSodiumState();
+        if (state == null) {
+            // SODIUM-ADAPT 时序守卫：begin() 注册激活状态、end() 清除；
+            // 未注册即到达 = renderer 接线错误（fail-fast）
+            throw new IllegalStateException("Sodium beginTessellating without active renderer state (renderer.begin() not called?)");
+        }
+        if (!(tessellation instanceof MetalSodiumTessellation metalTessellation)) {
+            throw new IllegalStateException("Tessellation is not Metal-backed: " + tessellation.getClass().getName());
+        }
+        return new MetalSodiumDrawCommandList((MetalCommandEncoder) encoder(), metalTessellation, state);
+    }
+
+    // ---- SODIUM-ADAPT：激活状态注册（阶段 3） ----
+    // MetalSodiumShaderChunkRenderer.begin()/end() 维护；渲染线程单线程访问，
+    // volatile 仅为防御（严格讲无需同步）。
+
+    private static volatile MetalSodiumActiveState activeSodiumState;
+
+    public static void setActiveSodiumState(final MetalSodiumActiveState state) {
+        activeSodiumState = state;
+    }
+
+    public static void clearActiveSodiumState() {
+        activeSodiumState = null;
+    }
+
+    @org.jspecify.annotations.Nullable
+    public static MetalSodiumActiveState activeSodiumState() {
+        return activeSodiumState;
     }
 
     private void checkMapDisposed(final GlBufferMapping map) {
@@ -227,7 +259,8 @@ public final class MetalSodiumCommandList implements CommandList {
         return entry;
     }
 
-    private static MetalGpuBuffer requireBuffer(final GlBuffer buffer) {
+    /** SODIUM-ADAPT：包可见供 MetalSodiumTessellation 复用（同包）。 */
+    static MetalGpuBuffer requireBuffer(final GlBuffer buffer) {
         MetalGlBufferRegistry.MetalGlBufferEntry entry = entryOf(buffer);
         MetalGpuBuffer metal = entry.buffer();
         if (metal == null) {

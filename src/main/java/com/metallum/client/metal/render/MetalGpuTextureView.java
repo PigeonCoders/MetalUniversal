@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
 import java.lang.foreign.MemorySegment;
 
 @Environment(EnvType.CLIENT)
-final class MetalGpuTextureView extends GpuTextureView {
+public final class MetalGpuTextureView extends GpuTextureView {
     private boolean closed;
     @Nullable
     private MemorySegment nativeHandle;
@@ -20,7 +20,7 @@ final class MetalGpuTextureView extends GpuTextureView {
         ((MetalGpuTexture) texture).addView();
     }
 
-    MemorySegment nativeHandle() {
+    public MemorySegment nativeHandle() {
         if (this.closed) {
             throw new IllegalStateException("Texture view is closed");
         }

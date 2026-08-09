@@ -15,7 +15,7 @@ import java.lang.foreign.MemorySegment;
 import java.util.OptionalDouble;
 
 @Environment(EnvType.CLIENT)
-final class MetalGpuSampler extends GpuSampler {
+public final class MetalGpuSampler extends GpuSampler {
     private final MetalDevice device;
     private final MemorySegment nativeHandle;
     private final AddressMode addressModeU;
@@ -97,7 +97,7 @@ final class MetalGpuSampler extends GpuSampler {
         return this.closed;
     }
 
-    MemorySegment nativeHandle() {
+    public MemorySegment nativeHandle() {
         return this.nativeHandle;
     }
 

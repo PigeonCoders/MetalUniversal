@@ -2,6 +2,8 @@ package com.metallum.client.metal.render.sodium;
 
 import com.metallum.Metallum;
 import com.metallum.client.metal.render.MetalGpuBuffer;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
@@ -62,12 +64,17 @@ public final class MetalSodiumShaderInterface implements ChunkShaderInterface {
     private GpuTextureView lightTex;
     @Nullable
     private GpuSampler terrainSampler;
+    /** u_LightTex 的采样器（GL 版 setupState 用 samplerCache.getClampToEdge(LINEAR)，阶段 3 补）。 */
+    @Nullable
+    private GpuSampler lightSampler;
 
     @Override
     public void setupState(final TerrainRenderPass pass, final FogParameters parameters, final GpuSampler sampler) {
         this.blockTex = pass.getAtlas();
         this.lightTex = Minecraft.getInstance().gameRenderer.lightTexture().getTextureView();
         this.terrainSampler = sampler;
+        // 与 GL 版 DefaultShaderInterface.setupState 一致：light 纹理用 clamp-to-edge + linear
+        this.lightSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
 
         var textureAtlas = (TextureAtlasAccessor) Minecraft.getInstance()
                 .getTextureManager()
@@ -101,6 +108,7 @@ public final class MetalSodiumShaderInterface implements ChunkShaderInterface {
         this.blockTex = null;
         this.lightTex = null;
         this.terrainSampler = null;
+        this.lightSampler = null;
         this.chunkDataBuffer = null;
     }
 
@@ -228,5 +236,11 @@ public final class MetalSodiumShaderInterface implements ChunkShaderInterface {
     @Nullable
     public GpuSampler terrainSampler() {
         return this.terrainSampler;
+    }
+
+    /** u_LightTex 的采样器（samplerCache.getClampToEdge(LINEAR)）。 */
+    @Nullable
+    public GpuSampler lightSampler() {
+        return this.lightSampler;
     }
 }

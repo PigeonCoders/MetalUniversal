@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 @Environment(EnvType.CLIENT)
-class MetalGpuBuffer extends GpuBuffer {
+public class MetalGpuBuffer extends GpuBuffer {
     private final MetalDevice device;
     private final boolean cpuAccessible;
     private final boolean dynamic;
@@ -28,7 +28,7 @@ class MetalGpuBuffer extends GpuBuffer {
     private ByteBuffer storage;
     private boolean closed;
 
-    MetalGpuBuffer(final MetalDevice device, final int usage, final long size) {
+    public MetalGpuBuffer(final MetalDevice device, final int usage, final long size) {
         super(usage, size);
         this.device = device;
 
@@ -92,7 +92,7 @@ class MetalGpuBuffer extends GpuBuffer {
         this.storage = null;
     }
 
-    ByteBuffer sliceStorage(final long offset, final long length) {
+    public ByteBuffer sliceStorage(final long offset, final long length) {
         if (this.storage == null) {
             throw new IllegalStateException("Buffer is not CPU-accessible");
         }
@@ -103,26 +103,34 @@ class MetalGpuBuffer extends GpuBuffer {
         return duplicate.slice().order(this.storage.order());
     }
 
-    MemorySegment nativeHandle() {
+    public MemorySegment nativeHandle() {
         if (this.nativeHandle == null || this.nativeHandle.address() == 0L) {
             throw new IllegalStateException("Native Metal buffer is closed or null");
         }
         return this.nativeHandle;
     }
 
-    boolean isDynamic() {
+    public boolean isDynamic() {
         return this.dynamic;
     }
 
-    long allocationSize() {
+    /**
+     * CPU 可访问（Metal Shared storage）：可直接经 currentStorage()/sliceStorage()
+     * 读写，无需 GPU staging + blit 往返。
+     */
+    public boolean isCpuAccessible() {
+        return this.cpuAccessible;
+    }
+
+    public long allocationSize() {
         return this.allocationSize;
     }
 
-    long resourceOptions() {
+    public long resourceOptions() {
         return this.resourceOptions;
     }
 
-    ByteBuffer currentStorage() {
+    public ByteBuffer currentStorage() {
         if (this.storage == null) {
             throw new IllegalStateException("Buffer is not CPU-accessible");
         }

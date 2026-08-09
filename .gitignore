@@ -47,3 +47,7 @@ libs/
 .qartez/
 .cached-context/
 .factorypath
+
+# local-only plans (never push)
+
+docs/plan-*.md

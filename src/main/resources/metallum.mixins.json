@@ -9,7 +9,8 @@
     "render.GLFWSwapBuffersMixin",
     "render.GLFWTerminateMixin",
     "render.RenderSystemGlobalsMixin",
-    "render.LevelRendererDiagMixin"
+    "render.LevelRendererDiagMixin",
+    "sodium.GlBufferMixin"
   ],
   "injectors": {
     "defaultRequire": 1

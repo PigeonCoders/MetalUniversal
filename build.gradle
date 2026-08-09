@@ -56,6 +56,9 @@ dependencies {
 	// fabric-mixin-compile-extensions 提供 MixinAnnotationProcessor，sponge-mixin 提供编译期类
 	annotationProcessor "net.fabricmc:fabric-mixin-compile-extensions:0.6.0"
 	compileOnly "net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7"
+
+	testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 processResources {
@@ -412,4 +415,8 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
+}
+
+test {
+	useJUnitPlatform()
 }

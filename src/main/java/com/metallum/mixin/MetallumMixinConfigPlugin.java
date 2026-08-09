@@ -44,7 +44,8 @@ public final class MetallumMixinConfigPlugin implements IMixinConfigPlugin {
             return false;
         }
         if (mixinClassName.contains(".mixin.sodium.")) {
-            return FabricLoader.getInstance().isModLoaded("sodium");
+            // sodium 适配 mixin 仅 Metal 主机 + sodium 已加载时应用（GL 主机回归原行为）
+            return this.isMetalHost && FabricLoader.getInstance().isModLoaded("sodium");
         }
         return RENDER_SYSTEM_DEVICE_MIXIN.equals(mixinClassName) || GLFW_SWAP_BUFFERS_MIXIN.equals(mixinClassName)
                 || GLFW_TERMINATE_MIXIN.equals(mixinClassName) || RENDER_SYSTEM_GLOBALS_MIXIN.equals(mixinClassName)

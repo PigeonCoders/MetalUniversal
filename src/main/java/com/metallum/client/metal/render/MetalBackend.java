@@ -28,6 +28,20 @@ public final class MetalBackend {
      */
     private static volatile com.mojang.blaze3d.buffers.GpuBuffer globalSettingsBuffer;
 
+    /**
+     * 当前活跃 Metal 设备（createDevice 时记录）。Sodium 适配层（sodium 包）与
+     * 诊断代码经 activeDevice() 获取设备与命令编码器，避免向 MC 侧暴露额外接口。
+     */
+    private static volatile MetalDevice activeDevice;
+
+    public static MetalDevice activeDevice() {
+        MetalDevice device = activeDevice;
+        if (device == null) {
+            throw new IllegalStateException("Metal device not initialized");
+        }
+        return device;
+    }
+
     public static void setGlobalSettingsBuffer(final com.mojang.blaze3d.buffers.GpuBuffer buffer) {
         globalSettingsBuffer = buffer;
     }
@@ -109,7 +123,9 @@ public final class MetalBackend {
         Metallum.LOGGER.info("Metal device: {}", deviceName);
 
         try {
-            return new MetalDevice(deviceHandle, metalLayer, deviceName, cocoaView, defaultShaderSource);
+            MetalDevice device = new MetalDevice(deviceHandle, metalLayer, deviceName, cocoaView, defaultShaderSource);
+            activeDevice = device;
+            return device;
         } catch (Throwable throwable) {
             throw new IllegalStateException("Metal device initialization failed: " + throwable.getMessage(), throwable);
         }

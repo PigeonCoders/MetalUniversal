@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 @Environment(EnvType.CLIENT)
-final class MetalDevice implements GpuDevice {
+public final class MetalDevice implements GpuDevice {
     private static final Pattern BLOCK_COMMENTS = Pattern.compile("(?s)/\\*.*?\\*/");
     private static final Pattern LINE_COMMENTS = Pattern.compile("(?m)//[^\\n]*");
     private static final Pattern SAMPLER_IDENT_PATTERN = Pattern.compile("\\bsampler\\b");

@@ -43,7 +43,11 @@ public final class MetalSodiumShaderChunkRenderer extends DefaultChunkRenderer {
     private MetalSodiumCompiledPipeline activePipeline;
 
     public MetalSodiumShaderChunkRenderer(final MetalDevice device, final ChunkVertexType vertexType) {
-        super(com.metallum.client.metal.render.sodium.MetalRenderDevice.INSTANCE, vertexType);
+        // 激活状态统一走 Sodium 的 RenderDevice.INSTANCE（= GLRenderDevice，其
+        // getCapabilities/createCommandList 已被 GLRenderDeviceMixin Metal 化）：
+        // Sodium 的 enterManagedCode 激活的是它，若用 MetalRenderDevice.INSTANCE
+        // 会因 checkDeviceActive 未激活而抛错（接口 mixin 不可行后改从实现类入手）。
+        super(net.caffeinemc.mods.sodium.client.gl.device.RenderDevice.INSTANCE, vertexType);
         this.shaderCache = new MetalSodiumShaderCache(device);
         this.uniformBuffers = new MetalSodiumUniformBuffers(device);
     }

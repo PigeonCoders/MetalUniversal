@@ -11,7 +11,7 @@
     "render.RenderSystemGlobalsMixin",
     "render.LevelRendererDiagMixin",
     "sodium.GlBufferMixin",
-    "sodium.RenderDeviceMixin",
+    "sodium.GLRenderDeviceMixin",
     "sodium.RenderSectionManagerMixin",
     "sodium.GlContextInfoMixin",
     "sodium.Gl32FenceMixin"

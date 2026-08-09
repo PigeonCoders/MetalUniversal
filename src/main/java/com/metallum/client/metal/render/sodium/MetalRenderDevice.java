@@ -37,6 +37,16 @@ public final class MetalRenderDevice implements RenderDevice {
     // 若 FAKE_CAPABILITIES 尚未初始化则读到 null（曾踩坑：NPE "capabilities is null"）
     private static final GLCapabilities FAKE_CAPABILITIES = createFakeCapabilities();
 
+    /**
+     * 假 GLCapabilities（空扩展集 → BufferStorageFunctions.pickBest 返回 NONE，
+     * Sodium 自动走 FallbackStagingBuffer；GlBufferStreamer 的 GL.getCapabilities()
+     * 也被 && 短路跳过）。GLRenderDeviceMixin 复用（GLRenderDevice 构造期
+     * DeviceFunctions→pickBest 同样需要，否则 <clinit> NPE）。
+     */
+    public static GLCapabilities getFakeCapabilities() {
+        return FAKE_CAPABILITIES;
+    }
+
     /** 单例（阶段 5 mixin 替换 RenderDevice.INSTANCE 的目标）。 */
     public static final RenderDevice INSTANCE = new MetalRenderDevice();
 

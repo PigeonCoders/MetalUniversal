@@ -18,13 +18,17 @@ import net.fabricmc.api.Environment;
  *
  * <p>继承 {@link DefaultChunkRenderer} 而非 {@link ShaderChunkRenderer}：render 循环
  * 与全部 private static 方法（fillCommandBuffer / addSharedIndexedDrawCommands /
- * executeDrawBatch 等）零复制复用；render 里 {@code super.begin(...)} 是虚调用，
- * 动态分发到本类的 Metal 覆写。
+ * executeDrawBatch 等）零复制复用。
  *
- * <p>覆写 begin/end 绕开原版的全部 GL 耦合（GlStateManager._viewport /
- * _glBindFramebuffer / GlCommandEncoderAccessor cast / GlProgram.bind——Metal 模式
- * 必崩）。原版 begin 的职责在此替换为：编译/取 pipeline（MetalSodiumShaderCache）
- * + interface 值计算（setupState）+ 注册"激活状态"供
+ * <p>⚠️ 重要（实测修正）：DefaultChunkRenderer.render 里的 {@code super.begin(...)}
+ * 是 **Java super 静态分发**（字节码 invokespecial 直调 ShaderChunkRenderer.begin 实现，
+ * 不经过子类覆写）——本类的 begin/end 覆写不会被 render() 调用。真正拦截点在
+ * ShaderChunkRendererMixin：@Inject 到 ShaderChunkRenderer.begin/end 方法本体 HEAD
+ * （super 直调同样命中），Metal 主机经 instanceof 转调本类的 public metalBegin/metalEnd。
+ *
+ * <p>metalBegin/metalEnd 公开（非 protected）：mixin 跨包调用需要（begin/end 覆写
+ * 调它们作为虚调用路径的双保险）。原版 begin 的职责在此替换为：编译/取 pipeline
+ * （MetalSodiumShaderCache）+ interface 值计算（setupState）+ 注册"激活状态"供
  * MetalSodiumCommandList.beginTessellating 构建 DrawCommandList。
  *
  * <p>DefaultChunkRenderer.render 内 {@code activeProgram.getInterface()} 返回的
@@ -54,6 +58,11 @@ public final class MetalSodiumShaderChunkRenderer extends DefaultChunkRenderer {
 
     @Override
     protected void begin(final TerrainRenderPass pass, final FogParameters parameters, final GpuSampler terrainSampler) {
+        this.metalBegin(pass, parameters, terrainSampler);
+    }
+
+    /** 金属 begin 逻辑（public：ShaderChunkRendererMixin 跨包经 instanceof 转调）。 */
+    public void metalBegin(final TerrainRenderPass pass, final FogParameters parameters, final GpuSampler terrainSampler) {
         // 与 GL 版 begin 相同的变体选择：fog 恒 SMOOTH（GL 版硬编码 ChunkFogMode.SMOOTH）
         ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass, this.vertexType);
 
@@ -75,6 +84,11 @@ public final class MetalSodiumShaderChunkRenderer extends DefaultChunkRenderer {
 
     @Override
     protected void end(final TerrainRenderPass pass) {
+        this.metalEnd(pass);
+    }
+
+    /** 金属 end 逻辑（public：ShaderChunkRendererMixin 跨包经 instanceof 转调）。 */
+    public void metalEnd(final TerrainRenderPass pass) {
         MetalSodiumCommandList.clearActiveSodiumState();
         this.shaderInterface.resetState();
         this.activePipeline = null;

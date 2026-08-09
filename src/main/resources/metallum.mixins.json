@@ -14,7 +14,7 @@
     "sodium.GLRenderDeviceMixin",
     "sodium.RenderSectionManagerMixin",
     "sodium.GlContextInfoMixin",
-    "sodium.DefaultChunkRendererMixin"
+    "sodium.ShaderChunkRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

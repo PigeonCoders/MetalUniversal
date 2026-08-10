@@ -101,11 +101,24 @@ public final class MetalGpuSampler extends GpuSampler {
         return this.nativeHandle;
     }
 
+    /**
+     * iOS 环境规避（fix12）：MC 的 mip 数据由 CPU 生成（STBImageResize——iOS 上
+     * Amethyst 的 liblwjgl_stb.dylib 与 Java 绑定不匹配，NoSuchMethodError 反复出现，
+     * §12 已知环境问题）→ 纹理 mip>0 层未初始化（Metal 新纹理内容为零）→ 三线性
+     * 采样 LOD>0 读到 alpha=0（透明间隙）+ 移动视角 LOD 切换（抖动）。
+     *
+     * <p>maxLod 未指定（MC 默认 OptionalDouble.empty()——terrain/lightTex 等全部默认
+     * sampler）时强制无 mip 采样（只用 mip 0——原始纹理数据正常）：mipFilter=Nearest
+     * + LOD 钳制 0.25。显式指定 maxLod 的纹理（如 MC 显式 mip 场景）保持原逻辑。
+     */
     private static MTLSamplerMipFilter toMtlMipFilter(final OptionalDouble maxLod) {
-        return maxLod.orElse(1000.0) > 0.25 ? MTLSamplerMipFilter.Linear : MTLSamplerMipFilter.Nearest;
+        if (maxLod.isEmpty()) {
+            return MTLSamplerMipFilter.Nearest;
+        }
+        return maxLod.getAsDouble() > 0.25 ? MTLSamplerMipFilter.Linear : MTLSamplerMipFilter.Nearest;
     }
 
     private static double toMtlMaxLodClamp(final OptionalDouble maxLod) {
-        return Math.max(0.25, maxLod.orElse(1000.0));
+        return Math.max(0.25, maxLod.orElse(0.25));
     }
 }

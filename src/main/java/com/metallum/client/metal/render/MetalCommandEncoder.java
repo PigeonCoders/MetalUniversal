@@ -271,6 +271,36 @@ public final class MetalCommandEncoder implements CommandEncoder {
         return this.renderDepthAttachment != MemorySegment.NULL && this.currentEncoder instanceof MTLRenderCommandEncoder;
     }
 
+    /**
+     * SODIUM-ADAPT（fix9）：确保当前有活跃的 render encoder 可绘制。
+     *
+     * <p>Sodium 的 chunkFades（GlBufferStreamer）首帧 flush 走 blit 上传
+     * （writeToBuffer → blitCommandEncoder → endEncoder），把 metalBegin
+     * 建立的 render encoder 结束（currentEncoder=null）；随后 executeDrawBatch
+     * 到达时若无此重建则 activeRenderEncoder() 为 null。
+     *
+     * <p>currentRenderPass 由 createRenderPass 设置（submitRenderPass/close 才清），
+     * 其 color/depth attachment 与 viewport 尺寸足够重建 encoder（clear 全关——
+     * 清屏由 MC pending-clear 机制负责；重建的 encoder 是全新状态，Sodium 的
+     * applyPipelineState 会全量设置，无残留污染）。
+     */
+    public @Nullable MTLRenderCommandEncoder ensureActiveRenderEncoder() {
+        if (this.currentEncoder instanceof MTLRenderCommandEncoder enc) {
+            return enc;
+        }
+        if (this.currentRenderPass == null) {
+            return null;
+        }
+        return this.renderCommandEncoder(
+                this.currentRenderPass.sodiumColorTextureView(),
+                this.currentRenderPass.sodiumDepthTextureView(),
+                this.currentRenderPass.sodiumWidth(),
+                this.currentRenderPass.sodiumHeight(),
+                false, 0.0F, 0.0F, 0.0F, 0.0F,
+                false, 0.0
+        );
+    }
+
     @Override
     public @NonNull RenderPass createRenderPass(
             final @NonNull Supplier<String> debugGroup,

@@ -86,12 +86,13 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
             throw new IllegalStateException("DrawCommandList already closed");
         }
 
-        MTLRenderCommandEncoder enc = this.encoder.activeRenderEncoder();
+        // SODIUM-ADAPT（fix9）：Sodium 绘制段内的 blit 上传（chunkFades 首帧 flush 经
+        // writeToBuffer）会 endEncoder 结束 render encoder——此处主动重建（attachment
+        // 取自 currentRenderPass），不再假设 encoder 恰好活跃。仍无则属接线错误。
+        MTLRenderCommandEncoder enc = this.encoder.ensureActiveRenderEncoder();
         if (enc == null) {
-            // SODIUM-ADAPT 时序守卫：绘制必须发生在 MC 主 pass 内；blit 打断期间
-            // （endEncoder 后）currentEncoder 是 blit encoder，此时到达即为接线错误
             throw new IllegalStateException(
-                    "Sodium draw outside of active Metal render pass (activeRenderEncoder() == null)");
+                    "Sodium draw outside of active Metal render pass (ensureActiveRenderEncoder() == null)");
         }
         if (this.tessellation.indexBuffer() == null) {
             throw new IllegalStateException("Sodium tessellation missing index buffer");

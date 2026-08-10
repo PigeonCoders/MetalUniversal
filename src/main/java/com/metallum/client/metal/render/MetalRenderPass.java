@@ -248,6 +248,26 @@ public final class MetalRenderPass implements RenderPass {
         return ((MetalGpuTexture) colorTexture.texture()).mtlPixelFormat();
     }
 
+    // SODIUM-ADAPT（fix9）：Sodium 绘制段内的 blit 上传（chunkFades 首帧 flush）会经
+    // endEncoder 结束 render encoder；MetalCommandEncoder.ensureActiveRenderEncoder()
+    // 据此重建。colorTexture/depthTexture 是 private final——同包也需访问器。
+    MetalGpuTextureView sodiumColorTextureView() {
+        return (MetalGpuTextureView) colorTexture;
+    }
+
+    @Nullable
+    MetalGpuTextureView sodiumDepthTextureView() {
+        return depthTexture == null ? null : (MetalGpuTextureView) depthTexture;
+    }
+
+    int sodiumWidth() {
+        return colorTexture.getWidth(0);
+    }
+
+    int sodiumHeight() {
+        return colorTexture.getHeight(0);
+    }
+
     MTLPixelFormat depthAttachmentFormat() {
         if (depthTexture == null) {
             return MTLPixelFormat.Invalid;

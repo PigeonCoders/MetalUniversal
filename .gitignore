@@ -51,3 +51,4 @@ libs/
 # local-only plans (never push)
 
 docs/plan-*.md
+metallum-diag.log

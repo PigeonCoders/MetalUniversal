@@ -301,6 +301,11 @@ public final class MetalCommandEncoder implements CommandEncoder {
         );
     }
 
+    /** SODIUM-ADAPT（fix11）：per-region uniform 的 transient 块分配（帧内安全、帧末回收）。 */
+    public MetalTransientMemory.MappedView allocateTransientUniform(final long size, final long alignment) {
+        return this.transientMemory.allocateUniformSlice(size, alignment);
+    }
+
     @Override
     public @NonNull RenderPass createRenderPass(
             final @NonNull Supplier<String> debugGroup,

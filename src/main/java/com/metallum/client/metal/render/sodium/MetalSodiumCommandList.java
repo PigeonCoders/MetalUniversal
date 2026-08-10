@@ -223,12 +223,13 @@ public final class MetalSodiumCommandList implements CommandList {
         if (!(tessellation instanceof MetalSodiumTessellation metalTessellation)) {
             throw new IllegalStateException("Tessellation is not Metal-backed: " + tessellation.getClass().getName());
         }
-        // SODIUM-ADAPT（fix10）：每 region 一次全量写入 uniform（projection/modelView/
-        // regionOffset/fog 等 11 个 Shared buffer）——setModelMatrixUniforms 已先更新
-        // interface 值（regionOffset 每 region 不同），此处时机与 regionOffset 对齐。
-        // 缺失此调用 = uniform 全 0 → 投影矩阵零 → 顶点全被裁剪 → 地形不可见（iOS 实测）。
-        state.uniformBuffers().uploadAll(state.shaderInterface());
-        return new MetalSodiumDrawCommandList((MetalCommandEncoder) encoder(), metalTessellation, state);
+        // fix11（uniform 覆写竞争）：9 个 per-pass uniform pass 内写一次（幂等）；
+        // regionOffset/currentTime 每 region 从 transient 分配独立块（GPU 读各自块，
+        // 不再被后续 region 覆写——iOS 实测曾整体上下偏移/随视角闪现）。
+        state.uniformBuffers().uploadPassUniforms(state.shaderInterface());
+        MetalSodiumUniformBuffers.RegionUniformSlices regionUniforms =
+                state.uniformBuffers().allocateRegionUniforms(state.shaderInterface());
+        return new MetalSodiumDrawCommandList((MetalCommandEncoder) encoder(), metalTessellation, state, regionUniforms);
     }
 
     // ---- SODIUM-ADAPT：激活状态注册（阶段 3） ----

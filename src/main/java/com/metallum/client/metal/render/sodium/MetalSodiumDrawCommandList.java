@@ -53,16 +53,19 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
     private final MetalCommandEncoder encoder;
     private final MetalSodiumTessellation tessellation;
     private final MetalSodiumActiveState state;
+    private final MetalSodiumUniformBuffers.RegionUniformSlices regionUniforms;
     private boolean closed;
 
     public MetalSodiumDrawCommandList(
             final MetalCommandEncoder encoder,
             final MetalSodiumTessellation tessellation,
-            final MetalSodiumActiveState state
+            final MetalSodiumActiveState state,
+            final MetalSodiumUniformBuffers.RegionUniformSlices regionUniforms
     ) {
         this.encoder = encoder;
         this.tessellation = tessellation;
         this.state = state;
+        this.regionUniforms = regionUniforms;
     }
 
     /** batch 的读取逻辑抽成纯函数（Linux JUnit 可测）。 */
@@ -159,10 +162,22 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
         MetalSodiumActiveState state = this.state;
         for (MetalSodiumCompiledPipeline.ResourceBinding binding : state.pipeline().resources()) {
             if (binding.kind() == MetalSodiumCompiledPipeline.ResourceKind.UNIFORM_BUFFER) {
-                MetalGpuBuffer buffer = state.uniformBuffers().forBinding(binding.name());
-                if (buffer == null && "ChunkData".equals(binding.name())) {
-                    // ChunkData 是 GlBufferStreamer 的 buffer（Sodium 侧上传），经 interface 取
-                    buffer = state.shaderInterface().chunkDataBuffer();
+                // fix11：per-region uniform（regionOffset/currentTime）用每 region 独立
+                // transient 块（buffer + 块内偏移）——固定 buffer 覆写竞争已消除
+                MetalGpuBuffer buffer;
+                long bufferOffset = 0L;
+                if ("u_RegionOffset".equals(binding.name())) {
+                    buffer = (MetalGpuBuffer) this.regionUniforms.regionOffset().buffer();
+                    bufferOffset = this.regionUniforms.regionOffset().offset();
+                } else if ("u_CurrentTime".equals(binding.name())) {
+                    buffer = (MetalGpuBuffer) this.regionUniforms.currentTime().buffer();
+                    bufferOffset = this.regionUniforms.currentTime().offset();
+                } else {
+                    buffer = state.uniformBuffers().forBinding(binding.name());
+                    if (buffer == null && "ChunkData".equals(binding.name())) {
+                        // ChunkData 是 GlBufferStreamer 的 buffer（Sodium 侧上传），经 interface 取
+                        buffer = state.shaderInterface().chunkDataBuffer();
+                    }
                 }
                 if (buffer == null) {
                     if (ChunkDataMissingWarned.compareAndSet(false, true)) {
@@ -170,7 +185,7 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
                     }
                     continue;
                 }
-                enc.setBuffer(buffer.nativeHandle(), 0, binding.bindingIndex(), binding.stageMask());
+                enc.setBuffer(buffer.nativeHandle(), bufferOffset, binding.bindingIndex(), binding.stageMask());
                 continue;
             }
 

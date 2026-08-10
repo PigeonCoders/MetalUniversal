@@ -16,13 +16,13 @@ import java.util.List;
  * 本类改为纯内部工具类（由 MetalCommandEncoder 持有）。
  */
 @Environment(EnvType.CLIENT)
-final class MetalTransientMemory {
+public final class MetalTransientMemory {
     private static final long BLOCK_SIZE = 524288L;
     private static final long MAX_CPU_ALIGNMENT = 16L;
     private static final long MAX_GPU_ALIGNMENT = 256L;
     private static final int BLOCK_USAGE = GpuBuffer.USAGE_MAP_READ | GpuBuffer.USAGE_MAP_WRITE;
 
-    record MappedView(GpuBufferSlice slice, ByteBuffer data, Runnable closeAction) implements AutoCloseable {
+    public record MappedView(GpuBufferSlice slice, ByteBuffer data, Runnable closeAction) implements AutoCloseable {
         @Override
         public void close() {
             closeAction.run();
@@ -71,6 +71,15 @@ final class MetalTransientMemory {
 
     MappedView allocateStaging(final long size, final long alignment, final int usage, final long minimumAllocation, final long elementSize) {
         return allocateMapped(size, alignment, usage, minimumAllocation, elementSize);
+    }
+
+    /**
+     * SODIUM-ADAPT（fix11）：per-region uniform 块分配（CPU 可写 Shared + GPU 直读）。
+     * 块由 gpuBlockAllocator 在帧内偏移分配（互不重叠），帧末 rotate 回收——
+     * 用于避免「固定 uniform buffer 被后续 region 覆写」的竞争。
+     */
+    public MappedView allocateUniformSlice(final long size, final long alignment) {
+        return allocateMapped(size, alignment, GpuBuffer.USAGE_UNIFORM, 0L, 1L);
     }
 
     GpuBufferSlice allocateGpu(final long size, final long alignment, final int usage, final long minimumAllocation, final long elementSize) {

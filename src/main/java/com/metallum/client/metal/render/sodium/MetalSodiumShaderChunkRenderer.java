@@ -91,6 +91,8 @@ public final class MetalSodiumShaderChunkRenderer extends DefaultChunkRenderer {
 
         // 与 GL 版 begin 相同的变体选择：fog 恒 SMOOTH（GL 版硬编码 ChunkFogMode.SMOOTH）
         ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass, this.vertexType);
+        // fix11：每个 pass 重置 per-pass uniform 写入标志（9 个固定 buffer pass 内写一次）
+        this.uniformBuffers.markPassStart();
 
         this.activePipeline = this.shaderCache.get(options);
         if (!this.activePipeline.isValid()) {

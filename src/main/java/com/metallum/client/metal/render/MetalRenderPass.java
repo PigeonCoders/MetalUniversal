@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.function.Supplier;
 
 @Environment(EnvType.CLIENT)
-final class MetalRenderPass implements RenderPass {
+public final class MetalRenderPass implements RenderPass {
     static final boolean VALIDATION = SharedConstants.IS_RUNNING_IN_IDE;
     // 1.21.11 的 RenderPass 接口无 MAX_VERTEX_BUFFERS 常量（26.2 有）：按 26.2 值保持
     static final int MAX_VERTEX_BUFFERS = 16;

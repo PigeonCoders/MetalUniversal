@@ -1,6 +1,10 @@
 package com.metallum.client.metal.render.sodium;
 
+import com.metallum.client.metal.render.MetalBackend;
+import com.metallum.client.metal.render.MetalCommandEncoder;
 import com.metallum.client.metal.render.MetalDevice;
+import com.metallum.client.metal.render.MetalRenderPass;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.textures.GpuSampler;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer;
@@ -12,6 +16,9 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexT
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
 
 /**
  * SODIUM-ADAPT：Metal 版 chunk renderer（阶段 3）。
@@ -45,6 +52,8 @@ public final class MetalSodiumShaderChunkRenderer extends DefaultChunkRenderer {
     private final MetalSodiumShaderInterface shaderInterface = new MetalSodiumShaderInterface();
 
     private MetalSodiumCompiledPipeline activePipeline;
+    /** 自建 RenderPass（metalBegin 创建 / metalEnd close）——Sodium 的 renderGroup cancel 后无活跃 render encoder。 */
+    private MetalRenderPass activeRenderPass;
 
     public MetalSodiumShaderChunkRenderer(final MetalDevice device, final ChunkVertexType vertexType) {
         // 激活状态统一走 Sodium 的 RenderDevice.INSTANCE（= GLRenderDevice，其
@@ -63,6 +72,23 @@ public final class MetalSodiumShaderChunkRenderer extends DefaultChunkRenderer {
 
     /** 金属 begin 逻辑（public：ShaderChunkRendererMixin 跨包经 instanceof 转调）。 */
     public void metalBegin(final TerrainRenderPass pass, final FogParameters parameters, final GpuSampler terrainSampler) {
+        // 原版 renderGroup 内部才创建 RenderPass（ChunkSectionsToRender.renderGroup 的
+        // try-with-resources）——Sodium 的 ChunkSectionsToRenderMixin cancel 后没有任何活跃
+        // render encoder（MetalSodiumDrawCommandList 时序守卫会抛 "outside of active pass"）。
+        // 这里自建 RenderPass 包裹整个 Sodium 绘制段（begin→draw→end 语义贴合原版）：
+        // clear 全空（不清屏——主目标清屏由 MC 的 pending-clear 机制负责）；attachment 与
+        // MC 主目标一致 → MetalCommandEncoder.renderCommandEncoder 复用/重建正确衔接后续 pass。
+        RenderTarget target = pass.getTarget();
+        // 单例 encoder（createCommandEncoder 恒返回同一 MetalCommandEncoder 实例）
+        MetalCommandEncoder encoder = (MetalCommandEncoder) MetalBackend.activeDevice().createCommandEncoder();
+        this.activeRenderPass = (MetalRenderPass) encoder.createRenderPass(
+                () -> "sodium-terrain",
+                target.getColorTextureView(),
+                OptionalInt.empty(),
+                target.getDepthTexture() == null ? null : target.getDepthTextureView(),
+                OptionalDouble.empty()
+        );
+
         // 与 GL 版 begin 相同的变体选择：fog 恒 SMOOTH（GL 版硬编码 ChunkFogMode.SMOOTH）
         ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass, this.vertexType);
 
@@ -93,6 +119,12 @@ public final class MetalSodiumShaderChunkRenderer extends DefaultChunkRenderer {
         this.shaderInterface.resetState();
         this.activePipeline = null;
         this.activeProgram = null;
+        // 关闭自建 RenderPass（materializePendingClear——本 pass 无 pending clear 即 no-op；
+        // encoder 保持活跃，MC 后续 pass 在 attachment 相同时复用）
+        if (this.activeRenderPass != null) {
+            this.activeRenderPass.close();
+            this.activeRenderPass = null;
+        }
     }
 
     @Override

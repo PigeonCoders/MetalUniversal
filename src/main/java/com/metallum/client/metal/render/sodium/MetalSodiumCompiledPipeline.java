@@ -131,7 +131,10 @@ public final class MetalSodiumCompiledPipeline implements AutoCloseable {
         this.depthBiasScaleFactor = stateSource.getDepthBiasScaleFactor();
         this.depthBiasConstant = stateSource.getDepthBiasConstant();
         DepthTestFunction depthTest = stateSource.getDepthTestFunction();
-        this.depthCompareOp = MTLCompareFunction.from(depthTest);
+        // 判别实验（fix14）：LEQUAL → LESS——相邻 section 重合面的深度竞争（ULP 边界
+        // 帧间翻转 → 侧面交替/消失）；LESS 使「相等」恒不通过（先画者胜，稳定一侧）。
+        // 若 iOS 侧面消失/闪烁停止 → 确认深度竞争；仍闪 → 排除深度（恢复 LEQUAL）。
+        this.depthCompareOp = MTLCompareFunction.Less; // MTLCompareFunction.from(depthTest);
         this.depthWrite = stateSource.isWriteDepth() ? 1 : 0;
         this.depthStencilState = MetalNativeBridge.MTLDevice_makeDepthStencilState(
                 device.metalDeviceHandle(), this.depthCompareOp, this.depthWrite

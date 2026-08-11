@@ -25,6 +25,17 @@ private struct DepthStencilKey: Hashable {
     let writeDepth: Bool
 }
 
+// P20：nextDrawable 等待统计（present 路径——vsync 池空阻塞判别）。
+// 渲染主线程单线程调用，无并发竞争。
+private struct PresentDrawableStats {
+    static var calls: Int64 = 0       // >1ms 的等待次数（窗口内）
+    static var slowCalls: Int64 = 0   // >5ms（≈vsync 级阻塞）
+    static var totalWaitUs: Int64 = 0
+    static var maxWaitUs: Int64 = 0
+    static var nilCount: Int64 = 0    // 累计（不随窗口清零）
+    static var lastLogNanos: Int64 = 0
+}
+
 private struct PipelineVariantKey: Hashable {
     let deviceAddress: UInt
     let colorFormat: MTLPixelFormat
@@ -1454,6 +1465,11 @@ public func metallum_configure_layer(_ layer: CAMetalLayer, _ width: Double, _ h
     // command-buffer completions and drawable recycling can exhaust the
     // pool, causing nextDrawable() to return nil (black frame).
     layer.allowsNextDrawableTimeout = true
+    // P20（spike 根治候选）：池 3 个 + MAX_SUBMITS_IN_FLIGHT=3 竞争 + vsync
+    // 相位滑动 → 周期性池空 → nextDrawable() 阻塞 ~16.7ms → 每秒 1 个 30ms+
+    // spike（实测 awaitPrev=0 不捕获——不经 semaphore，帧间隔采样却计入）。
+    // 池扩到 4：竞争窗口下保底 1 个可用 drawable，消除池空等待。
+    layer.maximumDrawableCount = 4
     // The CAMetalLayer IS view.layer (see metallum_ios_get_view_metal_layer):
     // the host UIView owns the layer's frame and updates it on layout /
     // rotation. We must NOT touch layer.frame here — doing so would fight
@@ -1475,7 +1491,32 @@ public func metallum_MTLCommandBuffer_encodePresentTextureToDrawable(
     _ globalFence: MTLFence?
 ) {
     return autoreleasepool {
-        guard let drawable: CAMetalDrawable = layer.nextDrawable() else {
+        let t0 = DispatchTime.now().uptimeNanoseconds
+        let drawable: CAMetalDrawable? = layer.nextDrawable()
+        let t1 = DispatchTime.now().uptimeNanoseconds
+        let waitUs = (t1 - t0) / 1000
+        // P20：nextDrawable 等待统计（>1ms 才计——快路径 0-50us 不干扰）——
+        // 判别 vsync 池空阻塞（16.7ms 级等待 = spike 源坐实）。5s 节流 NSLog。
+        if waitUs > 1000 {
+            PresentDrawableStats.calls += 1
+            PresentDrawableStats.totalWaitUs += Int64(waitUs)
+            PresentDrawableStats.maxWaitUs = max(PresentDrawableStats.maxWaitUs, Int64(waitUs))
+            if waitUs > 5000 { PresentDrawableStats.slowCalls += 1 }
+        }
+        let nowNanos = DispatchTime.now().uptimeNanoseconds
+        if Int64(nowNanos) - PresentDrawableStats.lastLogNanos > 5_000_000_000 {
+            PresentDrawableStats.lastLogNanos = Int64(nowNanos)
+            NSLog("[Metallum] P20 drawable: slow>1ms=%lld slow>5ms=%lld totalWait=%lldms maxWait=%lldms nil=%lld",
+                  PresentDrawableStats.calls, PresentDrawableStats.slowCalls,
+                  PresentDrawableStats.totalWaitUs / 1000, PresentDrawableStats.maxWaitUs / 1000,
+                  PresentDrawableStats.nilCount)
+            PresentDrawableStats.calls = 0
+            PresentDrawableStats.slowCalls = 0
+            PresentDrawableStats.totalWaitUs = 0
+            PresentDrawableStats.maxWaitUs = 0
+        }
+        guard let drawable else {
+            PresentDrawableStats.nilCount += 1
             NSLog("[Metallum] WARNING: nextDrawable() returned nil (drawableSize=\(layer.drawableSize), frame=\(layer.frame), isOpaque=\(layer.isOpaque), device=\(layer.device != nil ? "set" : "nil"))")
             return
         }

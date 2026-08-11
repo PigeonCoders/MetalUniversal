@@ -540,6 +540,20 @@ public final class MetalRenderPass implements RenderPass {
         }
 
         MetalGpuBuffer uniformBuffer = (MetalGpuBuffer) uniformSlice.buffer();
+        // P8 E1（云层判别）：CloudInfo UBO 的 CloudOffset 每帧值观测——"云固定世界位置 +
+        // 象限限制"症状 = offset 恒 0/恒定（相机偏移未随玩家更新）。std140 布局：
+        // vec4(16B) + vec3 offset(-cellX, height, -cellZ)：x 在字节 16、z 在字节 24。
+        if ("CloudInfo".equals(binding.name()) && Diagnostics.shouldRun("cloud-info", 5_000L)) {
+            try {
+                java.nio.ByteBuffer data = uniformBuffer.sliceStorage(uniformSlice.offset(), Math.min(uniformSlice.length(), 48L));
+                if (data.remaining() >= 28) {
+                    DiagLog.log("[diag] cloud CloudInfo offset=(%.2f,%.2f) len=%d",
+                            data.getFloat(16), data.getFloat(24), uniformSlice.length());
+                }
+            } catch (IllegalStateException e) {
+                DiagLog.log("[diag] cloud CloudInfo not CPU-readable");
+            }
+        }
         enc.setBuffer(uniformBuffer.nativeHandle(), uniformSlice.offset(), binding.bindingIndex(), binding.stageMask());
     }
 
@@ -558,6 +572,20 @@ public final class MetalRenderPass implements RenderPass {
         }
 
         MetalGpuBuffer texelBuffer = (MetalGpuBuffer) texelSlice.buffer();
+        // P8 E2（云层判别）：CloudFaces UTB 数据观测——跨 cell（12 块）后首字节应变化；
+        // 恒定 → rebuild 未发生/写入未达。R8I 每 texel 1 字节，encodeFace 3 字节/顶点。
+        if ("CloudFaces".equals(binding.name()) && Diagnostics.shouldRun("cloud-faces", 5_000L)) {
+            try {
+                java.nio.ByteBuffer data = texelBuffer.sliceStorage(texelSlice.offset(), Math.min(texelSlice.length(), 12L));
+                StringBuilder sb = new StringBuilder("[diag] cloud faces len=").append(texelSlice.length());
+                for (int k = 0; k < data.remaining(); k++) {
+                    sb.append(' ').append(data.get(k));
+                }
+                DiagLog.log("%s", sb);
+            } catch (IllegalStateException e) {
+                DiagLog.log("[diag] cloud faces not CPU-readable");
+            }
+        }
         long pixelFormat = MTLPixelFormat.from(texelFormat).value;
         int pixelSize = texelFormat.pixelSize();
         long texelByteLength = texelSlice.length();

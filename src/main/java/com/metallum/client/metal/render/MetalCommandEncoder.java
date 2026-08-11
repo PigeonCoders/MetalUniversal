@@ -280,6 +280,15 @@ public final class MetalCommandEncoder implements CommandEncoder {
             DiagLog.log("%s", Stats.snapshot());
         }
 
+        // P8 卡顿判别：JVM 堆观测——周期性大 spike（静止时 182ms）与堆曲线阶梯回落
+        // 关联 = GC 暂停候选（上传风暴/transient 大块分配后的回收）。
+        if (Diagnostics.shouldRun("heap", 5_000L)) {
+            Runtime rt = Runtime.getRuntime();
+            long used = rt.totalMemory() - rt.freeMemory();
+            DiagLog.log("[diag] heap used=%dMB total=%dMB",
+                    used / 1048576L, rt.totalMemory() / 1048576L);
+        }
+
         // P0：帧末重置移动标记（下一帧由渲染路径重新标记）
         frameMoving = false;
     }

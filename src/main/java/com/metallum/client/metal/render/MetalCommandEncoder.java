@@ -72,6 +72,14 @@ public final class MetalCommandEncoder implements CommandEncoder {
     private long frameTimeSumUs = 0;
     private long frameTimeMaxUs = 0;
     private long frameTimeNotDone = 0;
+    /**
+     * P0 帧分类：本帧是否"移动"（Sodium 层 metalBegin 每帧经 markFrameMoving 标记，
+     * submit() 采样后重置）。用于区分「常态低帧率 vs 移动尖峰」——frame_time 行按
+     * 移动/静止帧分开统计 avg，观察尖峰是否只在移动窗口出现。
+     */
+    private static volatile boolean frameMoving;
+    private long movingSamples = 0;
+    private long movingSumUs = 0;
     private final Long2ObjectOpenHashMap<java.util.ArrayDeque<MemorySegment>> dynamicBackingPool = new Long2ObjectOpenHashMap<>();
     private static final int MAX_POOLED_DYNAMIC_BACKINGS_PER_SIZE = 8;
     @Nullable
@@ -89,6 +97,14 @@ public final class MetalCommandEncoder implements CommandEncoder {
                 throw new IllegalStateException("Failed to allocate submit semaphore");
             }
         }
+    }
+
+    /**
+     * P0：标记本帧是否移动（由渲染路径调用方——Sodium metalBegin——每帧设置一次；
+     * submit() 采样后自动重置）。与渲染层解耦：encoder 不感知 game 状态。
+     */
+    public static void markFrameMoving(final boolean moving) {
+        frameMoving = moving;
     }
 
     MTLCommandBuffer commandBuffer() {
@@ -147,6 +163,11 @@ public final class MetalCommandEncoder implements CommandEncoder {
                         frameTimeSamples++;
                         frameTimeSumUs += frameUs;
                         frameTimeMaxUs = Math.max(frameTimeMaxUs, frameUs);
+                        // P0：按移动/静止分类统计（金属移动判定在 metalBegin 已标记本帧）
+                        if (frameMoving) {
+                            movingSamples++;
+                            movingSumUs += frameUs;
+                        }
                     }
                 }
             }
@@ -184,20 +205,29 @@ public final class MetalCommandEncoder implements CommandEncoder {
 
         if (Diagnostics.shouldRun("frame_time", 5_000L) && frameTimeSamples > 0) {
             long avgUs = frameTimeSumUs / frameTimeSamples;
-            DiagLog.log("frame_time fps=%.1f avg=%.2fms max=%.2fms gpuBehind=%d",
+            long movingAvgUs = movingSamples == 0 ? 0 : movingSumUs / movingSamples;
+            // P0：moving=N/M 为 5s 窗口内移动帧占比，avgMoving 为移动帧平均耗时（静止帧 avg 即总 avg）
+            DiagLog.log("frame_time fps=%.1f avg=%.2fms max=%.2fms gpuBehind=%d moving=%d/%d avgMoving=%.2fms",
                     1_000_000.0 / avgUs,
                     avgUs / 1000.0,
                     frameTimeMaxUs / 1000.0,
-                    frameTimeNotDone);
+                    frameTimeNotDone,
+                    movingSamples, frameTimeSamples,
+                    movingAvgUs / 1000.0);
             frameTimeSamples = 0;
             frameTimeSumUs = 0;
             frameTimeMaxUs = 0;
             frameTimeNotDone = 0;
+            movingSamples = 0;
+            movingSumUs = 0;
         }
 
         if (Diagnostics.shouldRun("stats", 60_000L)) {
             DiagLog.log("%s", Stats.snapshot());
         }
+
+        // P0：帧末重置移动标记（下一帧由渲染路径重新标记）
+        frameMoving = false;
     }
 
     MTLRenderCommandEncoder renderCommandEncoder(

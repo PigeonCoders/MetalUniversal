@@ -16,6 +16,8 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexT
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
@@ -70,8 +72,17 @@ public final class MetalSodiumShaderChunkRenderer extends DefaultChunkRenderer {
         this.metalBegin(pass, parameters, terrainSampler);
     }
 
+    /** P0：移动判定阈值（m/tick；走路 ~0.216 / 跑步 ~0.28，滑行减速残留 ~0.05，静止 0）。 */
+    private static final double MOVE_THRESHOLD = 0.05;
+
     /** 金属 begin 逻辑（public：ShaderChunkRendererMixin 跨包经 instanceof 转调）。 */
     public void metalBegin(final TerrainRenderPass pass, final FogParameters parameters, final GpuSampler terrainSampler) {
+        // P0：标记本帧是否移动（player 水平速度）——供 MetalCommandEncoder.frame_time
+        // 按移动/静止帧分开统计，区分「常态低帧率 vs 移动尖峰」。主菜单（player==null）恒静止。
+        LocalPlayer player = Minecraft.getInstance().player;
+        MetalCommandEncoder.markFrameMoving(player != null
+                && player.getDeltaMovement().horizontalDistance() > MOVE_THRESHOLD);
+
         // 原版 renderGroup 内部才创建 RenderPass（ChunkSectionsToRender.renderGroup 的
         // try-with-resources）——Sodium 的 ChunkSectionsToRenderMixin cancel 后没有任何活跃
         // render encoder（MetalSodiumDrawCommandList 时序守卫会抛 "outside of active pass"）。

@@ -602,6 +602,32 @@ public final class MetalRenderPass implements RenderPass {
         }
 
         MetalGpuBuffer uniformBuffer = (MetalGpuBuffer) uniformSlice.buffer();
+        // P12 E12（云层判别）：云 pass 矩阵快照——投影固定错 → NDC 错 → 屏幕固定象限。
+        // 与主 pass 投影对比（方块正常则主 pass 投影正确）：云 pass 矩阵不一致 → 绑定错。
+        if ("Projection".equals(binding.name()) && !"Clouds".equals(this.label)
+                && Diagnostics.shouldRun("main-matrix", 5_000L)) {
+            // 对照：非云 pass 的 Projection（方块/实体 pass 的相机投影）
+            try {
+                java.nio.ByteBuffer data = uniformBuffer.sliceStorage(uniformSlice.offset(), Math.min(uniformSlice.length(), 64L));
+                java.nio.FloatBuffer f = data.order(java.nio.ByteOrder.nativeOrder()).asFloatBuffer();
+                DiagLog.log("[diag] main %s m00=%.4f m10=%.4f m20=%.4f m30=%.4f m01=%.4f m11=%.4f",
+                        binding.name(), f.get(0), f.get(1), f.get(2), f.get(3), f.get(4), f.get(5));
+            } catch (IllegalStateException e) {
+                DiagLog.log("[diag] main %s not CPU-readable", binding.name());
+            }
+        }
+        if (("Projection".equals(binding.name()) || "DynamicTransforms".equals(binding.name()))
+                && "Clouds".equals(this.label)
+                && Diagnostics.shouldRun("cloud-matrix", 5_000L)) {
+            try {
+                java.nio.ByteBuffer data = uniformBuffer.sliceStorage(uniformSlice.offset(), Math.min(uniformSlice.length(), 64L));
+                java.nio.FloatBuffer f = data.order(java.nio.ByteOrder.nativeOrder()).asFloatBuffer();
+                DiagLog.log("[diag] cloud %s m00=%.4f m10=%.4f m20=%.4f m30=%.4f m01=%.4f m11=%.4f",
+                        binding.name(), f.get(0), f.get(1), f.get(2), f.get(3), f.get(4), f.get(5));
+            } catch (IllegalStateException e) {
+                DiagLog.log("[diag] cloud %s not CPU-readable", binding.name());
+            }
+        }
         // P8 E1（云层判别）：CloudInfo UBO 的 CloudOffset 每帧值观测——"云固定世界位置 +
         // 象限限制"症状 = offset 恒 0/恒定（相机偏移未随玩家更新）。std140 布局：
         // vec4(16B) + vec3 offset(-cellX, height, -cellZ)：x 在字节 16、z 在字节 24。

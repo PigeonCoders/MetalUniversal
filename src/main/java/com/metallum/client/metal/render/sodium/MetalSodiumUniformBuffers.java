@@ -26,9 +26,12 @@ import java.nio.ByteOrder;
  * per-draw 快照，Metal 不是——iOS 实测：地形整体上下偏移、随视角闪现）。
  * 因此拆成两类：
  * <ul>
- *   <li><b>per-pass 固定 buffer（9 个）</b>：值 pass 内不变（projection/modelView/
- *       texCoordShrink/fadePeriodInv/fog×3/texelSize/useRGSS），pass 内写一次即可
- *       （覆写同值无影响）。</li>
+ *   <li><b>per-pass 固定 buffer（9 个 × 3 组 ring）</b>：值 pass 内不变（projection/
+ *       modelView/texCoordShrink/fadePeriodInv/fog×3/texelSize/useRGSS），pass 内写一次
+ *       （覆写同值无影响）。<b>P2.5</b>：每组按帧轮转（frame % 3）——fix11 只解决帧内
+ *       多 region 覆写，帧间 CPU 覆写 vs GPU 跨帧读（与 staging 同构，穷尽审计唯一
+ *       实质残留竞争源）由 ring 消除：帧 N 用组 k，帧 N+3 复用组 k 时 GPU 至多执行
+ *       帧 N+1/N+2（SYNC_MODE=3 落后 ≤2 帧 < 3 组）。</li>
  *   <li><b>per-region transient 块（regionOffset/currentTime）</b>：每 region 从
  *       MetalTransientMemory 分配独立块（帧内不回收、块内偏移互不重叠），
  *       写入后 GPU 读各自块——互不覆写。</li>
@@ -50,46 +53,63 @@ public final class MetalSodiumUniformBuffers implements AutoCloseable {
     public record RegionUniformSlices(GpuBufferSlice regionOffset, GpuBufferSlice currentTime) {
     }
 
-    private final MetalGpuBuffer projection;     // u_ProjectionMatrix float4x4 (64B)
-    private final MetalGpuBuffer modelView;      // u_ModelViewMatrix  float4x4 (64B)
-    private final MetalGpuBuffer texCoordShrink; // u_TexCoordShrink   float2  (8B)
-    private final MetalGpuBuffer fadePeriodInv;  // u_FadePeriodInv    float   (4B)
-    private final MetalGpuBuffer fogColor;       // u_FogColor         float4  (16B)
-    private final MetalGpuBuffer environmentFog; // u_EnvironmentFog   float2  (8B)
-    private final MetalGpuBuffer renderFog;      // u_RenderFog        float2  (8B)
-    private final MetalGpuBuffer texelSize;      // u_TexelSize        float2  (8B)
-    private final MetalGpuBuffer useRGSS;        // u_UseRGSS          bool    (4B)
+    /** per-pass ring 组数：SYNC_MODE=3 下 GPU 落后 ≤2 帧，3 组轮转安全（与 MAX_SUBMITS_IN_FLIGHT 对齐）。 */
+    private static final int RING_GROUPS = 3;
+    private static final int UNIFORM_COUNT = 9;
+
+    /** MSL buffer 参数名 → 组内下标。 */
+    private static final int IDX_PROJECTION = 0;
+    private static final int IDX_MODEL_VIEW = 1;
+    private static final int IDX_TEX_COORD_SHRINK = 2;
+    private static final int IDX_FADE_PERIOD_INV = 3;
+    private static final int IDX_FOG_COLOR = 4;
+    private static final int IDX_ENVIRONMENT_FOG = 5;
+    private static final int IDX_RENDER_FOG = 6;
+    private static final int IDX_TEXEL_SIZE = 7;
+    private static final int IDX_USE_RGSS = 8;
+    private static final int[] UNIFORM_SIZES = {64, 64, 8, 4, 16, 8, 8, 8, 4};
+
+    /** 3 组 per-pass 固定 buffer（按帧轮转，P2.5）。 */
+    private final MetalGpuBuffer[][] groups = new MetalGpuBuffer[RING_GROUPS][UNIFORM_COUNT];
 
     private boolean passUniformsWritten;
 
     public MetalSodiumUniformBuffers(final com.metallum.client.metal.render.MetalDevice device) {
-        this.projection = new MetalGpuBuffer(device, USAGE, 64L);
-        this.modelView = new MetalGpuBuffer(device, USAGE, 64L);
-        this.texCoordShrink = new MetalGpuBuffer(device, USAGE, 8L);
-        this.fadePeriodInv = new MetalGpuBuffer(device, USAGE, 4L);
-        this.fogColor = new MetalGpuBuffer(device, USAGE, 16L);
-        this.environmentFog = new MetalGpuBuffer(device, USAGE, 8L);
-        this.renderFog = new MetalGpuBuffer(device, USAGE, 8L);
-        this.texelSize = new MetalGpuBuffer(device, USAGE, 8L);
-        this.useRGSS = new MetalGpuBuffer(device, USAGE, 4L);
+        for (int g = 0; g < RING_GROUPS; g++) {
+            for (int i = 0; i < UNIFORM_COUNT; i++) {
+                this.groups[g][i] = new MetalGpuBuffer(device, USAGE, UNIFORM_SIZES[i]);
+            }
+        }
     }
 
-    /** 按 MSL buffer 参数名取 per-pass 固定 buffer；per-region（u_RegionOffset/u_CurrentTime）
+    /** 组决策纯函数：帧号 → 组（帧 N 用组 N%3，同帧内所有调用稳定一致；负值防御取 0）。 */
+    static int groupForFrame(final long frame) {
+        if (frame < 0L) {
+            return 0;
+        }
+        return (int) (frame % RING_GROUPS);
+    }
+
+    /** 按 MSL buffer 参数名取 per-pass 固定 buffer（当前帧组）；per-region（u_RegionOffset/u_CurrentTime）
      * 与外部 buffer（ChunkData 等）返回 null（调用方特殊处理）。 */
     @org.jspecify.annotations.Nullable
     public MetalGpuBuffer forBinding(final String name) {
-        return switch (name) {
-            case "u_ProjectionMatrix" -> this.projection;
-            case "u_ModelViewMatrix" -> this.modelView;
-            case "u_TexCoordShrink" -> this.texCoordShrink;
-            case "u_FadePeriodInv" -> this.fadePeriodInv;
-            case "u_FogColor" -> this.fogColor;
-            case "u_EnvironmentFog" -> this.environmentFog;
-            case "u_RenderFog" -> this.renderFog;
-            case "u_TexelSize" -> this.texelSize;
-            case "u_UseRGSS" -> this.useRGSS;
-            default -> null;
+        int idx = switch (name) {
+            case "u_ProjectionMatrix" -> IDX_PROJECTION;
+            case "u_ModelViewMatrix" -> IDX_MODEL_VIEW;
+            case "u_TexCoordShrink" -> IDX_TEX_COORD_SHRINK;
+            case "u_FadePeriodInv" -> IDX_FADE_PERIOD_INV;
+            case "u_FogColor" -> IDX_FOG_COLOR;
+            case "u_EnvironmentFog" -> IDX_ENVIRONMENT_FOG;
+            case "u_RenderFog" -> IDX_RENDER_FOG;
+            case "u_TexelSize" -> IDX_TEXEL_SIZE;
+            case "u_UseRGSS" -> IDX_USE_RGSS;
+            default -> -1;
         };
+        if (idx < 0) {
+            return null;
+        }
+        return this.groups[groupForFrame(MetalCommandEncoder.currentFrameIndex())][idx];
     }
 
     /** 每个 pass 开始（metalBegin）时调用：重置 per-pass 写入标志。 */
@@ -107,22 +127,24 @@ public final class MetalSodiumUniformBuffers implements AutoCloseable {
         if (this.passUniformsWritten) {
             return;
         }
+        // P2.5：写入当前帧组（与 forBinding 同帧一致——同帧内所有调用取同一组）
+        MetalGpuBuffer[] group = this.groups[groupForFrame(MetalCommandEncoder.currentFrameIndex())];
         Matrix4fc projection = shaderInterface.projectionMatrix();
         Matrix4fc modelView = shaderInterface.modelViewMatrix();
         if (projection != null) {
-            writeMatrix(this.projection, projection);
+            writeMatrix(group[IDX_PROJECTION], projection);
         }
         if (modelView != null) {
-            writeMatrix(this.modelView, modelView);
+            writeMatrix(group[IDX_MODEL_VIEW], modelView);
         }
-        writeFloats(this.texCoordShrink, 8, shaderInterface.texCoordShrinkX(), shaderInterface.texCoordShrinkY());
-        writeFloat(this.fadePeriodInv, shaderInterface.fadePeriodInv());
-        writeFloats(this.fogColor, 16,
+        writeFloats(group[IDX_TEX_COORD_SHRINK], 8, shaderInterface.texCoordShrinkX(), shaderInterface.texCoordShrinkY());
+        writeFloat(group[IDX_FADE_PERIOD_INV], shaderInterface.fadePeriodInv());
+        writeFloats(group[IDX_FOG_COLOR], 16,
                 shaderInterface.fogColorR(), shaderInterface.fogColorG(), shaderInterface.fogColorB(), shaderInterface.fogColorA());
-        writeFloats(this.environmentFog, 8, shaderInterface.environmentFogStart(), shaderInterface.environmentFogEnd());
-        writeFloats(this.renderFog, 8, shaderInterface.renderFogStart(), shaderInterface.renderFogEnd());
-        writeFloats(this.texelSize, 8, shaderInterface.texelSizeX(), shaderInterface.texelSizeY());
-        writeInt(this.useRGSS, shaderInterface.useRGSS() ? 1 : 0);
+        writeFloats(group[IDX_ENVIRONMENT_FOG], 8, shaderInterface.environmentFogStart(), shaderInterface.environmentFogEnd());
+        writeFloats(group[IDX_RENDER_FOG], 8, shaderInterface.renderFogStart(), shaderInterface.renderFogEnd());
+        writeFloats(group[IDX_TEXEL_SIZE], 8, shaderInterface.texelSizeX(), shaderInterface.texelSizeY());
+        writeInt(group[IDX_USE_RGSS], shaderInterface.useRGSS() ? 1 : 0);
         this.passUniformsWritten = true;
     }
 
@@ -190,14 +212,10 @@ public final class MetalSodiumUniformBuffers implements AutoCloseable {
 
     @Override
     public void close() {
-        this.projection.close();
-        this.modelView.close();
-        this.texCoordShrink.close();
-        this.fadePeriodInv.close();
-        this.fogColor.close();
-        this.environmentFog.close();
-        this.renderFog.close();
-        this.texelSize.close();
-        this.useRGSS.close();
+        for (int g = 0; g < RING_GROUPS; g++) {
+            for (int i = 0; i < UNIFORM_COUNT; i++) {
+                this.groups[g][i].close();
+            }
+        }
     }
 }

@@ -1,5 +1,7 @@
 package com.metallum.client.metal.render.sodium;
 
+import com.metallum.client.metal.render.DiagLog;
+import com.metallum.client.metal.render.Diagnostics;
 import com.metallum.client.metal.render.MetalCommandEncoder;
 import com.metallum.client.metal.render.MetalGpuBuffer;
 import com.metallum.client.metal.render.MetalTransientMemory;
@@ -142,6 +144,19 @@ public final class MetalSodiumUniformBuffers implements AutoCloseable {
                 .put(shaderInterface.regionOffsetZ());
         data.position(CURRENT_TIME_OFFSET);
         data.putInt(shaderInterface.currentTime());
+
+        // 诊断（diag）：fade/regionOffset 值抽查——fade 计算异常（值 0/巨大/NaN）
+        // 会使方块呈雾色（=天空色，间隙）或抖动；regionOffset 异常 → 位置错。
+        if (Diagnostics.shouldRun("sodium-fade", 5_000L)) {
+            float rx = shaderInterface.regionOffsetX();
+            float ry = shaderInterface.regionOffsetY();
+            float rz = shaderInterface.regionOffsetZ();
+            int ct = shaderInterface.currentTime();
+            float fpi = shaderInterface.fadePeriodInv();
+            boolean nan = Float.isNaN(rx) || Float.isNaN(ry) || Float.isNaN(rz) || Float.isNaN(fpi);
+            DiagLog.log("[diag] sodium regionUniform regionOffset=(%.2f,%.2f,%.2f) currentTime=%d fadePeriodInv=%.6f%s",
+                    rx, ry, rz, ct, fpi, nan ? " NAN-DETECTED" : "");
+        }
 
         return new RegionUniformSlices(
                 new GpuBufferSlice(block.buffer(), block.offset(), 16L),

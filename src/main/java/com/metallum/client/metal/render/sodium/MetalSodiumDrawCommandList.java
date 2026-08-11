@@ -1,6 +1,8 @@
 package com.metallum.client.metal.render.sodium;
 
 import com.metallum.Metallum;
+import com.metallum.client.metal.render.DiagLog;
+import com.metallum.client.metal.render.Diagnostics;
 import com.metallum.client.metal.render.MetalCommandEncoder;
 import com.metallum.client.metal.render.MetalGpuBuffer;
 import com.metallum.client.metal.render.MetalGpuSampler;
@@ -55,6 +57,8 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
     private final MetalSodiumActiveState state;
     private final MetalSodiumUniformBuffers.RegionUniformSlices regionUniforms;
     private boolean closed;
+    /** 诊断：5s 窗口内的 draw 数（DiagLog 节流输出）。 */
+    private long sodiumDrawCount;
 
     public MetalSodiumDrawCommandList(
             final MetalCommandEncoder encoder,
@@ -108,6 +112,17 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
         MetalGpuBuffer indexBuffer = this.tessellation.indexBuffer();
         MTLPrimitiveType primitiveType = toMetalPrimitive(this.tessellation.getPrimitiveType());
         MTLIndexType metalIndexType = toMetalIndex(indexType);
+
+        // 诊断（diag）：draw 统计 + 首个 draw 的索引偏移/baseVertex 抽查——
+        // 排查抖动用（偏移/顶点异常 → 漏面/错位）。
+        sodiumDrawCount += batch.size;
+        if (Diagnostics.shouldRun("sodium-draw", 5_000L)) {
+            DrawCommand first = batch.size > 0 ? readBatchEntry(batch, 0) : null;
+            DiagLog.log("[diag] sodium draws(last5s)=%d batchSize=%d firstDraw=%s",
+                    sodiumDrawCount, batch.size,
+                    first == null ? "none" : ("e=" + first.elementCount() + " bv=" + first.baseVertex() + " io=" + first.indexOffsetBytes()));
+            sodiumDrawCount = 0;
+        }
 
         for (int i = 0; i < batch.size; i++) {
             DrawCommand command = readBatchEntry(batch, i);

@@ -37,6 +37,8 @@ public final class MetalCommandEncoder implements CommandEncoder {
     public static final int MAX_SUBMITS_IN_FLIGHT = 3;
     private final MetalDevice device;
     private long currentSubmitIndex = MAX_SUBMITS_IN_FLIGHT;
+    /** SODIUM-ADAPT 诊断：ensureActiveRenderEncoder 重建计数（DiagLog 节流输出）。 */
+    private long sodiumEncoderRebuilds;
     private final InFlight[] inFlight = new InFlight[MAX_SUBMITS_IN_FLIGHT];
     private final MemorySegment[] submitSemaphores = new MemorySegment[MAX_SUBMITS_IN_FLIGHT];
     private final MetalDestructionQueue destroyQueue = new MetalDestructionQueue(MAX_SUBMITS_IN_FLIGHT);
@@ -290,6 +292,13 @@ public final class MetalCommandEncoder implements CommandEncoder {
         }
         if (this.currentRenderPass == null) {
             return null;
+        }
+        // 诊断（diag）：重建频率——每 region 的 fade blit 都会打断；若每帧重建次数
+        // 异常高（> region 数×pass 数）说明有额外的 endEncoder 路径（排查抖动用）。
+        sodiumEncoderRebuilds++;
+        if (Diagnostics.shouldRun("sodium-enc", 5_000L)) {
+            DiagLog.log("[diag] sodium encoder rebuilds(last5s)=%d", sodiumEncoderRebuilds);
+            sodiumEncoderRebuilds = 0L;
         }
         return this.renderCommandEncoder(
                 this.currentRenderPass.sodiumColorTextureView(),

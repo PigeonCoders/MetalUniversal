@@ -51,6 +51,9 @@ public final class MetalCommandEncoder implements CommandEncoder {
             return 1;
         }
     }
+
+    /** P2 staging ring：单例 encoder 引用（currentFrameIndex 静态代理用，MetalDevice 构造时赋值）。 */
+    private static volatile MetalCommandEncoder singleton;
     private final MetalDevice device;
     private long currentSubmitIndex = MAX_SUBMITS_IN_FLIGHT;
     /** SODIUM-ADAPT 诊断：ensureActiveRenderEncoder 重建计数（DiagLog 节流输出）。 */
@@ -114,6 +117,16 @@ public final class MetalCommandEncoder implements CommandEncoder {
         // P1：启动首行确认判别开关生效（Amethyst 参数注入失败时静默回退默认 1——
         // 日志可发现，防实验跑错模式）
         DiagLog.log("sync_mode=%d (metallum.sync: 1=serial 2=one-ahead 3=sliding)", SYNC_MODE);
+        singleton = this;
+    }
+
+    /**
+     * P2：当前提交帧号（staging ring 轮转的帧边界信号）。单例 encoder 的
+     * currentSubmitIndex 静态代理；未初始化（JUnit 等无 Metal 环境）返回 0。
+     */
+    public static long currentFrameIndex() {
+        MetalCommandEncoder enc = singleton;
+        return enc == null ? 0L : enc.currentSubmitIndex;
     }
 
     /**

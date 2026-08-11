@@ -124,7 +124,9 @@ public final class MetalSodiumCompiledPipeline implements AutoCloseable {
         }
         this.firstVertexBufferSlot = maxVertexBuffer + 1;
 
-        this.cullMode = stateSource.isCull() ? MTLCullMode.Back : MTLCullMode.None;
+        // 实验 1（诊断 cull/winding 退化）：临时强制 None——若 iOS 抖动/间隙消失则
+        // 侧面（垂直面）在旋转时的退化三角形被错误剔除（Metal vs GL 差异）。
+        this.cullMode = MTLCullMode.None; // stateSource.isCull() ? MTLCullMode.Back : MTLCullMode.None;
         this.fillMode = stateSource.getPolygonMode() == PolygonMode.WIREFRAME ? MTLTriangleFillMode.Lines : MTLTriangleFillMode.Fill;
         this.topology = MTLPrimitiveType.from(stateSource.getVertexFormatMode());
         this.depthBiasScaleFactor = stateSource.getDepthBiasScaleFactor();

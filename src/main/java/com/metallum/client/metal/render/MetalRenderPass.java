@@ -572,16 +572,41 @@ public final class MetalRenderPass implements RenderPass {
         }
 
         MetalGpuBuffer texelBuffer = (MetalGpuBuffer) texelSlice.buffer();
-        // P8 E2（云层判别）：CloudFaces UTB 数据观测——跨 cell（12 块）后首字节应变化；
-        // 恒定 → rebuild 未发生/写入未达。R8I 每 texel 1 字节，encodeFace 3 字节/顶点。
+        // P9 E7（云层判别）：CloudFaces UTB 全量坐标分布统计——"云只显示第三象限"判别：
+        // cellX>>1/cellZ>>1 的符号分布若单侧集中（如 cellX 恒 ≤0）→ 数据只覆盖部分象限
+        // （写入/读取错位）；全象限分布正常 → 转查渲染侧（cull/winding）。R8I 3 字节/顶点。
         if ("CloudFaces".equals(binding.name()) && Diagnostics.shouldRun("cloud-faces", 5_000L)) {
             try {
-                java.nio.ByteBuffer data = texelBuffer.sliceStorage(texelSlice.offset(), Math.min(texelSlice.length(), 12L));
-                StringBuilder sb = new StringBuilder("[diag] cloud faces len=").append(texelSlice.length());
-                for (int k = 0; k < data.remaining(); k++) {
-                    sb.append(' ').append(data.get(k));
+                java.nio.ByteBuffer data = texelBuffer.sliceStorage(texelSlice.offset(), texelSlice.length());
+                long vertices = data.remaining() / 3L;
+                long cellXNeg = 0L;
+                long cellXZero = 0L;
+                long cellXPos = 0L;
+                long cellZNeg = 0L;
+                long cellZZero = 0L;
+                long cellZPos = 0L;
+                for (long v = 0L; v < vertices; v++) {
+                    int base = (int) v * 3;
+                    byte cx = data.get(base);
+                    byte cz = data.get(base + 1);
+                    if (cx < 0) {
+                        cellXNeg++;
+                    } else if (cx == 0) {
+                        cellXZero++;
+                    } else {
+                        cellXPos++;
+                    }
+                    if (cz < 0) {
+                        cellZNeg++;
+                    } else if (cz == 0) {
+                        cellZZero++;
+                    } else {
+                        cellZPos++;
+                    }
                 }
-                DiagLog.log("%s", sb);
+                DiagLog.log("[diag] cloud faces verts=%d cellX=(-%d,0:%d,+)%d cellZ=(-%d,0:%d,+)%d first=%d,%d,%d",
+                        vertices, cellXNeg, cellXZero, cellXPos, cellZNeg, cellZZero, cellZPos,
+                        data.get(0), data.get(1), data.get(2));
             } catch (IllegalStateException e) {
                 DiagLog.log("[diag] cloud faces not CPU-readable");
             }

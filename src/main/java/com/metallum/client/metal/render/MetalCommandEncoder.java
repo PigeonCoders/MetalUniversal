@@ -35,6 +35,8 @@ import java.util.function.Supplier;
 @Environment(EnvType.CLIENT)
 public final class MetalCommandEncoder implements CommandEncoder {
     public static final int MAX_SUBMITS_IN_FLIGHT = 3;
+    /** 判别实验（跨帧竞争）：true 时每帧等待上一帧 GPU 完成（串行提交——帧率大降属预期）。 */
+    private static final boolean GPU_SYNC_DIAG = true;
     private final MetalDevice device;
     private long currentSubmitIndex = MAX_SUBMITS_IN_FLIGHT;
     /** SODIUM-ADAPT 诊断：ensureActiveRenderEncoder 重建计数（DiagLog 节流输出）。 */
@@ -160,8 +162,14 @@ public final class MetalCommandEncoder implements CommandEncoder {
         }
         currentSubmitIndex++;
 
-        if (!awaitSubmitCompletion(currentSubmitIndex - MAX_SUBMITS_IN_FLIGHT, 5000L)) {
-            throw new IllegalStateException("5s timeout reached when waiting for Metal submit completion");
+        // 判别实验（GPU_SYNC_DIAG）：等待「上一帧」GPU 完成（而非 3 帧滑动窗口）——
+        // 彻底消除跨帧竞争（帧 N 的 GPU 读 vs 帧 N+1 的 CPU 覆写/上传）。若 iOS
+        // 垂直面消失/闪烁停止 → 跨帧数据竞争确认（提交序理论被推翻）；仍在 →
+        // 非跨帧（角度依赖的光栅化/退化）。注意：每帧 GPU 串行，帧率大幅下降属预期。
+        if (GPU_SYNC_DIAG) {
+            awaitSubmitCompletion(currentSubmitIndex - 1, 5000L);
+        } else {
+            awaitSubmitCompletion(currentSubmitIndex - MAX_SUBMITS_IN_FLIGHT, 5000L);
         }
 
         if (toClose != null) {

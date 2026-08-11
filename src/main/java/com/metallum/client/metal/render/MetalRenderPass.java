@@ -616,17 +616,30 @@ public final class MetalRenderPass implements RenderPass {
                 DiagLog.log("[diag] main %s not CPU-readable", binding.name());
             }
         }
-        if (("Projection".equals(binding.name()) || "DynamicTransforms".equals(binding.name()))
-                && "Clouds".equals(this.label)
-                && Diagnostics.shouldRun("cloud-matrix", 5_000L)) {
-            try {
-                java.nio.ByteBuffer data = uniformBuffer.sliceStorage(uniformSlice.offset(), Math.min(uniformSlice.length(), 64L));
-                java.nio.FloatBuffer f = data.order(java.nio.ByteOrder.nativeOrder()).asFloatBuffer();
-                DiagLog.log("[diag] cloud %s m00=%.4f m10=%.4f m20=%.4f m30=%.4f m01=%.4f m11=%.4f",
-                        binding.name(), f.get(0), f.get(1), f.get(2), f.get(3), f.get(4), f.get(5));
-            } catch (IllegalStateException e) {
-                DiagLog.log("[diag] cloud %s not CPU-readable", binding.name());
+        // P13 修正 E12：label 恒 null（MetalDevice.useLabels() 硬编码 false）——改由
+        // CloudInfo（云 pass 独有 binding）触发。核心判别：云 shader 引用 ProjMat/ModelViewMat
+        // （rendertype_clouds.vsh 源码实证）——若 uniforms map 缺 Projection/DT/Fog =
+        // MC 端从未 setUniform = 云读 buffer 0 默认值 = 云位置/投影错乱（象限截断根因候选）。
+        if ("CloudInfo".equals(binding.name()) && Diagnostics.shouldRun("cloud-matrix", 5_000L)) {
+            StringBuilder sb = new StringBuilder("[diag] cloud matrix");
+            for (String name : new String[]{"Projection", "DynamicTransforms", "Fog"}) {
+                GpuBufferSlice slice = uniforms.get(name);
+                if (slice == null) {
+                    sb.append(' ').append(name).append("=MISSING");
+                    continue;
+                }
+                try {
+                    java.nio.ByteBuffer data = ((MetalGpuBuffer) slice.buffer()).sliceStorage(slice.offset(), Math.min(slice.length(), 64L));
+                    java.nio.FloatBuffer f = data.order(java.nio.ByteOrder.nativeOrder()).asFloatBuffer();
+                    sb.append(' ').append(name).append("=(")
+                            .append(String.format("%.4f,%.4f,%.4f,%.4f,%.4f,%.4f",
+                                    f.get(0), f.get(1), f.get(2), f.get(3), f.get(4), f.get(5)))
+                            .append(')');
+                } catch (IllegalStateException e) {
+                    sb.append(' ').append(name).append("=UNREADABLE");
+                }
             }
+            DiagLog.log("%s", sb);
         }
         // P8 E1（云层判别）：CloudInfo UBO 的 CloudOffset 每帧值观测——"云固定世界位置 +
         // 象限限制"症状 = offset 恒 0/恒定（相机偏移未随玩家更新）。std140 布局：

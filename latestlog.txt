@@ -1,0 +1,427 @@
+[Pre-Init] Amethyst INIT!
+[Pre-Init] Version: 1.1.0-experimental-development
+[Pre-Init] Commit: aca33b5 (vulkan-renderer)
+[Pre-Init] Device: iPad Air 11-inch (M3)
+[Pre-Init] iPadOS 18.4 (22E240) (Unjailbroken)
+[Pre-init] Entitlements availability:
+* com.apple.developer.kernel.extended-virtual-addressing: NO
+* com.apple.developer.kernel.increased-memory-limit: YES
+* com.apple.private.security.no-sandbox: NO
+[Debugging] Debug log enabled: YES
+[Pre-init] Restored game directory preference (Fabric-noOtherMods-1.21.11)
+[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/versions/1.21.11/1.21.11.json, have to assume it's good.
+[MCDL] insertSafety: how to insert assetIndex?
+[MCDL] insertSafety: how to insert assets?
+[MCDL] Warning: JNA version required by fabric-loader-0.19.3-1.21.11 is 5.17.0 > 5.13.0, skipping JNA replacement.
+[MDCL] Skipped library org.lwjgl:lwjgl-freetype:3.3.3
+[MDCL] Skipped library org.lwjgl:lwjgl-freetype:3.3.3:natives-linux
+[MDCL] Skipped library org.lwjgl:lwjgl-freetype:3.3.3:natives-macos-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-freetype:3.3.3:natives-macos-patch
+[MDCL] Skipped library org.lwjgl:lwjgl-freetype:3.3.3:natives-windows
+[MDCL] Skipped library org.lwjgl:lwjgl-freetype:3.3.3:natives-windows-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-freetype:3.3.3:natives-windows-x86
+[MDCL] Skipped library org.lwjgl:lwjgl-glfw:3.3.3
+[MDCL] Skipped library org.lwjgl:lwjgl-glfw:3.3.3:natives-linux
+[MDCL] Skipped library org.lwjgl:lwjgl-glfw:3.3.3:natives-macos
+[MDCL] Skipped library org.lwjgl:lwjgl-glfw:3.3.3:natives-macos-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-glfw:3.3.3:natives-windows
+[MDCL] Skipped library org.lwjgl:lwjgl-glfw:3.3.3:natives-windows-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-glfw:3.3.3:natives-windows-x86
+[MDCL] Skipped library org.lwjgl:lwjgl-jemalloc:3.3.3
+[MDCL] Skipped library org.lwjgl:lwjgl-jemalloc:3.3.3:natives-linux
+[MDCL] Skipped library org.lwjgl:lwjgl-jemalloc:3.3.3:natives-macos
+[MDCL] Skipped library org.lwjgl:lwjgl-jemalloc:3.3.3:natives-macos-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-jemalloc:3.3.3:natives-windows
+[MDCL] Skipped library org.lwjgl:lwjgl-jemalloc:3.3.3:natives-windows-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-jemalloc:3.3.3:natives-windows-x86
+[MDCL] Skipped library org.lwjgl:lwjgl-openal:3.3.3
+[MDCL] Skipped library org.lwjgl:lwjgl-openal:3.3.3:natives-linux
+[MDCL] Skipped library org.lwjgl:lwjgl-openal:3.3.3:natives-macos
+[MDCL] Skipped library org.lwjgl:lwjgl-openal:3.3.3:natives-macos-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-openal:3.3.3:natives-windows
+[MDCL] Skipped library org.lwjgl:lwjgl-openal:3.3.3:natives-windows-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-openal:3.3.3:natives-windows-x86
+[MDCL] Skipped library org.lwjgl:lwjgl-opengl:3.3.3
+[MDCL] Skipped library org.lwjgl:lwjgl-opengl:3.3.3:natives-linux
+[MDCL] Skipped library org.lwjgl:lwjgl-opengl:3.3.3:natives-macos
+[MDCL] Skipped library org.lwjgl:lwjgl-opengl:3.3.3:natives-macos-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-opengl:3.3.3:natives-windows
+[MDCL] Skipped library org.lwjgl:lwjgl-opengl:3.3.3:natives-windows-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-opengl:3.3.3:natives-windows-x86
+[MDCL] Skipped library org.lwjgl:lwjgl-stb:3.3.3
+[MDCL] Skipped library org.lwjgl:lwjgl-stb:3.3.3:natives-linux
+[MDCL] Skipped library org.lwjgl:lwjgl-stb:3.3.3:natives-macos
+[MDCL] Skipped library org.lwjgl:lwjgl-stb:3.3.3:natives-macos-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-stb:3.3.3:natives-windows
+[MDCL] Skipped library org.lwjgl:lwjgl-stb:3.3.3:natives-windows-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-stb:3.3.3:natives-windows-x86
+[MDCL] Skipped library org.lwjgl:lwjgl-tinyfd:3.3.3
+[MDCL] Skipped library org.lwjgl:lwjgl-tinyfd:3.3.3:natives-linux
+[MDCL] Skipped library org.lwjgl:lwjgl-tinyfd:3.3.3:natives-macos
+[MDCL] Skipped library org.lwjgl:lwjgl-tinyfd:3.3.3:natives-macos-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-tinyfd:3.3.3:natives-windows
+[MDCL] Skipped library org.lwjgl:lwjgl-tinyfd:3.3.3:natives-windows-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl-tinyfd:3.3.3:natives-windows-x86
+[MDCL] Skipped library org.lwjgl:lwjgl:3.3.3
+[MDCL] Skipped library org.lwjgl:lwjgl:3.3.3:natives-linux
+[MDCL] Skipped library org.lwjgl:lwjgl:3.3.3:natives-macos
+[MDCL] Skipped library org.lwjgl:lwjgl:3.3.3:natives-macos-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl:3.3.3:natives-windows
+[MDCL] Skipped library org.lwjgl:lwjgl:3.3.3:natives-windows-arm64
+[MDCL] Skipped library org.lwjgl:lwjgl:3.3.3:natives-windows-x86
+[MCDL] Unknown artifact object for org.ow2.asm:asm:9.10.1, attempting to generate one
+[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/org/ow2/asm/asm/9.10.1/asm-9.10.1.jar, have to assume it's good.
+[MCDL] Unknown artifact object for org.ow2.asm:asm-analysis:9.10.1, attempting to generate one
+[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/org/ow2/asm/asm-analysis/9.10.1/asm-analysis-9.10.1.jar, have to assume it's good.
+[MCDL] Unknown artifact object for org.ow2.asm:asm-commons:9.10.1, attempting to generate one
+[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/org/ow2/asm/asm-commons/9.10.1/asm-commons-9.10.1.jar, have to assume it's good.
+[MCDL] Unknown artifact object for org.ow2.asm:asm-tree:9.10.1, attempting to generate one
+[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/org/ow2/asm/asm-tree/9.10.1/asm-tree-9.10.1.jar, have to assume it's good.
+[MCDL] Unknown artifact object for org.ow2.asm:asm-util:9.10.1, attempting to generate one
+[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/org/ow2/asm/asm-util/9.10.1/asm-util-9.10.1.jar, have to assume it's good.
+[MCDL] Unknown artifact object for net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7, attempting to generate one
+[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/net/fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/sponge-mixin-0.17.3+mixin.0.8.7.jar, have to assume it's good.
+[MCDL] Unknown artifact object for net.fabricmc:intermediary:1.21.11, attempting to generate one
+[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/net/fabricmc/intermediary/1.21.11/intermediary-1.21.11.jar, have to assume it's good.
+[MCDL] Unknown artifact object for net.fabricmc:fabric-loader:0.19.3, attempting to generate one
+[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/net/fabricmc/fabric-loader/0.19.3/fabric-loader-0.19.3.jar, have to assume it's good.
+[JavaLauncher] Beginning JVM launch
+[JavaLauncher] Reading custom environment variables
+[JavaLauncher] Warning: skipped empty value custom env variable: 
+[DyldLVBypass] init
+[DyldLVBypass] Using redirectFunctionDirect
+[DyldLVBypass] found dyld_mmap at 0x1bd47357c
+[DyldLVBypass] hook dyld_mmap succeed!
+[DyldLVBypass] found dyld_fcntl at 0x1bd477d3c
+[DyldLVBypass] hook dyld_fcntl succeed!
+[PLProfiles] Applying javaVersion
+[JavaLauncher] RENDERER is set to libmobileglues.dylib
+[JavaLauncher] Looking for Java 25 or later
+[JavaLauncher] JAVA_HOME has been set to /private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/java_runtimes/java-25-openjdk
+[JavaLauncher] Max RAM allocation is set to 4097 MB
+[Bisect] About to dlopen libjli at /private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/java_runtimes/java-25-openjdk/lib/libjli.dylib
+[Bisect] dlopen returned 0x3bf6e3b80
+[JavaLauncher] Reading custom JVM flags
+[JavaLauncher] Added custom JVM flag: -Dmetallum.sync=3
+[Init] Found JLI lib
+[Init] Calling JLI_Launch
+Input: Mouse connected!
+Input: Got mouse Mouse
+Input: Mouse connected!
+Input: Got mouse Mouse
+Input: Mouse connected!
+Input: Got mouse Mouse
+Input: Mouse connected!
+Input: Got mouse Mouse
+OpenJDK 64-Bit Server VM warning: Option UseCompressedClassPointers was deprecated in version 25.0 and will likely be removed in a future release.
+WARNING: Unknown module: cpw.mods.bootstraplauncher specified to --add-exports
+WARNING: package sun.security.action not in java.base
+PatchJNAAgent: premain called
+Arc Capes DNS Injector
+Parts of Alibaba's DCM library were used, please read https://github.com/alibaba/java-dns-cache-manipulator/blob/main/README.md for more info
+Added DNS cache entry: s.optifine.net/23.95.137.176
+java.lang.ClassNotFoundException: sun/java2d/SurfaceManagerFactory
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Unknown Source)
+	at java.base/java.lang.Class.forName(Unknown Source)
+	at com.github.caciocavallosilano.cacio.ctc.CTCPreloadClassLoader.<clinit>(CTCPreloadClassLoader.java:62)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Unknown Source)
+	at java.base/java.lang.Class.forName(Unknown Source)
+	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:47)
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::loadLibrary has been called by net.kdt.pojavlaunch.value.MinecraftAccount in an unnamed module (file:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs/launcher.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+Launching Minecraft fabric-loader-0.19.3-1.21.11
+Args init finished. Now starting game
+2026-08-11T13:26:50.373727Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
+[VersionList] Got 0 versions
+PatchJNAAgent: Replacing class
+Platform.isMac called from com.sun.jna.Native
+Platform.isMac called from com.sun.jna.Native
+Platform.isMac called from com.sun.jna.Native
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:/private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/libraries/org/joml/joml/1.10.8/joml-1.10.8.jar)
+WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+Initializing MobileGlues ...
+The Open Source License of MobileGlues: 
+  GNU LGPL-2.1 License
+[MobileGlues] Setting: enableAngle                 = false
+[MobileGlues] Setting: ignoreError                 = 1
+[MobileGlues] Setting: enableExtComputeShader      = false
+[MobileGlues] Setting: enableExtGL43               = false
+[MobileGlues] Setting: enableExtTimerQuery         = false
+[MobileGlues] Setting: enableExtDirectStateAccess  = true
+[MobileGlues] Setting: maxGlslCacheSize            = 30
+[MobileGlues] Setting: angleDepthClearFixMode      = 0
+[MobileGlues] Setting: bufferCoherentAsFlush       = 0
+[MobileGlues] Setting: customGLVersion             = (default)
+[MobileGlues] Setting: fsr1Setting                 = 0
+EGL initialized successfully
+OpenGL ES Version: OpenGL ES 3.0.0 (300)
+Not Detected GL_EXT_multi_draw_indirect!
+[MobileGlues] Setting: multidrawMode               = Auto
+multidrawMode = Auto
+    -> DrawElements (Auto detected)
+EGLBridge: Binding to OpenGL ES
+2026-08-11 21:26:54.668 AngelAuraAmethyst[3055:690530] [Metallum] +[SurfaceViewController surface] returned <GameSurfaceView: 0x104aceb80; frame = (0 0; 1180 820); layer = <CAMetalLayer: 0x11e920870>>
+2026-08-11 21:26:54.669 AngelAuraAmethyst[3055:690530] [Metallum] Using existing view.layer as CAMetalLayer (frame=(0.0, 0.0, 1180.0, 820.0), contentsScale=2.0, drawsAsynchronously=YES)
+2026-08-11T13:27:05.144794Z Render thread ERROR Unreported exception thrown!
+java.util.IllegalFormatConversionException: d != com.metallum.client.metal.render.mtl.MTLCullMode
+	at java.base/java.util.Formatter$FormatSpecifier.failConversion(Unknown Source)
+	at java.base/java.util.Formatter$FormatSpecifier.printInteger(Unknown Source)
+	at java.base/java.util.Formatter$FormatSpecifier.print(Unknown Source)
+	at java.base/java.util.Formatter.format(Unknown Source)
+	at java.base/java.util.Formatter.format(Unknown Source)
+	at java.base/java.lang.String.format(Unknown Source)
+	at knot//com.metallum.client.metal.render.DiagLog.log(DiagLog.java:61)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.pushTexelBufferDescriptor(MetalRenderPass.java:643)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.pushDescriptor(MetalRenderPass.java:592)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.bindDrawState(MetalRenderPass.java:512)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.drawIndexed(MetalRenderPass.java:198)
+	at knot//net.minecraft.class_9955.method_62168(class_9955.java:243)
+	at knot//net.minecraft.class_761.method_62205(class_761.java:778)
+	at knot//net.minecraft.class_9909.method_61910(class_9909.java:67)
+	at knot//net.minecraft.class_761.method_22710(class_761.java:599)
+	at knot//net.minecraft.class_757.method_3188(class_757.java:785)
+	at knot//net.minecraft.class_757.method_3192(class_757.java:497)
+	at knot//net.minecraft.class_310.method_1523(class_310.java:1393)
+	at knot//net.minecraft.class_310.method_1514(class_310.java:966)
+	at knot//net.minecraft.client.main.Main.main(Main.java:250)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at net.kdt.pojavlaunch.Tools.launchMinecraft(Tools.java:76)
+	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
+	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
+
+---- Minecraft Crash Report ----
+// Would you like a cupcake?
+
+Time: 2026-08-11 21:27:05
+Description: Unexpected error
+
+java.util.IllegalFormatConversionException: d != com.metallum.client.metal.render.mtl.MTLCullMode
+	at java.base/java.util.Formatter$FormatSpecifier.failConversion(Unknown Source)
+	at java.base/java.util.Formatter$FormatSpecifier.printInteger(Unknown Source)
+	at java.base/java.util.Formatter$FormatSpecifier.print(Unknown Source)
+	at java.base/java.util.Formatter.format(Unknown Source)
+	at java.base/java.util.Formatter.format(Unknown Source)
+	at java.base/java.lang.String.format(Unknown Source)
+	at knot//com.metallum.client.metal.render.DiagLog.log(DiagLog.java:61)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.pushTexelBufferDescriptor(MetalRenderPass.java:643)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.pushDescriptor(MetalRenderPass.java:592)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.bindDrawState(MetalRenderPass.java:512)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.drawIndexed(MetalRenderPass.java:198)
+	at knot//net.minecraft.class_9955.method_62168(class_9955.java:243)
+	at knot//net.minecraft.class_761.method_62205(class_761.java:778)
+	at knot//net.minecraft.class_9909.method_61910(class_9909.java:67)
+	at knot//net.minecraft.class_761.method_22710(class_761.java:599)
+	at knot//net.minecraft.class_757.method_3188(class_757.java:785)
+	at knot//net.minecraft.class_757.method_3192(class_757.java:497)
+	at knot//net.minecraft.class_310.method_1523(class_310.java:1393)
+	at knot//net.minecraft.class_310.method_1514(class_310.java:966)
+	at knot//net.minecraft.client.main.Main.main(Main.java:250)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at net.kdt.pojavlaunch.Tools.launchMinecraft(Tools.java:76)
+	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
+	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Thread: Render thread
+Stacktrace:
+	at java.base/java.util.Formatter$FormatSpecifier.failConversion(Unknown Source)
+	at java.base/java.util.Formatter$FormatSpecifier.printInteger(Unknown Source)
+	at java.base/java.util.Formatter$FormatSpecifier.print(Unknown Source)
+	at java.base/java.util.Formatter.format(Unknown Source)
+	at java.base/java.util.Formatter.format(Unknown Source)
+	at java.base/java.lang.String.format(Unknown Source)
+	at knot//com.metallum.client.metal.render.DiagLog.log(DiagLog.java:61)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.pushTexelBufferDescriptor(MetalRenderPass.java:643)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.pushDescriptor(MetalRenderPass.java:592)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.bindDrawState(MetalRenderPass.java:512)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.drawIndexed(MetalRenderPass.java:198)
+	at knot//net.minecraft.class_9955.method_62168(class_9955.java:243)
+	at knot//net.minecraft.class_761.method_62205(class_761.java:778)
+	at knot//net.minecraft.class_9909.method_61910(class_9909.java:67)
+	at knot//net.minecraft.class_761.method_22710(class_761.java:599)
+	at knot//net.minecraft.class_757.method_3188(class_757.java:785)
+
+-- Uptime --
+Details:
+	JVM uptime: 15.775s
+	Wall uptime: 11.511s
+	High-res time: 10.852s
+	Client ticks: 166 ticks / 8.300s
+Stacktrace:
+	at knot//net.minecraft.class_310.method_1587(class_310.java:2477)
+	at knot//net.minecraft.class_310.method_54580(class_310.java:1035)
+	at knot//net.minecraft.class_310.method_1514(class_310.java:990)
+	at knot//net.minecraft.client.main.Main.main(Main.java:250)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at net.kdt.pojavlaunch.Tools.launchMinecraft(Tools.java:76)
+	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
+	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
+
+-- Affected level --
+Details:
+	All players: 1 total; class_746{name=NIUNIU3303, id=26, pos=(1040.024547625937, 122.0768921458109, 1290.8739439853493), mode=CREATIVE, permission=permission level: OWNERS}
+	Chunk stats: 961, 28
+	Level dimension: minecraft:overworld
+	Level spawn location: World: (0,80,16), Section: (at 0,0,0 in 0,5,1; chunk contains blocks 0,-64,16 to 15,319,31), Region: (0,0; contains chunks 0,0 to 31,31, blocks 0,-64,0 to 511,319,511)
+	Level time: 46789 game time, 4225 day time
+	Server brand: fabric
+	Server type: Integrated singleplayer server
+	Tracked entity count: 13
+
+-- Last reload --
+Details:
+	Reload number: 1
+	Reload reason: initial
+	Finished: Yes
+	Packs: vanilla, betterf3, cloth-config, fabric-api, fabric-api-base, fabric-api-lookup-api-v1, fabric-biome-api-v1, fabric-block-api-v1, fabric-block-view-api-v2, fabric-command-api-v2, fabric-content-registries-v0, fabric-convention-tags-v1, fabric-convention-tags-v2, fabric-crash-report-info-v1, fabric-data-attachment-api-v1, fabric-data-generation-api-v1, fabric-dimensions-v1, fabric-entity-events-v1, fabric-events-interaction-v0, fabric-game-rule-api-v1, fabric-item-api-v1, fabric-item-group-api-v1, fabric-key-binding-api-v1, fabric-lifecycle-events-v1, fabric-loot-api-v2, fabric-loot-api-v3, fabric-message-api-v1, fabric-model-loading-api-v1, fabric-networking-api-v1, fabric-object-builder-api-v1, fabric-particles-v1, fabric-recipe-api-v1, fabric-registry-sync-v0, fabric-renderer-api-v1, fabric-renderer-indigo, fabric-rendering-fluids-v1, fabric-rendering-v1, fabric-resource-conditions-api-v1, fabric-resource-loader-v0, fabric-resource-loader-v1, fabric-screen-api-v1, fabric-screen-handler-api-v1, fabric-serialization-api-v1, fabric-sound-api-v1, fabric-tag-api-v1, fabric-transfer-api-v1, fabric-transitive-access-wideners-v1, fabricloader, metallum, modmenu, placeholder-api, sodium
+
+-- System Details --
+Details:
+	Minecraft Version: 1.21.11
+	Minecraft Version ID: 1.21.11
+	Operating System: Mac OS X (aarch64) version 18.4
+	Java Version: 25.0.1-internal, N/A
+	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode), Oracle Corporation
+	Memory: 160945184 bytes (153 MiB) / 629145600 bytes (600 MiB) up to 4303355904 bytes (4104 MiB)
+	CPUs: 8
+	Processor Vendor: 
+	Processor Name: 
+	Identifier:  Family  Model  Stepping 
+	Microarchitecture: unknown
+	Frequency (GHz): 2.40
+	Number of physical packages: 1
+	Number of physical CPUs: 8
+	Number of logical CPUs: 8
+	Graphics card #0 name: unknown
+	Graphics card #0 vendor: unknown
+	Graphics card #0 VRAM (MiB): 0.00
+	Graphics card #0 deviceId: unknown
+	Graphics card #0 versionInfo: unknown
+	Memory slot #0 capacity (MiB): 0.00
+	Memory slot #0 clockSpeed (GHz): 0.00
+	Memory slot #0 type: unknown
+	Virtual memory max (MiB): 7644.84
+	Virtual memory used (MiB): 4719.69
+	Swap memory total (MiB): 0.00
+	Swap memory used (MiB): 0.00
+	Space in storage for jna.tmpdir (MiB): <path not set>
+	Space in storage for org.lwjgl.system.SharedLibraryExtractPath (MiB): <path not set>
+	Space in storage for io.netty.native.workdir (MiB): <path not set>
+	Space in storage for java.io.tmpdir (MiB): available: 84961.27, total: 243805.58
+	Space in storage for workdir (MiB): available: 84961.27, total: 243805.58
+	JVM Flags: 6 total; -Xms128M -Xmx4097M -XX:+UnlockExperimentalVMOptions -XX:+DisablePrimordialThreadGuardPages -Xbootclasspath/a:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-shared-1.18-SNAPSHOT.jar:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-tta-1.18-SNAPSHOT.jar -XX:-UseCompressedClassPointers
+	Debug Flags: 0 total; 
+	Fabric Mods: 
+		betterf3: BetterF3 17.0.0
+		cloth-config: Cloth Config v20 21.11.153
+			cloth-basic-math: cloth-basic-math 0.6.1
+		fabric-api: Fabric API 0.141.6+1.21.11
+			fabric-api-base: Fabric API Base 1.0.5+4ebb5c083e
+			fabric-api-lookup-api-v1: Fabric API Lookup API (v1) 1.6.114+20dc27073e
+			fabric-biome-api-v1: Fabric Biome API (v1) 17.1.1+4fc5413f3e
+			fabric-block-api-v1: Fabric Block API (v1) 1.1.10+4ebb5c083e
+			fabric-block-view-api-v2: Fabric BlockView API (v2) 1.0.39+4ebb5c083e
+			fabric-command-api-v2: Fabric Command API (v2) 2.4.7+6b42a6003e
+			fabric-content-registries-v0: Fabric Content Registries (v0) 10.2.14+4fc5413f3e
+			fabric-convention-tags-v1: Fabric Convention Tags 2.1.55+7f945d5b3e
+			fabric-convention-tags-v2: Fabric Convention Tags (v2) 2.17.3+8ef948ba3e
+			fabric-crash-report-info-v1: Fabric Crash Report Info (v1) 0.3.23+4ebb5c083e
+			fabric-data-attachment-api-v1: Fabric Data Attachment API (v1) 1.8.48+eed0806f3e
+			fabric-data-generation-api-v1: Fabric Data Generation API (v1) 23.5.0+88d7da613e
+			fabric-dimensions-v1: Fabric Dimensions API (v1) 4.0.28+4fc5413f3e
+			fabric-entity-events-v1: Fabric Entity Events (v1) 3.1.1+1d0ab4303e
+			fabric-events-interaction-v0: Fabric Events Interaction (v0) 4.1.1+3b89ecf63e
+			fabric-game-rule-api-v1: Fabric Game Rule API (v1) 2.0.3+4fc5413f3e
+			fabric-item-api-v1: Fabric Item API (v1) 11.6.0+67f17bb43e
+			fabric-item-group-api-v1: Fabric Item Group API (v1) 4.2.36+4fc5413f3e
+			fabric-key-binding-api-v1: Fabric Key Binding API (v1) 1.1.7+4fc5413f3e
+			fabric-lifecycle-events-v1: Fabric Lifecycle Events (v1) 2.6.15+4ebb5c083e
+			fabric-loot-api-v2: Fabric Loot API (v2) 3.0.73+3f89f5a53e
+			fabric-loot-api-v3: Fabric Loot API (v3) 2.0.20+78c8b4663e
+			fabric-message-api-v1: Fabric Message API (v1) 6.1.12+4ebb5c083e
+			fabric-model-loading-api-v1: Fabric Model Loading API (v1) 6.0.15+4fc5413f3e
+			fabric-networking-api-v1: Fabric Networking API (v1) 5.1.6+6b6d71a53e
+			fabric-object-builder-api-v1: Fabric Object Builder API (v1) 21.1.40+4fc5413f3e
+			fabric-particles-v1: Fabric Particles (v1) 4.2.12+4fc5413f3e
+			fabric-recipe-api-v1: Fabric Recipe API (v1) 8.2.4+4ebb5c083e
+			fabric-registry-sync-v0: Fabric Registry Sync (v0) 6.2.6+1718722b3e
+			fabric-renderer-api-v1: Fabric Renderer API (v1) 8.0.3+f4ffd2e53e
+			fabric-renderer-indigo: Fabric Renderer - Indigo 5.0.3+f4ffd2e53e
+			fabric-rendering-fluids-v1: Fabric Rendering Fluids (v1) 3.1.43+4ebb5c083e
+			fabric-rendering-v1: Fabric Rendering (v1) 16.2.10+0290ad933e
+			fabric-resource-conditions-api-v1: Fabric Resource Conditions API (v1) 5.0.35+4fc5413f3e
+			fabric-resource-loader-v0: Fabric Resource Loader (v0) 3.3.4+4fc5413f3e
+			fabric-resource-loader-v1: Fabric Resource Loader (v1) 1.0.10+78c8b4663e
+			fabric-screen-api-v1: Fabric Screen API (v1) 3.1.7+4ebb5c083e
+			fabric-screen-handler-api-v1: Fabric Screen Handler API (v1) 1.3.162+4fc5413f3e
+			fabric-serialization-api-v1: Fabric Serialization API (v1) 1.0.5+4ebb5c083e
+			fabric-sound-api-v1: Fabric Sound API (v1) 1.0.51+4fc5413f3e
+			fabric-tag-api-v1: Fabric Tag API (v1) 1.3.0+88d7da613e
+			fabric-transfer-api-v1: Fabric Transfer API (v1) 6.0.25+4fc5413f3e
+			fabric-transitive-access-wideners-v1: Fabric Transitive Access Wideners (v1) 7.1.0+014c8cec3e
+		fabricloader: Fabric Loader 0.19.3
+		java: OpenJDK 64-Bit Server VM 25
+		metallum: MetalUniversal 1.1.0
+		minecraft: Minecraft 1.21.11
+		mixinextras: MixinExtras 0.5.0
+		modmenu: Mod Menu 17.0.0
+		placeholder-api: Placeholder API 2.8.2+1.21.10
+		sodium: Sodium 0.8.13+mc1.21.11
+	Launched Version: 1.21.11
+	Backend library: LWJGL version 3.3.3-snapshot
+	Backend API: Apple M3 GPU (iOS 18.4)
+	Window size: 2360x1640
+	GFLW Platform: x11
+	Render Extensions: CAMetalLayer, MTLDevice
+	GL debug messages: <debugging unavailable>
+	Is Modded: Definitely; Client brand changed to 'fabric'; Server brand changed to 'fabric'
+	Universe: 400921fb54442d18
+	Type: Integrated Server (map_client.txt)
+	Transparency: regular
+	Render Distance: 12/12 chunks
+	Resource Packs: vanilla, betterf3, cloth-config, fabric-api, fabric-api-base, fabric-api-lookup-api-v1, fabric-biome-api-v1, fabric-block-api-v1, fabric-block-view-api-v2, fabric-command-api-v2, fabric-content-registries-v0, fabric-convention-tags-v1, fabric-convention-tags-v2, fabric-crash-report-info-v1, fabric-data-attachment-api-v1, fabric-data-generation-api-v1, fabric-dimensions-v1, fabric-entity-events-v1, fabric-events-interaction-v0, fabric-game-rule-api-v1, fabric-item-api-v1, fabric-item-group-api-v1, fabric-key-binding-api-v1, fabric-lifecycle-events-v1, fabric-loot-api-v2, fabric-loot-api-v3, fabric-message-api-v1, fabric-model-loading-api-v1, fabric-networking-api-v1, fabric-object-builder-api-v1, fabric-particles-v1, fabric-recipe-api-v1, fabric-registry-sync-v0, fabric-renderer-api-v1, fabric-renderer-indigo, fabric-rendering-fluids-v1, fabric-rendering-v1, fabric-resource-conditions-api-v1, fabric-resource-loader-v0, fabric-resource-loader-v1, fabric-screen-api-v1, fabric-screen-handler-api-v1, fabric-serialization-api-v1, fabric-sound-api-v1, fabric-tag-api-v1, fabric-transfer-api-v1, fabric-transitive-access-wideners-v1, fabricloader, metallum, modmenu, placeholder-api, sodium
+	Current Language: zh_cn
+	Locale: zh_CN_#Hans
+	System encoding: UTF-8
+	File encoding: UTF-8
+	CPU: 8x 
+	Server Running: true
+	Player Count: 1 / 8; [class_3222['NIUNIU3303'/26, l='ServerLevel[新的世界]', x=1040.02, y=122.08, z=1290.87]]
+	Active Data Packs: vanilla, fabric-convention-tags-v2
+	Available Data Packs: fabric-convention-tags-v2, minecart_improvements, redstone_experiments, trade_rebalance, vanilla
+	Enabled Feature Flags: minecraft:vanilla
+	World Generation: Stable
+	World Seed: -3023404124156431293
+	Suppressed Exceptions: ~~NONE~~
+#@!@# Game crashed! Crash report saved to: #@!@# /var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/crash-reports/crash-2026-08-11_21.27.05-client.txt
+exit(-1) called

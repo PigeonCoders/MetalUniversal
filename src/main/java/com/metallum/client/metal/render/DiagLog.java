@@ -58,7 +58,14 @@ public final class DiagLog {
         if (WINDOW_SECONDS > 0L && System.nanoTime() - START_NANOS > WINDOW_SECONDS * 1_000_000_000L) {
             return;
         }
-        String message = args.length == 0 ? format : String.format(format, args);
+        String message;
+        try {
+            message = args.length == 0 ? format : String.format(format, args);
+        } catch (RuntimeException e) {
+            // 防御：诊断日志绝不能因格式错误崩溃游戏（P10 E9 曾以
+            // IllegalFormatConversionException 崩渲染线程）
+            message = format + " [diag-format-error: " + e + "]";
+        }
         writeRaw(LocalTime.now().format(TIME) + " " + message);
     }
 

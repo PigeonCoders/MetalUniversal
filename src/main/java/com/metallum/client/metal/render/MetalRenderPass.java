@@ -640,7 +640,7 @@ public final class MetalRenderPass implements RenderPass {
             this.boundCloudFaces = true;
             this.cloudFacesSlice = texelSlice;
             if (Diagnostics.shouldRun("cloud-cull", 5_000L)) {
-                DiagLog.log("[diag] cloud pipeline cullMode=%d nocull=%b", this.compiledPipeline.cullMode(), NO_CULL_DIAG);
+                DiagLog.log("[diag] cloud pipeline cullMode=%d nocull=%b", this.compiledPipeline.cullMode().value, NO_CULL_DIAG);
             }
             if (NO_CULL_DIAG) {
                 // E10 判别：CloudFaces 绑定后覆盖 cull（bindDrawState 的 setCullMode 在其之前执行）

@@ -35,8 +35,22 @@ import java.util.function.Supplier;
 @Environment(EnvType.CLIENT)
 public final class MetalCommandEncoder implements CommandEncoder {
     public static final int MAX_SUBMITS_IN_FLIGHT = 3;
-    /** 判别实验（跨帧竞争）：true 时每帧等待上一帧 GPU 完成（串行提交——帧率大降属预期）。 */
-    private static final boolean GPU_SYNC_DIAG = true;
+    /**
+     * 跨帧竞争判别（P1 方案 B）：submit 后等待「提前 SYNC_MODE 帧」的提交完成。
+     * 1=等刚提交帧（GPU 完全串行，exp3 验证无闪烁基线）/ 2=等上一帧（CPU 超前 ≤1 帧，
+     * 方案 B 判别）/ 3=等两帧前（原 3 帧滑动窗口）。-Dmetallum.sync=N，非法值回退 1。
+     */
+    private static final int SYNC_MODE = parseSyncMode();
+
+    private static int parseSyncMode() {
+        String raw = System.getProperty("metallum.sync", "1");
+        try {
+            int v = Integer.parseInt(raw.trim());
+            return (v >= 1 && v <= 3) ? v : 1;
+        } catch (NumberFormatException e) {
+            return 1;
+        }
+    }
     private final MetalDevice device;
     private long currentSubmitIndex = MAX_SUBMITS_IN_FLIGHT;
     /** SODIUM-ADAPT 诊断：ensureActiveRenderEncoder 重建计数（DiagLog 节流输出）。 */
@@ -97,6 +111,9 @@ public final class MetalCommandEncoder implements CommandEncoder {
                 throw new IllegalStateException("Failed to allocate submit semaphore");
             }
         }
+        // P1：启动首行确认判别开关生效（Amethyst 参数注入失败时静默回退默认 1——
+        // 日志可发现，防实验跑错模式）
+        DiagLog.log("sync_mode=%d (metallum.sync: 1=serial 2=one-ahead 3=sliding)", SYNC_MODE);
     }
 
     /**
@@ -183,15 +200,10 @@ public final class MetalCommandEncoder implements CommandEncoder {
         }
         currentSubmitIndex++;
 
-        // 判别实验（GPU_SYNC_DIAG）：等待「上一帧」GPU 完成（而非 3 帧滑动窗口）——
-        // 彻底消除跨帧竞争（帧 N 的 GPU 读 vs 帧 N+1 的 CPU 覆写/上传）。若 iOS
-        // 垂直面消失/闪烁停止 → 跨帧数据竞争确认（提交序理论被推翻）；仍在 →
-        // 非跨帧（角度依赖的光栅化/退化）。注意：每帧 GPU 串行，帧率大幅下降属预期。
-        if (GPU_SYNC_DIAG) {
-            awaitSubmitCompletion(currentSubmitIndex - 1, 5000L);
-        } else {
-            awaitSubmitCompletion(currentSubmitIndex - MAX_SUBMITS_IN_FLIGHT, 5000L);
-        }
+        // P1 方案 B：SYNC_MODE=等「提前 N 帧」的提交完成（1=完全串行 / 2=超前 1 帧判别 /
+        // 3=滑动窗口）。等-2 判别：无闪烁 → 竞争窗口 ≤2 帧（方案 B 可行）；闪烁回归 →
+        // 窗口=3 帧（需精准等待）。注意 awaitSubmitCompletion 找不到记录返回 true（不等待）。
+        awaitSubmitCompletion(currentSubmitIndex - SYNC_MODE, 5000L);
 
         if (toClose != null) {
             if (!toClose.buffer.isCompleted()) {

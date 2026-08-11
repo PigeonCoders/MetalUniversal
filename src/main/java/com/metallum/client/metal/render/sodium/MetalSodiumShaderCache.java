@@ -23,6 +23,8 @@ import java.util.Map;
  */
 @Environment(EnvType.CLIENT)
 public final class MetalSodiumShaderCache {
+    /** 判别实验（纯色）：true 时 fragment 输出纯红（几何 vs 纹理/光照二分判别）。 */
+    private static final boolean SOLID_COLOR_DIAG = true;
     private static final String SHADER_PATH = "blocks/block_layer_opaque";
 
     private static final Map<String, VertexFormatElement.Type> ATTRIBUTE_TYPES = Map.of(
@@ -60,9 +62,20 @@ public final class MetalSodiumShaderCache {
                 constants
         );
 
+        // 判别实验（纯色）：fragment main 开头强制输出纯红并 return——跳过全部采样/光照。
+        // iOS 复测判读：侧面消失仍在（红色侧面也消失）→ 几何覆盖空洞（meshing/顶点/索引）；
+        // 红色侧面正常显示 → 问题在纹理/光照链（采样/过滤/光贴图）。
+        String fragmentSrc = fragment.src();
+        if (SOLID_COLOR_DIAG) {
+            fragmentSrc = fragmentSrc.replace(
+                    "void main() {",
+                    "void main() { fragColor = vec4(1.0, 0.0, 0.0, 1.0); return;"
+            );
+        }
+
         MetalCrossShaderCompiler.CompiledGlsl compiled = MetalCrossShaderCompiler.compileGlsl(
                 vertex.src(),
-                fragment.src(),
+                fragmentSrc,
                 ATTRIBUTE_TYPES,
                 ATTRIBUTE_LOCATIONS,
                 "sodium/" + SHADER_PATH

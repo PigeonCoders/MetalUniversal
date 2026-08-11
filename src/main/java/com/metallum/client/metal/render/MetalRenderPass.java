@@ -39,6 +39,14 @@ public final class MetalRenderPass implements RenderPass {
     @Nullable
     private Vector4fc clearColor;
     private boolean clearDepthEnabled;
+    /** P10：-Dmetallum.nocull=true 判别实验——云 pass 强制 cullMode=None（验证 cull/winding
+     * 镜像导致"云只显示部分象限"：fancy 云 UP/DOWN/NSWE 六朝向面，winding 不匹配 → Back-cull
+     * 剔除朝上面/部分侧面）。地形等其它 pass 不受影响（只覆盖 CloudFaces 绑定后）。 */
+    private static final boolean NO_CULL_DIAG = Boolean.parseBoolean(System.getProperty("metallum.nocull", "false"));
+    /** P10：本 pass 最近一次是否绑定了 CloudFaces（drawIndexed 用 indexCount=6×quadCount 限定扫描）。 */
+    private boolean boundCloudFaces;
+    @Nullable
+    private GpuBufferSlice cloudFacesSlice;
     private final double clearDepthValue;
     private final ScissorState scissorState = new ScissorState();
     private final GpuBufferSlice[] vertexBuffers = new GpuBufferSlice[MAX_VERTEX_BUFFERS];
@@ -188,6 +196,11 @@ public final class MetalRenderPass implements RenderPass {
         MTLRenderCommandEncoder enc = renderEncoder();
 
         bindDrawState(enc);
+        // P10 E8：云 pass（绑过 CloudFaces）——用 draw 的 indexCount（=6×quadCount，即
+        // 实际写入的 quad 数）限定扫描已写区域坐标分布，判定数据单侧 vs 对称。
+        if (this.boundCloudFaces) {
+            scanCloudFaces(indexCount);
+        }
         drawIndexedNative(enc, nativeIndexBuffer, indexOffset, indexCount, baseVertex, instanceCount, indexType, 0);
     }
 
@@ -362,6 +375,55 @@ public final class MetalRenderPass implements RenderPass {
             }
             GpuBufferSlice slice = mapped.slice();
             encoder.drawIndexedPrimitives(MTLPrimitiveType.Triangle, indexCount, fanIndexType, ((MetalGpuBuffer) slice.buffer()).nativeHandle(), slice.offset(), Math.max(1, instanceCount), firstVertex, baseInstance);
+        }
+    }
+
+    /**
+     * P10 E8：扫描云 UTB 已写区域（draw indexCount×2 字节 = quadCount×12 = 4 顶点/quad×3 字节）
+     * 的 cellX>>1/cellZ>>1 符号分布。quadCount 限定排除未初始化零（分配 710178B 但实际写入
+     * 仅部分——E7 全量扫描被零污染）。分布单侧集中 → 数据错位；对称 → 渲染侧（cull/winding）。
+     */
+    private void scanCloudFaces(final int indexCount) {
+        GpuBufferSlice slice = this.cloudFacesSlice;
+        this.boundCloudFaces = false;
+        this.cloudFacesSlice = null;
+        if (slice == null || !Diagnostics.shouldRun("cloud-faces", 5_000L)) {
+            return;
+        }
+        long scanBytes = Math.min(slice.length(), (long) indexCount * 2L);
+        try {
+            java.nio.ByteBuffer data = ((MetalGpuBuffer) slice.buffer()).sliceStorage(slice.offset(), scanBytes);
+            long vertices = data.remaining() / 3L;
+            long cellXNeg = 0L;
+            long cellXZero = 0L;
+            long cellXPos = 0L;
+            long cellZNeg = 0L;
+            long cellZZero = 0L;
+            long cellZPos = 0L;
+            for (long v = 0L; v < vertices; v++) {
+                int base = (int) v * 3;
+                byte cx = data.get(base);
+                byte cz = data.get(base + 1);
+                if (cx < 0) {
+                    cellXNeg++;
+                } else if (cx == 0) {
+                    cellXZero++;
+                } else {
+                    cellXPos++;
+                }
+                if (cz < 0) {
+                    cellZNeg++;
+                } else if (cz == 0) {
+                    cellZZero++;
+                } else {
+                    cellZPos++;
+                }
+            }
+            DiagLog.log("[diag] cloud faces quadCount=%d verts=%d cellX=(-%d,0:%d,+)%d cellZ=(-%d,0:%d,+)%d first=%d,%d,%d",
+                    indexCount / 6, vertices, cellXNeg, cellXZero, cellXPos, cellZNeg, cellZZero, cellZPos,
+                    data.get(0), data.get(1), data.get(2));
+        } catch (IllegalStateException e) {
+            DiagLog.log("[diag] cloud faces scan failed");
         }
     }
 
@@ -572,6 +634,19 @@ public final class MetalRenderPass implements RenderPass {
         }
 
         MetalGpuBuffer texelBuffer = (MetalGpuBuffer) texelSlice.buffer();
+        if ("CloudFaces".equals(binding.name())) {
+            // P10：云 pass 标记（drawIndexed 用 indexCount 限定扫描已写区域——排除 UTB
+            // 未初始化零对坐标分布统计的污染，E7 曾误判）+ cull/winding 判别。
+            this.boundCloudFaces = true;
+            this.cloudFacesSlice = texelSlice;
+            if (Diagnostics.shouldRun("cloud-cull", 5_000L)) {
+                DiagLog.log("[diag] cloud pipeline cullMode=%d nocull=%b", this.compiledPipeline.cullMode(), NO_CULL_DIAG);
+            }
+            if (NO_CULL_DIAG) {
+                // E10 判别：CloudFaces 绑定后覆盖 cull（bindDrawState 的 setCullMode 在其之前执行）
+                enc.setCullMode(com.metallum.client.metal.render.mtl.MTLCullMode.None);
+            }
+        }
         // P9 E7（云层判别）：CloudFaces UTB 全量坐标分布统计——"云只显示第三象限"判别：
         // cellX>>1/cellZ>>1 的符号分布若单侧集中（如 cellX 恒 ≤0）→ 数据只覆盖部分象限
         // （写入/读取错位）；全象限分布正常 → 转查渲染侧（cull/winding）。R8I 3 字节/顶点。

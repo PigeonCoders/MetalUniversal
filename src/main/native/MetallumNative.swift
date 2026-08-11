@@ -1465,11 +1465,10 @@ public func metallum_configure_layer(_ layer: CAMetalLayer, _ width: Double, _ h
     // command-buffer completions and drawable recycling can exhaust the
     // pool, causing nextDrawable() to return nil (black frame).
     layer.allowsNextDrawableTimeout = true
-    // P20（spike 根治候选）：池 3 个 + MAX_SUBMITS_IN_FLIGHT=3 竞争 + vsync
-    // 相位滑动 → 周期性池空 → nextDrawable() 阻塞 ~16.7ms → 每秒 1 个 30ms+
-    // spike（实测 awaitPrev=0 不捕获——不经 semaphore，帧间隔采样却计入）。
-    // 池扩到 4：竞争窗口下保底 1 个可用 drawable，消除池空等待。
-    layer.maximumDrawableCount = 4
+    // P20 结论：iOS maximumDrawableCount 合法范围 [2,3]（设 4 抛
+    // CAMetalLayerInvalidMaximumDrawableCount 崩溃——已实证）。池上限 3 = 默认，
+    // 扩容不可行 → 解法 = 降 in-flight（-Dmetallum.sync=2：in-flight 2 + present 1
+    // = 3 = 池满容量，无池空竞争；staging/uniform ring 已保证 2 帧窗口安全）。
     // The CAMetalLayer IS view.layer (see metallum_ios_get_view_metal_layer):
     // the host UIView owns the layer's frame and updates it on layout /
     // rotation. We must NOT touch layer.frame here — doing so would fight

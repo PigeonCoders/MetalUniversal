@@ -643,10 +643,20 @@ public final class MetalRenderPass implements RenderPass {
                 try {
                     java.nio.ByteBuffer data = ((MetalGpuBuffer) slice.buffer()).sliceStorage(slice.offset(), Math.min(slice.length(), 64L));
                     java.nio.FloatBuffer f = data.order(java.nio.ByteOrder.nativeOrder()).asFloatBuffer();
-                    sb.append(' ').append(name).append("=(")
-                            .append(String.format("%.4f,%.4f,%.4f,%.4f,%.4f,%.4f",
-                                    f.get(0), f.get(1), f.get(2), f.get(3), f.get(4), f.get(5)))
-                            .append(')');
+                    if ("Fog".equals(name)) {
+                        // E14：Fog 全字段（std140：vec4 FogColor + 6 float：
+                        // EnvironmentalStart/End, RenderDistanceStart/End, SkyEnd, CloudsEnd——
+                        // FogCloudsEnd 决定云 alpha 衰减距离（fsh 实证 color.a *= 1-fog(d,0,CloudsEnd)））
+                        sb.append(' ').append(name).append("=(")
+                                .append(String.format("%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f",
+                                        f.get(0), f.get(1), f.get(2), f.get(3), f.get(4), f.get(5), f.get(6), f.get(7), f.get(8), f.get(9)))
+                                .append(')');
+                    } else {
+                        sb.append(' ').append(name).append("=(")
+                                .append(String.format("%.4f,%.4f,%.4f,%.4f,%.4f,%.4f",
+                                        f.get(0), f.get(1), f.get(2), f.get(3), f.get(4), f.get(5)))
+                                .append(')');
+                    }
                 } catch (IllegalStateException e) {
                     sb.append(' ').append(name).append("=UNREADABLE");
                 }

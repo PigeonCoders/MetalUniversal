@@ -407,6 +407,15 @@ public final class MetalCommandEncoder implements CommandEncoder {
         return this.transientMemory.allocateUniformSlice(size, alignment);
     }
 
+    /**
+     * P7：staging 上传独立块分配（MAP_READ|MAP_WRITE Shared 块）。帧内每份数据独立偏移
+     * （互不覆写），帧末 rotate + destroyQueue 3 帧延迟回收——替代固定 staging buffer
+     * 的帧内覆写竞争（FallbackStagingBuffer 成对 upload+copy，blit 异步读最后写入内容）。
+     */
+    public MetalTransientMemory.MappedView allocateTransientStaging(final long size, final long alignment) {
+        return this.transientMemory.allocateStaging(size, alignment, GpuBuffer.USAGE_MAP_READ | GpuBuffer.USAGE_MAP_WRITE, 0L, 1L);
+    }
+
     @Override
     public @NonNull RenderPass createRenderPass(
             final @NonNull Supplier<String> debugGroup,

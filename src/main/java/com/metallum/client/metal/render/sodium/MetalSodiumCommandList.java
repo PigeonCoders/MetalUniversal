@@ -4,7 +4,9 @@ import com.metallum.Metallum;
 import com.metallum.client.metal.render.MetalBackend;
 import com.metallum.client.metal.render.MetalCommandEncoder;
 import com.metallum.client.metal.render.MetalGpuBuffer;
+import com.metallum.client.metal.render.MetalTransientMemory;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import net.caffeinemc.mods.sodium.client.gl.array.GlVertexArray;
 import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
@@ -25,6 +27,7 @@ import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.jspecify.annotations.NonNull;
+import org.lwjgl.system.MemoryUtil;
 
 import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
@@ -72,7 +75,21 @@ public final class MetalSodiumCommandList implements CommandList {
     public void uploadData(final GlMutableBuffer glBuffer, final ByteBuffer byteBuffer, final GlBufferUsage usage) {
         MetalGlBufferRegistry.MetalGlBufferEntry entry = entryOf(glBuffer);
         int length = byteBuffer.remaining();
-        entry.ensureAllocated(length, SodiumUsageMapper.toMinecraftUsage(usage));
+        int mcUsage = SodiumUsageMapper.toMinecraftUsage(usage);
+        // P7（staging 帧内覆写竞争根治）：FallbackStagingBuffer 成对 uploadData+copyBufferSubData
+        // 复用固定 staging buffer 时，blit（异步执行）读到的 staging 内容 = 最后一次 uploadData
+        // 写入的 → 帧内所有 dst 得到同一份数据（P4 grow-only 复用后必然全图 mesh 错乱）。
+        // 改走 transient 独立块：帧内每份数据独立偏移（互不覆写），帧末 rotate + destroyQueue
+        // 3 帧延迟回收（blit 帧 N 执行，块帧 N+3 才释放）。非 staging usage 走原逻辑。
+        if (MetalGlBufferRegistry.MetalGlBufferEntry.isStagingUsage(mcUsage)) {
+            MetalCommandEncoder encoder = (MetalCommandEncoder) encoder();
+            MetalTransientMemory.MappedView view = encoder.allocateTransientStaging(length, 16L);
+            MemoryUtil.memCopy(MemoryUtil.memAddress(byteBuffer), MemoryUtil.memAddress(view.data()), length);
+            entry.pushStagingUpload(view.slice());
+            glBuffer.setSize(length);
+            return;
+        }
+        entry.ensureAllocated(length, mcUsage);
         glBuffer.setSize(length);
         writeBuffer(entry, 0L, byteBuffer.duplicate());
     }
@@ -91,8 +108,19 @@ public final class MetalSodiumCommandList implements CommandList {
 
     @Override
     public void copyBufferSubData(final GlBuffer src, final GlBuffer dst, final long readOffset, final long writeOffset, final long bytes) {
-        MetalGpuBuffer srcBuffer = requireBuffer(src);
+        MetalGlBufferRegistry.MetalGlBufferEntry srcEntry = entryOf(src);
+        // P7：staging 源（srcEntry 有 pending）→ 取 uploadData 配对的 transient 独立块
+        // （Sodium FallbackStagingBuffer 严格成对，队列帧内消费）；无 pending（arena resize
+        // 迁移等非 staging 路径）走原 buffer 引用。
+        GpuBufferSlice srcSlice = srcEntry.popStagingUpload();
         MetalGpuBuffer dstBuffer = requireBuffer(dst);
+        if (srcSlice != null) {
+            encoder().copyToBuffer(
+                    new GpuBufferSlice(srcSlice.buffer(), srcSlice.offset() + readOffset, bytes),
+                    dstBuffer.slice(writeOffset, bytes));
+            return;
+        }
+        MetalGpuBuffer srcBuffer = requireBuffer(src);
         encoder().copyToBuffer(srcBuffer.slice(readOffset, bytes), dstBuffer.slice(writeOffset, bytes));
     }
 

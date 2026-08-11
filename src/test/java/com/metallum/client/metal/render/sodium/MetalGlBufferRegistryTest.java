@@ -82,4 +82,27 @@ class MetalGlBufferRegistryTest {
     void nextRingSlotTreatsFirstFrameAsRotation() {
         assertEquals(1, MetalGlBufferRegistry.MetalGlBufferEntry.nextRingSlot(0, -1L, 0L));
     }
+
+    // ---- P7 staging pending 队列（FIFO 成对消费，无 Metal 依赖）----
+
+    @Test
+    void stagingUploadQueueIsFifo() {
+        MetalGlBufferRegistry.MetalGlBufferEntry entry = MetalGlBufferRegistry.MetalGlBufferEntry.create(7);
+        assertNull(entry.popStagingUpload());
+        com.mojang.blaze3d.buffers.GpuBufferSlice a = new com.mojang.blaze3d.buffers.GpuBufferSlice(null, 16L, 4L);
+        com.mojang.blaze3d.buffers.GpuBufferSlice b = new com.mojang.blaze3d.buffers.GpuBufferSlice(null, 32L, 8L);
+        entry.pushStagingUpload(a);
+        entry.pushStagingUpload(b);
+        assertSame(a, entry.popStagingUpload());
+        assertSame(b, entry.popStagingUpload());
+        assertNull(entry.popStagingUpload());
+    }
+
+    @Test
+    void stagingUploadQueueClearedByDispose() {
+        MetalGlBufferRegistry.MetalGlBufferEntry entry = MetalGlBufferRegistry.MetalGlBufferEntry.create(8);
+        entry.pushStagingUpload(new com.mojang.blaze3d.buffers.GpuBufferSlice(null, 0L, 1L));
+        entry.dispose();
+        assertNull(entry.popStagingUpload());
+    }
 }

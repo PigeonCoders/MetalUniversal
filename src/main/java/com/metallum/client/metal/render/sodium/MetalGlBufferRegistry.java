@@ -5,10 +5,12 @@ import com.metallum.client.metal.render.MetalCommandEncoder;
 import com.metallum.client.metal.render.MetalDevice;
 import com.metallum.client.metal.render.MetalGpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -85,6 +87,9 @@ public final class MetalGlBufferRegistry {
         private int[] ringUsages;
         private long lastRingFrame = -1L;
         private int ringSlot;
+        // ---- P7：staging 上传待消费块队列（uploadData push / copyBufferSubData pop，FIFO 成对）----
+        @Nullable
+        private ArrayDeque<GpuBufferSlice> pendingStagingUploads;
 
         MetalGlBufferEntry(final int handle) {
             this.handle = handle;
@@ -106,6 +111,24 @@ public final class MetalGlBufferRegistry {
 
         public int handle() {
             return this.handle;
+        }
+
+        /**
+         * P7：暂存一块 staging 上传数据（uploadData 写入 transient 块后入队；
+         * copyBufferSubData 按 FIFO 取用——Sodium FallbackStagingBuffer 严格成对）。
+         * 块生命周期由 transient 管理（帧末 rotate + destroyQueue 延迟回收），队列不持有所有权。
+         */
+        public void pushStagingUpload(final GpuBufferSlice slice) {
+            if (this.pendingStagingUploads == null) {
+                this.pendingStagingUploads = new ArrayDeque<>(4);
+            }
+            this.pendingStagingUploads.addLast(slice);
+        }
+
+        /** P7：取下一块待消费 staging 数据（成对消费）；队列空返回 null（非 staging 路径）。 */
+        @Nullable
+        public GpuBufferSlice popStagingUpload() {
+            return this.pendingStagingUploads == null ? null : this.pendingStagingUploads.pollFirst();
         }
 
         @Nullable
@@ -204,6 +227,8 @@ public final class MetalGlBufferRegistry {
 
         /** 释放底层缓冲（帧末销毁队列回收），保留句柄注册（deleteBuffer 才 remove）。 */
         public void dispose() {
+            // P7：清残留 pending 上传块（Sodium 严格成对，理论恒空——防御 deleteBuffer 残留）
+            this.pendingStagingUploads = null;
             if (this.ring != null) {
                 for (int i = 0; i < STAGING_RINGS; i++) {
                     if (this.ring[i] != null) {

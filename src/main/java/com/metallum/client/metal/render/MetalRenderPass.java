@@ -196,10 +196,22 @@ public final class MetalRenderPass implements RenderPass {
         MTLRenderCommandEncoder enc = renderEncoder();
 
         bindDrawState(enc);
-        // P10 E8：云 pass（绑过 CloudFaces）——用 draw 的 indexCount（=6×quadCount，即
-        // 实际写入的 quad 数）限定扫描已写区域坐标分布，判定数据单侧 vs 对称。
+        // E13：云 draw 执行层观测——indexCount + index buffer 前 8 项（顺序索引应 0,1,2,3...）
         if (this.boundCloudFaces) {
             scanCloudFaces(indexCount);
+            if (Diagnostics.shouldRun("cloud-idx", 5_000L)) {
+                try {
+                    java.nio.ByteBuffer ib = ((MetalGpuBuffer) nativeIndexBuffer)
+                            .sliceStorage(0L, Math.min(64L, nativeIndexBuffer.allocationSize()));
+                    StringBuilder sb = new StringBuilder("[diag] cloud idx count=").append(indexCount);
+                    for (int k = 0; k < Math.min(ib.remaining() / 4, 8); k++) {
+                        sb.append(' ').append(ib.getInt(k * 4));
+                    }
+                    DiagLog.log("%s", sb);
+                } catch (IllegalStateException e) {
+                    DiagLog.log("[diag] cloud idx not CPU-readable");
+                }
+            }
         }
         drawIndexedNative(enc, nativeIndexBuffer, indexOffset, indexCount, baseVertex, instanceCount, indexType, 0);
     }
@@ -680,6 +692,12 @@ public final class MetalRenderPass implements RenderPass {
             this.cloudFacesSlice = texelSlice;
             if (Diagnostics.shouldRun("cloud-cull", 5_000L)) {
                 DiagLog.log("[diag] cloud pipeline cullMode=%d nocull=%b", this.compiledPipeline.cullMode().value, NO_CULL_DIAG);
+            }
+            // E13（云层判别）：texel view 参数观测——offset 非 0/texelCount 与 quadCount×3
+            // 不匹配 → cellX/cellZ 读取错位（数据读取层最后的候选）。
+            if (Diagnostics.shouldRun("cloud-texel", 5_000L)) {
+                DiagLog.log("[diag] cloud texel offset=%d count=%d bytes=%d",
+                        texelSlice.offset(), texelSlice.length() / texelFormat.pixelSize(), texelSlice.length());
             }
             if (NO_CULL_DIAG) {
                 // E10 判别：CloudFaces 绑定后覆盖 cull（bindDrawState 的 setCullMode 在其之前执行）

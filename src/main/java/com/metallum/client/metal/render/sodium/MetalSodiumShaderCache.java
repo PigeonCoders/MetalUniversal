@@ -23,8 +23,13 @@ import java.util.Map;
  */
 @Environment(EnvType.CLIENT)
 public final class MetalSodiumShaderCache {
-    /** 判别实验（纯色）：false——已用纯红判别确认「跨帧竞争」（GPU 全同步修复），恢复真实渲染。 */
-    private static final boolean SOLID_COLOR_DIAG = false;
+    /**
+     * 判别实验（纯色）：-Dmetallum.solidcolor=true 开启（fragment 强制纯红 alpha=1，
+     * 跳过采样/光照）。水面透明度判别：纯红下透明缺口仍在 → 几何/段问题；恢复 →
+     * 纹理/alpha/discard 链。默认 false（真实渲染）。
+     */
+    private static final boolean SOLID_COLOR_DIAG =
+            Boolean.parseBoolean(System.getProperty("metallum.solidcolor", "false"));
     private static final String SHADER_PATH = "blocks/block_layer_opaque";
 
     private static final Map<String, VertexFormatElement.Type> ATTRIBUTE_TYPES = Map.of(

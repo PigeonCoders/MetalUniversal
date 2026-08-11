@@ -113,14 +113,50 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
         MTLPrimitiveType primitiveType = toMetalPrimitive(this.tessellation.getPrimitiveType());
         MTLIndexType metalIndexType = toMetalIndex(indexType);
 
-        // 诊断（diag）：draw 统计 + 首个 draw 的索引偏移/baseVertex 抽查——
-        // 排查抖动用（偏移/顶点异常 → 漏面/错位）。
+        // 诊断（diag）：draw 统计 + batch 全量摘要（P5 水面判别）——排查 per-section
+        // local index buffer 段错位：io（indexOffset 字节）越界/相邻重复（双重绘制）/
+        // 回退；bv（baseVertex）越界；e（elementCount）异常。
         sodiumDrawCount += batch.size;
         if (Diagnostics.shouldRun("sodium-draw", 5_000L)) {
-            DrawCommand first = batch.size > 0 ? readBatchEntry(batch, 0) : null;
-            DiagLog.log("[diag] sodium draws(last5s)=%d batchSize=%d firstDraw=%s",
-                    sodiumDrawCount, batch.size,
-                    first == null ? "none" : ("e=" + first.elementCount() + " bv=" + first.baseVertex() + " io=" + first.indexOffsetBytes()));
+            StringBuilder sb = new StringBuilder("[diag] sodium draws(last5s)=")
+                    .append(sodiumDrawCount).append(" batch=").append(batch.size);
+            if (batch.size > 0) {
+                DrawCommand first = readBatchEntry(batch, 0);
+                sb.append(" first=").append(first.elementCount()).append('/').append(first.baseVertex())
+                        .append('/').append(first.indexOffsetBytes());
+                long minIo = Long.MAX_VALUE;
+                long maxIo = -1L;
+                int minBv = Integer.MAX_VALUE;
+                int maxBv = Integer.MIN_VALUE;
+                int minE = Integer.MAX_VALUE;
+                int maxE = -1;
+                int nonZeroIo = 0;
+                int dupIoPairs = 0;
+                long prevIo = -1L;
+                for (int i = 0; i < batch.size; i++) {
+                    DrawCommand c = readBatchEntry(batch, i);
+                    minIo = Math.min(minIo, c.indexOffsetBytes());
+                    maxIo = Math.max(maxIo, c.indexOffsetBytes());
+                    minBv = Math.min(minBv, c.baseVertex());
+                    maxBv = Math.max(maxBv, c.baseVertex());
+                    minE = Math.min(minE, c.elementCount());
+                    maxE = Math.max(maxE, c.elementCount());
+                    if (c.indexOffsetBytes() != 0L) {
+                        nonZeroIo++;
+                        if (c.indexOffsetBytes() == prevIo) {
+                            dupIoPairs++;
+                        }
+                    }
+                    prevIo = c.indexOffsetBytes();
+                }
+                sb.append(" ioR=[").append(minIo).append(',').append(maxIo)
+                        .append("] bvR=[").append(minBv).append(',').append(maxBv)
+                        .append("] eR=[").append(minE).append(',').append(maxE)
+                        .append(" ioNz=").append(nonZeroIo).append(" dupIo=").append(dupIoPairs);
+            } else {
+                sb.append(" (empty)");
+            }
+            DiagLog.log("%s", sb);
             sodiumDrawCount = 0;
         }
 
@@ -196,6 +232,33 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
                     if (buffer == null && "ChunkData".equals(binding.name())) {
                         // ChunkData 是 GlBufferStreamer 的 buffer（Sodium 侧上传），经 interface 取
                         buffer = state.shaderInterface().chunkDataBuffer();
+                        // P5 水面判别：fade 值抽查（P3 后 ChunkData 为 Shared 可 CPU 读回）——
+                        // fade=0/异常值 → 雾色/透明异常。256 项中统计 -1（恒不透明）、
+                        // 0（异常：应写 build time 或 -1）、正值（淡入时间戳）计数。
+                        if (buffer != null && buffer.isCpuAccessible()
+                                && Diagnostics.shouldRun("sodium-chunkdata", 5_000L)) {
+                            java.nio.ByteBuffer data = buffer.currentStorage();
+                            int ints = data.remaining() / 4;
+                            int countNegOne = 0;
+                            int countZero = 0;
+                            int countPositive = 0;
+                            for (int k = 0; k < ints; k++) {
+                                int v = data.getInt(k * 4);
+                                if (v == -1) {
+                                    countNegOne++;
+                                } else if (v == 0) {
+                                    countZero++;
+                                } else {
+                                    countPositive++;
+                                }
+                            }
+                            DiagLog.log("[diag] sodium chunkFades total=%d negOne=%d zero=%d positive=%d first=%d,%d,%d,%d",
+                                    ints, countNegOne, countZero, countPositive,
+                                    ints > 0 ? data.getInt(0) : 0,
+                                    ints > 1 ? data.getInt(4) : 0,
+                                    ints > 2 ? data.getInt(8) : 0,
+                                    ints > 3 ? data.getInt(12) : 0);
+                        }
                     }
                 }
                 if (buffer == null) {

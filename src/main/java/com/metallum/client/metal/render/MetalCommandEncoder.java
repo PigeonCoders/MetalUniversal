@@ -97,6 +97,13 @@ public final class MetalCommandEncoder implements CommandEncoder {
     private static volatile boolean frameMoving;
     private long movingSamples = 0;
     private long movingSumUs = 0;
+    /** P6：await 阻塞时长统计（GPU 重帧判别——阻塞量 = max(0, T_g - 33.3ms)）。 */
+    private long lastAwaitUs = 0L;
+    private long awaitSamples = 0;
+    private long awaitSumUs = 0;
+    private long awaitMaxUs = 0;
+    /** P6：尖峰帧（帧间隔 >30ms）判别阈值（µs）。 */
+    private static final long SPIKE_THRESHOLD_US = 30_000L;
     private final Long2ObjectOpenHashMap<java.util.ArrayDeque<MemorySegment>> dynamicBackingPool = new Long2ObjectOpenHashMap<>();
     private static final int MAX_POOLED_DYNAMIC_BACKINGS_PER_SIZE = 8;
     @Nullable
@@ -198,6 +205,17 @@ public final class MetalCommandEncoder implements CommandEncoder {
                             movingSamples++;
                             movingSumUs += frameUs;
                         }
+                        // P6：await 阻塞归因——帧间隔 [prev,now] 含 prev 处 submit 的 await。
+                        // 尖峰帧（>30ms）逐条记录：awaitPrev 大 → GPU 重帧坐实；小 → CPU 编码突发。
+                        if (lastAwaitUs > 0L) {
+                            awaitSamples++;
+                            awaitSumUs += lastAwaitUs;
+                            awaitMaxUs = Math.max(awaitMaxUs, lastAwaitUs);
+                        }
+                        if (frameUs > SPIKE_THRESHOLD_US) {
+                            DiagLog.log("[diag] spike frame=%dus awaitPrev=%dus moving=%b",
+                                    frameUs, lastAwaitUs, frameMoving);
+                        }
                     }
                 }
             }
@@ -213,15 +231,19 @@ public final class MetalCommandEncoder implements CommandEncoder {
         }
         currentSubmitIndex++;
 
-        // P1 方案 B：SYNC_MODE=等「提前 N 帧」的提交完成（1=完全串行 / 2=超前 1 帧判别 /
-        // 3=滑动窗口）。等-2 判别：无闪烁 → 竞争窗口 ≤2 帧（方案 B 可行）；闪烁回归 →
-        // 窗口=3 帧（需精准等待）。注意 awaitSubmitCompletion 找不到记录返回 true（不等待）。
+        // P6 卡顿判别：await 阻塞时长观测 + gpuBehind 修复。模型：SYNC_MODE=3 时
+        // 阻塞量 = max(0, T_g - 33.3ms)（GPU 重帧 → CPU 等在 submit）。isCompleted 检查
+        // 移到 await 之前（toClose=N-3，await 前未完成 = GPU 落后 ≥3 帧，真 gpuBehind——
+        // 原位置恒 false 是结构性盲）。
+        boolean behindBeforeAwait = toClose != null && !toClose.buffer.isCompleted();
+        long awaitStartNanos = System.nanoTime();
         awaitSubmitCompletion(currentSubmitIndex - SYNC_MODE, 5000L);
+        lastAwaitUs = (System.nanoTime() - awaitStartNanos) / 1000L;
+        if (behindBeforeAwait) {
+            frameTimeNotDone++;
+        }
 
         if (toClose != null) {
-            if (!toClose.buffer.isCompleted()) {
-                frameTimeNotDone++;
-            }
             toClose.buffer.close();
         }
 
@@ -231,20 +253,27 @@ public final class MetalCommandEncoder implements CommandEncoder {
         if (Diagnostics.shouldRun("frame_time", 5_000L) && frameTimeSamples > 0) {
             long avgUs = frameTimeSumUs / frameTimeSamples;
             long movingAvgUs = movingSamples == 0 ? 0 : movingSumUs / movingSamples;
+            long awaitAvgUs = awaitSamples == 0 ? 0 : awaitSumUs / awaitSamples;
             // P0：moving=N/M 为 5s 窗口内移动帧占比，avgMoving 为移动帧平均耗时（静止帧 avg 即总 avg）
-            DiagLog.log("frame_time fps=%.1f avg=%.2fms max=%.2fms gpuBehind=%d moving=%d/%d avgMoving=%.2fms",
+            // P6：await 阻塞统计（GPU 重帧判别）
+            DiagLog.log("frame_time fps=%.1f avg=%.2fms max=%.2fms gpuBehind=%d moving=%d/%d avgMoving=%.2fms awaitAvg=%.2fms awaitMax=%.2fms",
                     1_000_000.0 / avgUs,
                     avgUs / 1000.0,
                     frameTimeMaxUs / 1000.0,
                     frameTimeNotDone,
                     movingSamples, frameTimeSamples,
-                    movingAvgUs / 1000.0);
+                    movingAvgUs / 1000.0,
+                    awaitAvgUs / 1000.0,
+                    awaitMaxUs / 1000.0);
             frameTimeSamples = 0;
             frameTimeSumUs = 0;
             frameTimeMaxUs = 0;
             frameTimeNotDone = 0;
             movingSamples = 0;
             movingSumUs = 0;
+            awaitSamples = 0;
+            awaitSumUs = 0;
+            awaitMaxUs = 0;
         }
 
         if (Diagnostics.shouldRun("stats", 60_000L)) {

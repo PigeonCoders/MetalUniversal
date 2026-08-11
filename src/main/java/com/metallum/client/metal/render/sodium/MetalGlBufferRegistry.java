@@ -142,7 +142,11 @@ public final class MetalGlBufferRegistry {
             if (isStagingUsage(usage)) {
                 this.ensureStagingSlot();
                 MetalGpuBuffer cur = this.ring[this.ringSlot];
-                if (cur != null && cur.size() == size && this.ringUsages[this.ringSlot] == usage) {
+                // P4：grow-only 复用（staging 上传是整写语义——大 buffer 复用安全，尺寸只增不减）。
+                // 精确尺寸匹配曾致 6498 次重分配/60s（section mesh 尺寸离散，pool 仅 36% hit）——
+                // 上传风暴期渲染线程 CPU 突发 + 分配 churn。复用时不重写旧内容（整写覆盖）。
+                if (cur != null && cur.size() >= size && this.ringUsages[this.ringSlot] == usage) {
+                    this.ringSizes[this.ringSlot] = cur.size();
                     return;
                 }
                 if (cur != null) {

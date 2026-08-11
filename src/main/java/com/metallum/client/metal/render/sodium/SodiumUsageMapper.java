@@ -29,7 +29,13 @@ public final class SodiumUsageMapper {
     /** GlBufferUsage → MC GpuBuffer.Usage 位。 */
     public static int toMinecraftUsage(final GlBufferUsage usage) {
         return switch (usage) {
-            case STREAM_DRAW, DYNAMIC_DRAW -> GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST;
+            // P3：STREAM_DRAW（GlBufferStreamer/chunkFades 唯一使用者）加 MAP_WRITE →
+            // Shared CPU 直写（writeBuffer 自带 CPU 分支）——fade 上传不再走 blit，
+            // 消除每帧 0-6 次 render encoder 重建打断（fade 为 build time，2 帧陈旧
+            // 仅延迟淡入 ≤33ms，不可感知）。DYNAMIC_DRAW 0.8.13 无使用者，保守不动
+            // （若未来作顶点数据，Shared 会引入跨帧竞争）。
+            case STREAM_DRAW -> GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE;
+            case DYNAMIC_DRAW -> GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST;
             case STREAM_COPY -> GpuBuffer.USAGE_COPY_SRC | GpuBuffer.USAGE_HINT_CLIENT_STORAGE;
             case STREAM_READ -> GpuBuffer.USAGE_MAP_READ | GpuBuffer.USAGE_COPY_DST;
             case STATIC_DRAW, DYNAMIC_COPY -> GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST;

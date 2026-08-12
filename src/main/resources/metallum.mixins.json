@@ -16,7 +16,8 @@
     "sodium.RenderSectionManagerMixin",
     "sodium.GlContextInfoMixin",
     "sodium.ShaderChunkRendererMixin",
-    "sodium.SodiumWorldRendererRotationMixin"
+    "sodium.SodiumWorldRendererRotationMixin",
+    "sodium.GameRendererCameraMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -105,6 +105,11 @@
 [JavaLauncher] Reading custom JVM flags
 [JavaLauncher] Added custom JVM flag: -Dmetallum.sync=3
 [JavaLauncher] Added custom JVM flag: -Dmetallum.diag.window=0
+[JavaLauncher] Added custom JVM flag: -Xm1G
+[JavaLauncher] Added custom JVM flag: -XX:MaxGCPauseMillis=50
+[JavaLauncher] Added custom JVM flag: -XX:G1MaxNewSizePercent=35
+[JavaLauncher] Added custom JVM flag: -XX:+ParallelRefProcEnabled
+[JavaLauncher] Added custom JVM flag: -XX:G1HeapRegionSize=4m
 [Init] Found JLI lib
 [Init] Calling JLI_Launch
 Input: Mouse connected!
@@ -116,113 +121,7 @@ Input: Got mouse Mouse
 Input: Mouse connected!
 Input: Got mouse Mouse
 OpenJDK 64-Bit Server VM warning: Option UseCompressedClassPointers was deprecated in version 25.0 and will likely be removed in a future release.
-WARNING: Unknown module: cpw.mods.bootstraplauncher specified to --add-exports
-WARNING: package sun.security.action not in java.base
-PatchJNAAgent: premain called
-Arc Capes DNS Injector
-Parts of Alibaba's DCM library were used, please read https://github.com/alibaba/java-dns-cache-manipulator/blob/main/README.md for more info
-Added DNS cache entry: s.optifine.net/23.95.137.176
-java.lang.ClassNotFoundException: sun/java2d/SurfaceManagerFactory
-	at java.base/java.lang.Class.forName0(Native Method)
-	at java.base/java.lang.Class.forName(Unknown Source)
-	at java.base/java.lang.Class.forName(Unknown Source)
-	at com.github.caciocavallosilano.cacio.ctc.CTCPreloadClassLoader.<clinit>(CTCPreloadClassLoader.java:62)
-	at java.base/java.lang.Class.forName0(Native Method)
-	at java.base/java.lang.Class.forName(Unknown Source)
-	at java.base/java.lang.Class.forName(Unknown Source)
-	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:47)
-WARNING: A restricted method in java.lang.System has been called
-WARNING: java.lang.System::loadLibrary has been called by net.kdt.pojavlaunch.value.MinecraftAccount in an unnamed module (file:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs/launcher.jar)
-WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
-WARNING: Restricted methods will be blocked in a future release unless native access is enabled
-
-Launching Minecraft fabric-loader-0.19.3-1.21.11
-Args init finished. Now starting game
-2026-08-11T18:15:24.457581Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
-PatchJNAAgent: Replacing class
-Platform.isMac called from com.sun.jna.Native
-Platform.isMac called from com.sun.jna.Native
-Platform.isMac called from com.sun.jna.Native
-Platform.isMac called from com.sun.jna.NativeLibrary
-Platform.isMac called from com.sun.jna.NativeLibrary
-Platform.isMac called from com.sun.jna.NativeLibrary
-Platform.isMac called from com.sun.jna.NativeLibrary
-Platform.isMac called from com.sun.jna.NativeLibrary
-Platform.isMac called from com.sun.jna.NativeLibrary
-Platform.isMac called from com.sun.jna.NativeLibrary
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:/private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/libraries/org/joml/joml/1.10.8/joml-1.10.8.jar)
-WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-Initializing MobileGlues ...
-The Open Source License of MobileGlues: 
-  GNU LGPL-2.1 License
-[MobileGlues] Setting: enableAngle                 = false
-[MobileGlues] Setting: ignoreError                 = 1
-[MobileGlues] Setting: enableExtComputeShader      = false
-[MobileGlues] Setting: enableExtGL43               = false
-[MobileGlues] Setting: enableExtTimerQuery         = false
-[MobileGlues] Setting: enableExtDirectStateAccess  = true
-[MobileGlues] Setting: maxGlslCacheSize            = 30
-[MobileGlues] Setting: angleDepthClearFixMode      = 0
-[MobileGlues] Setting: bufferCoherentAsFlush       = 0
-[MobileGlues] Setting: customGLVersion             = (default)
-[MobileGlues] Setting: fsr1Setting                 = 0
-EGL initialized successfully
-OpenGL ES Version: OpenGL ES 3.0.0 (300)
-Not Detected GL_EXT_multi_draw_indirect!
-[MobileGlues] Setting: multidrawMode               = Auto
-multidrawMode = Auto
-    -> DrawElements (Auto detected)
-EGLBridge: Binding to OpenGL ES
-2026-08-12 02:15:28.822 AngelAuraAmethyst[3945:832789] [Metallum] +[SurfaceViewController surface] returned <GameSurfaceView: 0x106b3f780; frame = (0 0; 1180 820); layer = <CAMetalLayer: 0x120de1050>>
-2026-08-12 02:15:28.823 AngelAuraAmethyst[3945:832789] [Metallum] Using existing view.layer as CAMetalLayer (frame=(0.0, 0.0, 1180.0, 820.0), contentsScale=2.0, drawsAsynchronously=YES)
-*** Terminating app due to uncaught exception 'CAMetalLayerInvalidMaximumDrawableCount', reason: 'failed trying to set maximumDrawableCount to 4 outside of the valid range of [2, 3]'
-*** First throw call stack:
-(0x196ad52ec 0x193f5da7c 0x196b33f08 0x19869f664 0x127bd0ff0 0x157acdd5c 0x157954a84 0x157954a84 0x157954a84 0x157954a84 0x157954a84 0x157954a84 0x157954a84 0x157954a84 0x157954a84 0x157954a84 0x15795501c 0x157954a84 0x157954a84 0x157954a84 0x157954a84 0x157954a84 0x157954a84 0x15795501c 0x157954a84 0x157954a84 0x157954a84 0x157954818 0x157954818 0x157954818 0x157954db0 0x157954818 0x157954a84 0x157954a84 0x157950154 0x1420e1594 0x14216862c 0x14216bc20 0x122313430 0x122315f0c 0x220e9bafc 0x220e9ba04)
-Uncaught exception: failed trying to set maximumDrawableCount to 4 outside of the valid range of [2, 3]
-Call stack: (
-	0   CoreFoundation                      0x0000000196ad52f8 0551BAA3-C6E9-3423-B0E2-BE69719C1D7F + 1155832
-	1   libobjc.A.dylib                     0x0000000193f5da7c objc_exception_throw + 88
-	2   CoreFoundation                      0x0000000196b33f08 0551BAA3-C6E9-3423-B0E2-BE69719C1D7F + 1543944
-	3   QuartzCore                          0x000000019869f664 AA600965-95AA-3AF4-853A-A2C99D41E348 + 1500772
-	4   libmetallum.dylib                   0x0000000127bd0ff0 metallum_configure_layer + 112
-	5   ???                                 0x0000000157acdd5c 0x0 + 5765913948
-	6   ???                                 0x0000000157954a84 0x0 + 5764369028
-	7   ???                                 0x0000000157954a84 0x0 + 5764369028
-	8   ???                                 0x0000000157954a84 0x0 + 5764369028
-	9   ???                                 0x0000000157954a84 0x0 + 5764369028
-	10  ???                                 0x0000000157954a84 0x0 + 5764369028
-	11  ???                                 0x0000000157954a84 0x0 + 5764369028
-	12  ???                                 0x0000000157954a84 0x0 + 5764369028
-	13  ???                                 0x0000000157954a84 0x0 + 5764369028
-	14  ???                                 0x0000000157954a84 0x0 + 5764369028
-	15  ???                                 0x0000000157954a84 0x0 + 5764369028
-	16  ???                                 0x000000015795501c 0x0 + 5764370460
-	17  ???                                 0x0000000157954a84 0x0 + 5764369028
-	18  ???                                 0x0000000157954a84 0x0 + 5764369028
-	19  ???                                 0x0000000157954a84 0x0 + 5764369028
-	20  ???                                 0x0000000157954a84 0x0 + 5764369028
-	21  ???                                 0x0000000157954a84 0x0 + 5764369028
-	22  ???                                 0x0000000157954a84 0x0 + 5764369028
-	23  ???                                 0x000000015795501c 0x0 + 5764370460
-	24  ???                                 0x0000000157954a84 0x0 + 5764369028
-	25  ???                                 0x0000000157954a84 0x0 + 5764369028
-	26  ???                                 0x0000000157954a84 0x0 + 5764369028
-	27  ???                                 0x0000000157954818 0x0 + 5764368408
-	28  ???                                 0x0000000157954818 0x0 + 5764368408
-	29  ???                                 0x0000000157954818 0x0 + 5764368408
-	30  ???                                 0x0000000157954db0 0x0 + 5764369840
-	31  ???                                 0x0000000157954818 0x0 + 5764368408
-	32  ???                                 0x0000000157954a84 0x0 + 5764369028
-	33  ???                                 0x0000000157954a84 0x0 + 5764369028
-	34  ???                                 0x0000000157950154 0x0 + 5764350292
-	35  libjvm.dylib                        0x00000001420e1594 _ZN9JavaCalls11call_helperEP9JavaValueRK12methodHandleP17JavaCallArgumentsP10JavaThread + 832
-	36  libjvm.dylib                        0x000000014216862c _ZL17jni_invoke_staticP7JNIEnv_P9JavaValueP8_jobject11JNICallTypeP10_jmethodIDP18JNI_ArgumentPusherP10JavaThread + 372
-	37  libjvm.dylib                        0x000000014216bc20 jni_CallStaticVoidMethod + 248
-	38  libjli.dylib                        0x0000000122313430 JavaMain + 2328
-	39  libjli.dylib                        0x0000000122315f0c ThreadJavaMain + 12
-	40  libsystem_pthread.dylib             0x0000000220e9bafc _pthread_start + 136
-	41  libsystem_pthread.dylib             0x0000000220e9ba04 thread_start + 8
-)
-libc++abi: terminating due to uncaught exception of type NSException
+Unrecognized option: -Xm1G
+Error: Could not create the Java Virtual Machine.
+Error: A fatal exception has occurred. Program will exit.
+exit(1) called

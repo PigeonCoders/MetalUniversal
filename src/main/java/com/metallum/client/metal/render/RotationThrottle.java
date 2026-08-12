@@ -13,17 +13,24 @@ package com.metallum.client.metal.render;
  * 节流失效；玩家跨块移动/跨 2° 桶时立即恢复重算（不滞后）。
  */
 public final class RotationThrottle {
-    // P27：2° → 10°——正常转动速度（~60°/s = 1°/帧）下 2° 桶 = 每 2 帧跨桶
-    // （重算帧掉 vsync——"无时无刻卡顿"）；10° = 每 10 帧一次重算（频率降 5 倍）。
-    // 权衡：可见集滞后 10°（快转甩视角时边缘 pop-in 可见；慢转——用户主场景——
-    // 顿挫从"每 2 帧"降为"每 10 帧"）。
-    private static final double BUCKET_DEGREES = 10.0;
+    // P28：固定 10° → 角速度自适应桶（慢转大桶重算稀——丝滑；快转小桶——低滞后）。
+    // 档位：<30°/s → 30° 桶（慢转每 ~1s 重算一次）；30-120°/s → 10° 桶；
+    // >120°/s → 5° 桶（甩视角低 pop-in）。角速度 EMA 估计（帧差/帧间隔）。
+    private static final double BUCKET_SLOW = 30.0;
+    private static final double BUCKET_MEDIUM = 10.0;
+    private static final double BUCKET_FAST = 5.0;
     private static double curPitch;
     private static double curYaw;
     private static long curBlockX;
     private static long curBlockZ;
+    private static long curNanos;
+    private static double prevYaw;
+    private static long prevNanos;
+    private static boolean hasPrev;
+    private static double speedEstimate; // °/s（EMA）
     private static int lastBucketX = Integer.MIN_VALUE;
     private static int lastBucketY = Integer.MIN_VALUE;
+    private static double lastBucketDegrees;
     private static long lastBlockX;
     private static long lastBlockZ;
 
@@ -32,24 +39,52 @@ public final class RotationThrottle {
 
     /** 每帧相机快照（GameRenderer.render HEAD——先于 Sodium setupTerrain）。 */
     public static void snapshot(final float pitch, final float yaw, final double posX, final double posZ) {
+        long now = System.nanoTime();
+        if (hasPrev) {
+            double elapsed = (now - prevNanos) / 1_000_000_000.0;
+            if (elapsed > 0.0 && elapsed < 0.5) {
+                double degPerSec = Math.abs(yaw - prevYaw) / elapsed;
+                speedEstimate = speedEstimate * 0.9 + degPerSec * 0.1;
+            }
+        } else {
+            hasPrev = true;
+        }
+        prevYaw = yaw;
+        prevNanos = now;
         curPitch = pitch;
         curYaw = yaw;
         curBlockX = (long) Math.floor(posX);
         curBlockZ = (long) Math.floor(posZ);
+        curNanos = now;
+    }
+
+    /** 当前档位桶（°）。 */
+    private static double bucketDegrees() {
+        double s = speedEstimate;
+        if (s < 30.0) {
+            return BUCKET_SLOW;
+        }
+        if (s < 120.0) {
+            return BUCKET_MEDIUM;
+        }
+        return BUCKET_FAST;
     }
 
     /** 桶内转动且未跨块 → true（应节流——纯小角度转动）。 */
     public static boolean shouldThrottle() {
-        int bucketX = (int) Math.floor(curPitch / BUCKET_DEGREES);
-        int bucketY = (int) Math.floor(curYaw / BUCKET_DEGREES);
-        return bucketX == lastBucketX && bucketY == lastBucketY
+        double bucket = bucketDegrees();
+        int bucketX = (int) Math.floor(curPitch / bucket);
+        int bucketY = (int) Math.floor(curYaw / bucket);
+        return bucket == lastBucketDegrees && bucketX == lastBucketX && bucketY == lastBucketY
                 && curBlockX == lastBlockX && curBlockZ == lastBlockZ;
     }
 
     /** 跨桶/跨块时记录当前快照（节流窗口对齐上次重算状态）。 */
     public static void record() {
-        lastBucketX = (int) Math.floor(curPitch / BUCKET_DEGREES);
-        lastBucketY = (int) Math.floor(curYaw / BUCKET_DEGREES);
+        double bucket = bucketDegrees();
+        lastBucketDegrees = bucket;
+        lastBucketX = (int) Math.floor(curPitch / bucket);
+        lastBucketY = (int) Math.floor(curYaw / bucket);
         lastBlockX = curBlockX;
         lastBlockZ = curBlockZ;
     }

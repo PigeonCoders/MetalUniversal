@@ -52,6 +52,33 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
     /** ChunkData 缺失警告只打一次（每 region 都会触发，避免刷屏）。 */
     private static final java.util.concurrent.atomic.AtomicBoolean ChunkDataMissingWarned = new java.util.concurrent.atomic.AtomicBoolean(false);
 
+    // P29-2：pass 内状态去重缓存——Metal 编码器状态幂等（重复 setBuffer/
+    // setRenderPipelineState 纯浪费），pass 内 94 region 间 pipeline/depth/cull/
+    // winding/fill/9 个 per-pass uniform/2 纹理 100% 相同（仅 u_RegionOffset/
+    // u_CurrentTime/vertexBuffer 每 region 变）。缓存 epoch+pipeline 失效
+    // （MetalCommandEncoder.endEncoder 后编码器状态全丢——必须全量重绑）。
+    // 渲染线程单线程（无并发）。静态跨 region 实例共享（每 region 新建 list）。
+    private static final int UNIFORM_CACHE_SLOTS = 32;
+    private static long cacheEpoch = Long.MIN_VALUE;
+    private static MemorySegment cachePipeline;
+    private static final MemorySegment[] cacheUniformHandle = new MemorySegment[UNIFORM_CACHE_SLOTS];
+    private static final long[] cacheUniformOffset = new long[UNIFORM_CACHE_SLOTS];
+    private static final MemorySegment[] cacheTexHandle = new MemorySegment[2];
+    private static final MemorySegment[] cacheSamplerHandle = new MemorySegment[2];
+
+    private static boolean stateCacheValid(final MemorySegment pipelineHandle) {
+        return MetalCommandEncoder.encoderEpoch() == cacheEpoch && pipelineHandle == cachePipeline;
+    }
+
+    private static void stateCacheReset(final MemorySegment pipelineHandle) {
+        cacheEpoch = MetalCommandEncoder.encoderEpoch();
+        cachePipeline = pipelineHandle;
+        java.util.Arrays.fill(cacheUniformHandle, null);
+        java.util.Arrays.fill(cacheUniformOffset, 0L);
+        java.util.Arrays.fill(cacheTexHandle, null);
+        java.util.Arrays.fill(cacheSamplerHandle, null);
+    }
+
     private final MetalCommandEncoder encoder;
     private final MetalSodiumTessellation tessellation;
     private final MetalSodiumActiveState state;
@@ -186,6 +213,11 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
         if (MetalNativeBridge.isNullHandle(pipelineHandle)) {
             throw new IllegalStateException("Sodium native pipeline unavailable (useDepth=" + useDepth + ", color=" + colorFormat + ")");
         }
+        // P29-2：pipeline/depth/cull/winding/fill 全部从 pipeline 派生——handle 相同即已绑（跳过）
+        if (stateCacheValid(pipelineHandle)) {
+            return;
+        }
+        stateCacheReset(pipelineHandle);
         enc.setRenderPipelineState(pipelineHandle);
 
         if (useDepth) {
@@ -215,6 +247,12 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
     /** 按 pipeline 资源表逐资源绑定（uniform buffers + textures）。 */
     private void applyResources(final MTLRenderCommandEncoder enc) {
         MetalSodiumActiveState state = this.state;
+        // P29-2：per-pass 绑定缓存（pipeline 变化/encoder 重建时失效——slot 语义重置）
+        MemorySegment pipelineHandle = state.pipeline().getNativePipeline(this.encoder.activeHasDepth(), this.encoder.activeColorFormat());
+        if (!stateCacheValid(pipelineHandle)) {
+            stateCacheReset(pipelineHandle);
+        }
+        int uniformSlot = 0;
         for (MetalSodiumCompiledPipeline.ResourceBinding binding : state.pipeline().resources()) {
             if (binding.kind() == MetalSodiumCompiledPipeline.ResourceKind.UNIFORM_BUFFER) {
                 // fix11：per-region uniform（regionOffset/currentTime）用每 region 独立
@@ -267,7 +305,21 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
                     }
                     continue;
                 }
-                enc.setBuffer(buffer.nativeHandle(), bufferOffset, binding.bindingIndex(), binding.stageMask());
+                // P29-2：per-pass buffer 缓存（u_RegionOffset/u_CurrentTime 走 region 专属
+                // 分支不缓存——其余 per-pass 在 pass 内恒定——跳过重复 setBuffer）
+                MemorySegment handle = buffer.nativeHandle();
+                if (uniformSlot < UNIFORM_CACHE_SLOTS
+                        && handle == cacheUniformHandle[uniformSlot]
+                        && bufferOffset == cacheUniformOffset[uniformSlot]) {
+                    uniformSlot++;
+                    continue;
+                }
+                enc.setBuffer(handle, bufferOffset, binding.bindingIndex(), binding.stageMask());
+                if (uniformSlot < UNIFORM_CACHE_SLOTS) {
+                    cacheUniformHandle[uniformSlot] = handle;
+                    cacheUniformOffset[uniformSlot] = bufferOffset;
+                    uniformSlot++;
+                }
                 continue;
             }
 
@@ -297,7 +349,17 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
         if (!(textureView instanceof MetalGpuTextureView metalTexture) || !(sampler instanceof MetalGpuSampler metalSampler)) {
             throw new IllegalStateException("Sodium texture/sampler for " + binding.name() + " not Metal-backed or missing");
         }
-        enc.setTextureAndSampler(metalTexture.nativeHandle(), metalSampler.nativeHandle(), binding.bindingIndex(), binding.stageMask());
+        // P29-2：纹理缓存（pass 内恒定——u_BlockTex/u_LightTex 各一槽；pipeline 变化
+        // 时 stateCacheReset 已清槽）
+        int texSlot = "u_BlockTex".equals(binding.name()) ? 0 : 1;
+        MemorySegment texHandle = metalTexture.nativeHandle();
+        MemorySegment samplerHandle = metalSampler.nativeHandle();
+        if (texHandle == cacheTexHandle[texSlot] && samplerHandle == cacheSamplerHandle[texSlot]) {
+            return;
+        }
+        cacheTexHandle[texSlot] = texHandle;
+        cacheSamplerHandle[texSlot] = samplerHandle;
+        enc.setTextureAndSampler(texHandle, samplerHandle, binding.bindingIndex(), binding.stageMask());
     }
 
     private static MTLPrimitiveType toMetalPrimitive(final GlPrimitiveType type) {

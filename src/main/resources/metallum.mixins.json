@@ -10,14 +10,15 @@
     "render.GLFWTerminateMixin",
     "render.RenderSystemGlobalsMixin",
     "render.LevelRendererDiagMixin",
+    "render.LevelRendererCameraMixin",
+    "render.GameRendererAutoScreenshotMixin",
     "sodium.GlBufferMixin",
     "sodium.PostLaunchChecksMixin",
     "sodium.GLRenderDeviceMixin",
     "sodium.RenderSectionManagerMixin",
     "sodium.GlContextInfoMixin",
     "sodium.ShaderChunkRendererMixin",
-    "sodium.SodiumWorldRendererRotationMixin",
-    "sodium.GameRendererCameraMixin"
+    "sodium.SodiumWorldRendererRotationMixin"
   ],
   "injectors": {
     "defaultRequire": 1

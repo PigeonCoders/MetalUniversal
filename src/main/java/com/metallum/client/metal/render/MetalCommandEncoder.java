@@ -183,6 +183,21 @@ public final class MetalCommandEncoder implements CommandEncoder {
         }
         renderColorAttachment = MemorySegment.NULL;
         renderDepthAttachment = MemorySegment.NULL;
+        bumpEncoderEpoch();
+    }
+
+    // P29-2：编码器世代计数——任何编码器结束/重建时递增。
+    // MetalSodiumDrawCommandList 的状态去重缓存依赖它失效（编码器状态全丢后
+    // 必须全量重绑——Metal 编码器状态不跨 endEncoder 保持）。渲染线程单线程。
+    private static long encoderEpoch;
+
+    private static void bumpEncoderEpoch() {
+        encoderEpoch++;
+    }
+
+    /** 编码器世代（适配层状态缓存失效信号）。 */
+    public static long encoderEpoch() {
+        return encoderEpoch;
     }
 
     /**

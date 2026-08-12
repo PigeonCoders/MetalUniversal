@@ -28,6 +28,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Environment(EnvType.CLIENT)
 public final class MetalGlBufferRegistry {
+    // P22（spike 判别）：arena resize 事件统计（5s 节流）——ensureAllocated 的
+    // 非 staging 分支"已有 buffer 尺寸/usage 不匹配 → 新建"（Sodium GlBufferArena
+    // resize 迁移路径；新 region 首建不计——buffer 为 null）。
+    private static long resizeCount;
+    private static long resizeBytes;
+    private static long resizeReportUs;
+    private static long resizeLastUs;
     /** GL 句柄从 1 起（0 在 GL 语义中是"未绑定"，保留不用）。 */
     private static final AtomicInteger NEXT_HANDLE = new AtomicInteger(1);
     private static final ConcurrentHashMap<Integer, MetalGlBufferEntry> BUFFERS = new ConcurrentHashMap<>();
@@ -182,6 +189,20 @@ public final class MetalGlBufferRegistry {
             }
             if (this.buffer != null && this.buffer.size() == size && this.usage == usage) {
                 return;
+            }
+            // P22：resize 事件（已有 buffer 但尺寸/usage 变化 → 新建迁移）
+            if (this.buffer != null) {
+                long nowUs = System.nanoTime() / 1000L;
+                resizeCount++;
+                resizeBytes += size;
+                if (nowUs - resizeLastUs > 5_000_000L) {
+                    resizeLastUs = nowUs;
+                    com.metallum.client.metal.render.DiagLog.log("[diag] registry resize=%d bytes=%d (%d ms)",
+                            resizeCount, resizeBytes, (nowUs - resizeReportUs) / 1000L);
+                    resizeCount = 0;
+                    resizeBytes = 0;
+                    resizeReportUs = nowUs;
+                }
             }
             this.dispose();
             MetalDevice device = MetalBackend.activeDevice();

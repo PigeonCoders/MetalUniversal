@@ -13,6 +13,11 @@ package com.metallum.client.metal.render;
  * 节流失效；玩家跨块移动/跨 2° 桶时立即恢复重算（不滞后）。
  */
 public final class RotationThrottle {
+    // P27：2° → 10°——正常转动速度（~60°/s = 1°/帧）下 2° 桶 = 每 2 帧跨桶
+    // （重算帧掉 vsync——"无时无刻卡顿"）；10° = 每 10 帧一次重算（频率降 5 倍）。
+    // 权衡：可见集滞后 10°（快转甩视角时边缘 pop-in 可见；慢转——用户主场景——
+    // 顿挫从"每 2 帧"降为"每 10 帧"）。
+    private static final double BUCKET_DEGREES = 10.0;
     private static double curPitch;
     private static double curYaw;
     private static long curBlockX;
@@ -35,16 +40,16 @@ public final class RotationThrottle {
 
     /** 桶内转动且未跨块 → true（应节流——纯小角度转动）。 */
     public static boolean shouldThrottle() {
-        int bucketX = (int) Math.floor(curPitch / 2.0);
-        int bucketY = (int) Math.floor(curYaw / 2.0);
+        int bucketX = (int) Math.floor(curPitch / BUCKET_DEGREES);
+        int bucketY = (int) Math.floor(curYaw / BUCKET_DEGREES);
         return bucketX == lastBucketX && bucketY == lastBucketY
                 && curBlockX == lastBlockX && curBlockZ == lastBlockZ;
     }
 
     /** 跨桶/跨块时记录当前快照（节流窗口对齐上次重算状态）。 */
     public static void record() {
-        lastBucketX = (int) Math.floor(curPitch / 2.0);
-        lastBucketY = (int) Math.floor(curYaw / 2.0);
+        lastBucketX = (int) Math.floor(curPitch / BUCKET_DEGREES);
+        lastBucketY = (int) Math.floor(curYaw / BUCKET_DEGREES);
         lastBlockX = curBlockX;
         lastBlockZ = curBlockZ;
     }

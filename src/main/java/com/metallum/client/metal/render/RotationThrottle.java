@@ -33,6 +33,11 @@ public final class RotationThrottle {
     private static double lastBucketDegrees;
     private static long lastBlockX;
     private static long lastBlockZ;
+    // P30（判别）：节流命中计数（5s 节流输出）——纯转动帧 hits 高 = 节流生效；
+    // hits≈0 = 节流失效（快照时序/比较链问题）。
+    private static long throttledHits;
+    private static long throttledSkips;
+    private static long throttledReportNanos;
 
     private RotationThrottle() {
     }
@@ -75,8 +80,21 @@ public final class RotationThrottle {
         double bucket = bucketDegrees();
         int bucketX = (int) Math.floor(curPitch / bucket);
         int bucketY = (int) Math.floor(curYaw / bucket);
-        return bucket == lastBucketDegrees && bucketX == lastBucketX && bucketY == lastBucketY
+        boolean throttled = bucket == lastBucketDegrees && bucketX == lastBucketX && bucketY == lastBucketY
                 && curBlockX == lastBlockX && curBlockZ == lastBlockZ;
+        if (throttled) {
+            throttledHits++;
+        } else {
+            throttledSkips++;
+        }
+        long now = System.nanoTime();
+        if (throttledHits + throttledSkips >= 300 && now - throttledReportNanos > 5_000_000_000L) {
+            throttledReportNanos = now;
+            DiagLog.log("[diag] rot-throttle hits=%d skip=%d", throttledHits, throttledSkips);
+            throttledHits = 0;
+            throttledSkips = 0;
+        }
+        return throttled;
     }
 
     /** 跨桶/跨块时记录当前快照（节流窗口对齐上次重算状态）。 */

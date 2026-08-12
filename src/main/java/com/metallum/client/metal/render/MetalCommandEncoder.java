@@ -235,8 +235,8 @@ public final class MetalCommandEncoder implements CommandEncoder {
                             awaitMaxUs = Math.max(awaitMaxUs, lastAwaitUs);
                         }
                         if (frameUs > SPIKE_THRESHOLD_US) {
-                            DiagLog.log("[diag] spike frame=%dus awaitPrev=%dus moving=%b",
-                                    frameUs, lastAwaitUs, frameMoving);
+                            DiagLog.log("[diag] spike frame=%dus awaitPrev=%dus moving=%b gcPause=%dms",
+                                    frameUs, lastAwaitUs, frameMoving, GcMonitor.pauseDeltaMs());
                         }
                     }
                 }

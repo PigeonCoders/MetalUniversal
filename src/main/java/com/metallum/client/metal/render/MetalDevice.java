@@ -46,41 +46,14 @@ public final class MetalDevice implements GpuDevice {
     private final Map<MslFunctionKey, MemorySegment> functionCache = new HashMap<>();
     private static final int MAX_POOLED_BUFFER_BUCKETS = 32;
     private static final int MAX_POOLED_BUFFERS_PER_SIZE = 8;
-    // P21（静态优化）：Sodium arena resize 尺寸序列（estimateNewCapacity ≈ ×1.5：
-    // 189K→290K→435K→653K→979K→1.47M…）与精确匹配分桶永不命中 → resize 每次新建
-    // buffer（0x28 pool 命中率 16% 实证）。改 512KB 粒度分桶 + 桶内记录实际尺寸 +
-    // 复用取"≥ 请求的最小可用"（防止小 buffer 被大请求误用越界）。1.5× 序列多数落
-    // 同桶（0/1/2 桶覆盖 189K-1.5M）→ resize 复用、新建风暴大降。
-    private static final long POOL_BUCKET_SHIFT = 19L; // 2^19 = 512KB
-
-    /** 512KB 粒度桶号（size < 512KB → 桶 0）。 */
-    static long bucketFor(final long size) {
-        return size >> POOL_BUCKET_SHIFT;
-    }
-
-    /** 池内缓冲（记录实际尺寸供 ≥ 请求的最小可用选择）。 */
-    record PooledBuffer(MemorySegment handle, long size) {
-    }
-
-    /** 桶内选择 ≥ 请求尺寸的最小可用缓冲（null = 无可用）。 */
-    static PooledBuffer chooseBestFit(final Deque<PooledBuffer> bucket, final long size) {
-        PooledBuffer best = null;
-        for (PooledBuffer pooled : bucket) {
-            if (pooled.size >= size && (best == null || pooled.size < best.size)) {
-                best = pooled;
-            }
-        }
-        return best;
-    }
-
-    private final Map<Long, Deque<PooledBuffer>> bufferPool = new LinkedHashMap<>(16, 0.75f, true) {
+    private final Map<Long, Deque<MemorySegment>> bufferPool = new LinkedHashMap<>(16, 0.75f, true) {
         @Override
-        protected boolean removeEldestEntry(final Map.Entry<Long, Deque<PooledBuffer>> eldest) {
+        protected boolean removeEldestEntry(final Map.Entry<Long, Deque<MemorySegment>> eldest) {
             if (size() <= MAX_POOLED_BUFFER_BUCKETS) {
                 return false;
             }
-            for (PooledBuffer pooled : eldest.getValue()) {
-                MetalNativeBridge.metallum_release_object(pooled.handle);
+            for (MemorySegment handle : eldest.getValue()) {
+                MetalNativeBridge.metallum_release_object(handle);
             }
             return true;
         }
@@ -329,15 +302,11 @@ public final class MetalDevice implements GpuDevice {
     }
 
     MemorySegment tryAcquirePooledBuffer(final long size, final long resourceOptions) {
-        long key = composePoolKey(bucketFor(size), resourceOptions);
-        Deque<PooledBuffer> bucket = bufferPool.get(key);
+        long key = composePoolKey(size, resourceOptions);
+        Deque<MemorySegment> bucket = bufferPool.get(key);
         if (bucket != null && !bucket.isEmpty()) {
-            PooledBuffer best = chooseBestFit(bucket, size);
-            if (best != null) {
-                bucket.remove(best);
-                Stats.recordPoolHit();
-                return best.handle;
-            }
+            Stats.recordPoolHit();
+            return bucket.pop();
         }
         Stats.recordPoolMiss();
         return MemorySegment.NULL;
@@ -345,10 +314,10 @@ public final class MetalDevice implements GpuDevice {
 
     void queueBufferRelease(final MemorySegment handle, final long size, final long resourceOptions) {
         this.commandEncoder.queueForDestroy(() -> {
-            long key = composePoolKey(bucketFor(size), resourceOptions);
-            Deque<PooledBuffer> bucket = bufferPool.computeIfAbsent(key, k -> new ArrayDeque<>());
+            long key = composePoolKey(size, resourceOptions);
+            Deque<MemorySegment> bucket = bufferPool.computeIfAbsent(key, k -> new ArrayDeque<>());
             if (bucket.size() < MAX_POOLED_BUFFERS_PER_SIZE) {
-                bucket.push(new PooledBuffer(handle, size));
+                bucket.push(handle);
                 Stats.recordPoolReturn();
             } else {
                 MetalNativeBridge.metallum_release_object(handle);
@@ -361,9 +330,9 @@ public final class MetalDevice implements GpuDevice {
     }
 
     private void drainBufferPool() {
-        for (Deque<PooledBuffer> bucket : bufferPool.values()) {
-            for (PooledBuffer pooled : bucket) {
-                MetalNativeBridge.metallum_release_object(pooled.handle);
+        for (Deque<MemorySegment> bucket : bufferPool.values()) {
+            for (MemorySegment handle : bucket) {
+                MetalNativeBridge.metallum_release_object(handle);
             }
         }
         bufferPool.clear();

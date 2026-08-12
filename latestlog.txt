@@ -9,8 +9,7 @@
 * com.apple.private.security.no-sandbox: NO
 [Debugging] Debug log enabled: YES
 [Pre-init] Restored game directory preference (Fabric-noOtherMods-1.21.11)
-[VersionList] Got 907 versions
-[MCDL] SHA1 passed for 1.21.11.json
+[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/versions/1.21.11/1.21.11.json, have to assume it's good.
 [MCDL] insertSafety: how to insert assetIndex?
 [MCDL] insertSafety: how to insert assets?
 [MCDL] Warning: JNA version required by fabric-loader-0.19.3-1.21.11 is 5.17.0 > 5.13.0, skipping JNA replacement.
@@ -86,6 +85,7 @@
 [MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/net/fabricmc/intermediary/1.21.11/intermediary-1.21.11.jar, have to assume it's good.
 [MCDL] Unknown artifact object for net.fabricmc:fabric-loader:0.19.3, attempting to generate one
 [MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/net/fabricmc/fabric-loader/0.19.3/fabric-loader-0.19.3.jar, have to assume it's good.
+[VersionList] Got 907 versions
 [JavaLauncher] Beginning JVM launch
 [JavaLauncher] Reading custom environment variables
 [JavaLauncher] Warning: skipped empty value custom env variable: 
@@ -99,19 +99,18 @@
 [JavaLauncher] RENDERER is set to libmobileglues.dylib
 [JavaLauncher] Looking for Java 25 or later
 [JavaLauncher] JAVA_HOME has been set to /private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/java_runtimes/java-25-openjdk
-[JavaLauncher] Max RAM allocation is set to 1025 MB
+[JavaLauncher] Max RAM allocation is set to 4103 MB
 [Bisect] About to dlopen libjli at /private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/java_runtimes/java-25-openjdk/lib/libjli.dylib
 [Bisect] dlopen returned 0x3bf6e3b80
 [JavaLauncher] Reading custom JVM flags
 [JavaLauncher] Added custom JVM flag: -Dmetallum.sync=3
 [JavaLauncher] Added custom JVM flag: -Dmetallum.diag.window=0
-[JavaLauncher] Ignored JVM flag: -Xmx1G
-[JavaLauncher] Added custom JVM flag: -XX:MaxGCPauseMillis=50
-[JavaLauncher] Added custom JVM flag: -XX:G1MaxNewSizePercent=35
-[JavaLauncher] Added custom JVM flag: -XX:+ParallelRefProcEnabled
-[JavaLauncher] Added custom JVM flag: -XX:G1HeapRegionSize=4m
 [Init] Found JLI lib
 [Init] Calling JLI_Launch
+Input: Mouse connected!
+Input: Got mouse Mouse
+Input: Mouse connected!
+Input: Got mouse Mouse
 Input: Mouse connected!
 Input: Got mouse Mouse
 Input: Mouse connected!
@@ -139,7 +138,7 @@ WARNING: Restricted methods will be blocked in a future release unless native ac
 
 Launching Minecraft fabric-loader-0.19.3-1.21.11
 Args init finished. Now starting game
-2026-08-12T06:26:40.124053Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
+2026-08-12T08:30:34.005716Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
 PatchJNAAgent: Replacing class
 Platform.isMac called from com.sun.jna.Native
 Platform.isMac called from com.sun.jna.Native
@@ -176,10 +175,10 @@ Not Detected GL_EXT_multi_draw_indirect!
 multidrawMode = Auto
     -> DrawElements (Auto detected)
 EGLBridge: Binding to OpenGL ES
-2026-08-12 14:26:44.491 AngelAuraAmethyst[4436:969744] [Metallum] +[SurfaceViewController surface] returned <GameSurfaceView: 0x12cf4ee80; frame = (0 0; 1180 820); layer = <CAMetalLayer: 0x12d18e910>>
-2026-08-12 14:26:44.492 AngelAuraAmethyst[4436:969744] [Metallum] Using existing view.layer as CAMetalLayer (frame=(0.0, 0.0, 1180.0, 820.0), contentsScale=2.0, drawsAsynchronously=YES)
-2026-08-12T06:26:44.739605Z Render thread ERROR Mixin apply for mod metallum failed metallum.mixins.json:sodium.SodiumWorldRendererRotationMixin from mod metallum -> net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Invalid descriptor on metallum.mixins.json:sodium.SodiumWorldRendererRotationMixin from mod metallum->@Inject::metallum$throttleRotation(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;ZZLjava/lang/Object;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V! Expected (Lnet/minecraft/class_4184;Lnet/caffeinemc/mods/sodium/client/render/viewport/Viewport;Lnet/caffeinemc/mods/sodium/client/util/FogParameters;ZZLnet/caffeinemc/mods/sodium/client/render/chunk/ChunkRenderMatrices;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V but found (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;ZZLjava/lang/Object;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:sodium.SodiumWorldRendererRotationMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:sodium.SodiumWorldRendererRotationMixin from mod metallum->@Inject::metallum$throttleRotation(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;ZZLjava/lang/Object;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V]
-org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Invalid descriptor on metallum.mixins.json:sodium.SodiumWorldRendererRotationMixin from mod metallum->@Inject::metallum$throttleRotation(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;ZZLjava/lang/Object;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V! Expected (Lnet/minecraft/class_4184;Lnet/caffeinemc/mods/sodium/client/render/viewport/Viewport;Lnet/caffeinemc/mods/sodium/client/util/FogParameters;ZZLnet/caffeinemc/mods/sodium/client/render/chunk/ChunkRenderMatrices;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V but found (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;ZZLjava/lang/Object;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:sodium.SodiumWorldRendererRotationMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:sodium.SodiumWorldRendererRotationMixin from mod metallum->@Inject::metallum$throttleRotation(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;ZZLjava/lang/Object;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V]
+2026-08-12 16:30:38.277 AngelAuraAmethyst[4520:1024935] [Metallum] +[SurfaceViewController surface] returned <GameSurfaceView: 0x10eebee80; frame = (0 0; 1180 820); layer = <CAMetalLayer: 0x10addcc60>>
+2026-08-12 16:30:38.278 AngelAuraAmethyst[4520:1024935] [Metallum] Using existing view.layer as CAMetalLayer (frame=(0.0, 0.0, 1180.0, 820.0), contentsScale=2.0, drawsAsynchronously=YES)
+2026-08-12T08:30:38.482959Z Render thread ERROR Mixin apply for mod metallum failed metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum -> net.minecraft.class_761: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Invalid descriptor on metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V! Expected (Lnet/minecraft/class_9922;Lnet/minecraft/class_9779;ZLnet/minecraft/class_4184;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V but found (Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V]
+org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Invalid descriptor on metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V! Expected (Lnet/minecraft/class_9922;Lnet/minecraft/class_9779;ZLnet/minecraft/class_4184;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V but found (Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V]
 	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:563)
 	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:493)
 	at org.spongepowered.asm.mixin.injection.code.Injector.inject(Injector.java:284)
@@ -200,8 +199,6 @@ org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Inva
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:231)
 	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
 	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
-	at knot//net.minecraft.class_761.handler$bdj000$sodium$init(class_761.java:2668)
-	at knot//net.minecraft.class_761.<init>(class_761.java:208)
 	at knot//net.minecraft.class_310.<init>(class_310.java:648)
 	at knot//net.minecraft.client.main.Main.main(Main.java:234)
 	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
@@ -214,19 +211,17 @@ org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Inva
 	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
 
 ---- Minecraft Crash Report ----
-// There are four lights!
+// Ouch. That hurt :(
 
-Time: 2026-08-12 14:26:44
+Time: 2026-08-12 16:30:38
 Description: Initializing game
 
-java.lang.RuntimeException: Mixin transformation of net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer failed
+java.lang.RuntimeException: Mixin transformation of net.minecraft.class_761 failed
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:440)
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.tryLoadClass(KnotClassDelegate.java:336)
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:231)
 	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
 	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
-	at knot//net.minecraft.class_761.handler$bdj000$sodium$init(class_761.java:2668)
-	at knot//net.minecraft.class_761.<init>(class_761.java:208)
 	at knot//net.minecraft.class_310.<init>(class_310.java:648)
 	at knot//net.minecraft.client.main.Main.main(Main.java:234)
 	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
@@ -242,13 +237,13 @@ Caused by: org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerEr
 	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
 	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
-	... 16 more
-Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [metallum.mixins.json:sodium.SodiumWorldRendererRotationMixin from mod metallum] from phase [DEFAULT] in config [metallum.mixins.json] FAILED during APPLY
+	... 14 more
+Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum] from phase [DEFAULT] in config [metallum.mixins.json] FAILED during APPLY
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:685)
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:636)
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:367)
-	... 19 more
-Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Invalid descriptor on metallum.mixins.json:sodium.SodiumWorldRendererRotationMixin from mod metallum->@Inject::metallum$throttleRotation(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;ZZLjava/lang/Object;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V! Expected (Lnet/minecraft/class_4184;Lnet/caffeinemc/mods/sodium/client/render/viewport/Viewport;Lnet/caffeinemc/mods/sodium/client/util/FogParameters;ZZLnet/caffeinemc/mods/sodium/client/render/chunk/ChunkRenderMatrices;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V but found (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;ZZLjava/lang/Object;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:sodium.SodiumWorldRendererRotationMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:sodium.SodiumWorldRendererRotationMixin from mod metallum->@Inject::metallum$throttleRotation(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;ZZLjava/lang/Object;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V]
+	... 17 more
+Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Invalid descriptor on metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V! Expected (Lnet/minecraft/class_9922;Lnet/minecraft/class_9779;ZLnet/minecraft/class_4184;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V but found (Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V]
 	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:563)
 	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:493)
 	at org.spongepowered.asm.mixin.injection.code.Injector.inject(Injector.java:284)
@@ -262,7 +257,7 @@ Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionExce
 	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
 	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
-	... 19 more
+	... 17 more
 
 
 A detailed walkthrough of the error, its code path and all known details is as follows:
@@ -276,8 +271,6 @@ Stacktrace:
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:231)
 	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
 	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
-	at knot//net.minecraft.class_761.handler$bdj000$sodium$init(class_761.java:2668)
-	at knot//net.minecraft.class_761.<init>(class_761.java:208)
 	at knot//net.minecraft.class_310.<init>(class_310.java:648)
 
 -- Initialization --
@@ -301,7 +294,7 @@ Details:
 	Operating System: Mac OS X (aarch64) version 18.4
 	Java Version: 25.0.1-internal, N/A
 	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode), Oracle Corporation
-	Memory: 122387096 bytes (116 MiB) / 364904448 bytes (348 MiB) up to 1082130432 bytes (1032 MiB)
+	Memory: 129915960 bytes (123 MiB) / 503316480 bytes (480 MiB) up to 4303355904 bytes (4104 MiB)
 	CPUs: 8
 	Processor Vendor: 
 	Processor Name: 
@@ -320,15 +313,15 @@ Details:
 	Memory slot #0 clockSpeed (GHz): 0.00
 	Memory slot #0 type: unknown
 	Virtual memory max (MiB): 7644.84
-	Virtual memory used (MiB): 4367.83
+	Virtual memory used (MiB): 4468.72
 	Swap memory total (MiB): 0.00
 	Swap memory used (MiB): 0.00
 	Space in storage for jna.tmpdir (MiB): <path not set>
 	Space in storage for org.lwjgl.system.SharedLibraryExtractPath (MiB): <path not set>
 	Space in storage for io.netty.native.workdir (MiB): <path not set>
-	Space in storage for java.io.tmpdir (MiB): available: 84613.27, total: 243805.58
-	Space in storage for workdir (MiB): available: 84613.27, total: 243805.58
-	JVM Flags: 10 total; -Xms128M -Xmx1025M -XX:+UnlockExperimentalVMOptions -XX:+DisablePrimordialThreadGuardPages -Xbootclasspath/a:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-shared-1.18-SNAPSHOT.jar:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-tta-1.18-SNAPSHOT.jar -XX:-UseCompressedClassPointers -XX:MaxGCPauseMillis=50 -XX:G1MaxNewSizePercent=35 -XX:+ParallelRefProcEnabled -XX:G1HeapRegionSize=4m
+	Space in storage for java.io.tmpdir (MiB): available: 84542.95, total: 243805.58
+	Space in storage for workdir (MiB): available: 84542.95, total: 243805.58
+	JVM Flags: 6 total; -Xms128M -Xmx4103M -XX:+UnlockExperimentalVMOptions -XX:+DisablePrimordialThreadGuardPages -Xbootclasspath/a:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-shared-1.18-SNAPSHOT.jar:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-tta-1.18-SNAPSHOT.jar -XX:-UseCompressedClassPointers
 	Debug Flags: 0 total; 
 	Fabric Mods: 
 		betterf3: BetterF3 17.0.0
@@ -400,5 +393,5 @@ Details:
 	System encoding: UTF-8
 	File encoding: UTF-8
 	CPU: 8x 
-#@!@# Game crashed! Crash report saved to: #@!@# /var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/crash-reports/crash-2026-08-12_14.26.44-client.txt
+#@!@# Game crashed! Crash report saved to: #@!@# /var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/crash-reports/crash-2026-08-12_16.30.38-client.txt
 exit(-1) called

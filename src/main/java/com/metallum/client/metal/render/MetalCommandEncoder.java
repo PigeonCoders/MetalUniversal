@@ -154,6 +154,13 @@ public final class MetalCommandEncoder implements CommandEncoder {
     }
 
     MTLBlitCommandEncoder blitCommandEncoder() {
+        // P24-1（上传合并）：挂起 blit 复用——帧内多次 blit 共享一个编码器
+        // （一次创建/一次 end/fence 两次）。任何 render encoder 创建前必先
+        // endEncoder 杀挂起 blit（renderCommandEncoder/flushPendingClear/
+        // submit/present 兜底）。
+        if (currentEncoder instanceof MTLBlitCommandEncoder blit) {
+            return blit;
+        }
         endEncoder();
         MTLBlitCommandEncoder encoder = commandBuffer().makeBlitCommandEncoder();
         encoder.waitForFence(fence);
@@ -632,7 +639,7 @@ public final class MetalCommandEncoder implements CommandEncoder {
                 destination.offset(),
                 length
         );
-        endEncoder();
+        // P24-1：blit 挂起（帧内合并——endEncoder 由 render/submit 路径统一兜底）
     }
 
     private void orphanWrite(final MetalGpuBuffer buffer, final long offset, final ByteBuffer data) {
@@ -697,7 +704,7 @@ public final class MetalCommandEncoder implements CommandEncoder {
                 target.offset(),
                 source.length()
         );
-        endEncoder();
+        // P24-1：blit 挂起（帧内合并——endEncoder 由 render/submit 路径统一兜底）
     }
 
     @Override
@@ -730,12 +737,12 @@ public final class MetalCommandEncoder implements CommandEncoder {
                 depthOrLayer,
                 destX,
                 destY,
-                width,
+                 width,
                 height,
                 rowBytes,
                 bytesPerImage
         );
-        endEncoder();
+        // P24-1：blit 挂起（帧内合并——endEncoder 由 render/submit 路径统一兜底）
     }
 
     @Override
@@ -789,7 +796,7 @@ public final class MetalCommandEncoder implements CommandEncoder {
                     rowBytes,
                     bytesPerImage
             );
-            endEncoder();
+            // P24-1：blit 挂起（帧内合并——endEncoder 由 render/submit 路径统一兜底）
         } finally {
             MemoryUtil.memFree(region);
         }
@@ -839,8 +846,7 @@ public final class MetalCommandEncoder implements CommandEncoder {
                 rowBytes,
                 bytesPerImage
         );
-
-        endEncoder();
+        // P24-1：blit 挂起（帧内合并——endEncoder 由 render/submit 路径统一兜底）
         queueForDestroy(callback);
     }
 
@@ -872,7 +878,7 @@ public final class MetalCommandEncoder implements CommandEncoder {
                 width,
                 height
         );
-        endEncoder();
+        // P24-1：blit 挂起（帧内合并——endEncoder 由 render/submit 路径统一兜底）
     }
 
     @Override

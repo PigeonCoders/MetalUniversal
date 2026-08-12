@@ -67,7 +67,20 @@ public final class MetalSodiumCommandList implements CommandList {
 
     @Override
     public void allocateStorage(final GlMutableBuffer buffer, final long bufferSize, final GlBufferUsage usage) {
-        entryOf(buffer).ensureAllocated(bufferSize, SodiumUsageMapper.toMinecraftUsage(usage));
+        int minecraftUsage = SodiumUsageMapper.toMinecraftUsage(usage);
+        long size = bufferSize;
+        // P24-2（arena 256K 规整）：0x28（VERTEX|COPY_DST——Sodium region arena
+        // 缓冲，geometry 3.69MB/index 378KB）尺寸离散（resize ×1.5 序列 290K/435K/653K…）
+        // → Metal pool 精确匹配永不命中 + 每次 resize 全量重传。规整到 256K 网格：
+        // ① 加载风暴期 94 region 同阶段同尺寸 → pool 同桶复用（region churn 释放的
+        // buffer 被后续 region 捡走）；② resize 轮次 -1（省一次全量 transferSegments）。
+        // 只改"造箱子时的尺寸"，不碰 pool 复用结构（P21 品红教训）。浪费 ≤256K/region
+        // ≈ 6-12MB 可忽略。不覆盖 0x2C（fade Shared 直写——无 blit 迁移，非风暴主源）。
+        if ((minecraftUsage & (GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST))
+                == (GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST)) {
+            size = (bufferSize + 262143L) & ~262143L;
+        }
+        entryOf(buffer).ensureAllocated(size, minecraftUsage);
         buffer.setSize(bufferSize);
     }
 

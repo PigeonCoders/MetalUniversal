@@ -203,7 +203,7 @@ public final class MetalRenderPass implements RenderPass {
             guiMaxBaseVertex = baseVertex;
         }
         if (Diagnostics.shouldRun("gui-draw", 5_000L)) {
-            DiagLog.log("[diag] gui-draw pass draws=%d maxBaseVertex=%d (last base=%d idx=%d)", guiDrawCount, guiMaxBaseVertex, baseVertex, indexCount);
+            DiagLog.logAlways("[diag] gui-draw pass draws=%d maxBaseVertex=%d (last base=%d idx=%d)", guiDrawCount, guiMaxBaseVertex, baseVertex, indexCount);
             guiDrawCount = 0;
             guiMaxBaseVertex = 0;
         }
@@ -605,7 +605,7 @@ public final class MetalRenderPass implements RenderPass {
         lastScissorH = h;
         lastScissorEnabled = enabled;
         if (w <= 0 || h <= 0 || Diagnostics.shouldRun("scissor-diag", 5_000L)) {
-            DiagLog.log("[diag] scissor enabled=%b rect=(%d,%d,%d,%d) passSize=(%d,%d)",
+            DiagLog.logAlways("[diag] scissor enabled=%b rect=(%d,%d,%d,%d) passSize=(%d,%d)",
                     enabled, x, y, w, h, colorTexture.getWidth(0), colorTexture.getHeight(0));
         }
     }

@@ -26,7 +26,18 @@ public abstract class SodiumConfigBuilderMixin {
             ),
             require = 1
     )
-    private static GLCapabilities metallum$fakeCapabilities() {
+    private static GLCapabilities metallum$safeCapabilities() {
+        // 真 capabilities 优先（iOS 的 MobileGlues context 真实存在——与 mixin 前
+        // 行为一致零回归）；macOS 无 GL context 时 GL.getCapabilities() 抛
+        // IllegalStateException → 回退假 capabilities 防崩。
+        try {
+            GLCapabilities real = org.lwjgl.opengl.GL.getCapabilities();
+            if (real != null) {
+                return real;
+            }
+        } catch (RuntimeException ignored) {
+            // 无 GL context——走假 capabilities
+        }
         return MetalRenderDevice.getFakeCapabilities();
     }
 }

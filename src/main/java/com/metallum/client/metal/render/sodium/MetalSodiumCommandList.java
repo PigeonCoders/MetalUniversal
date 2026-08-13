@@ -112,14 +112,16 @@ public final class MetalSodiumCommandList implements CommandList {
     }
 
     /** P22 修正（P31-2）：上传路径累计计时（uploadData + uploadDataToOffset 两条 mesh
-     *  上传路径共享字段——5s 节流输出 sodium-upload 行）。 */
+     *  上传路径共享字段——5s 时间戳节流输出 sodium-upload 行。P33 修正：原条件
+     *  uploadUs > 5_000_000（5 秒内累计上传耗时 >5 秒——不可能）→ 时间戳节流。 */
     private static void recordUpload(final long bytes, final long t0) {
         long elapsedUs = (System.nanoTime() - t0) / 1000L;
         uploadCalls++;
         uploadBytes += bytes;
         uploadUs += elapsedUs;
-        if (uploadUs - lastReportedUs > 5_000_000L) {
-            lastReportedUs = uploadUs;
+        long now = System.nanoTime();
+        if (now - lastUploadReportNanos > 5_000_000_000L) {
+            lastUploadReportNanos = now;
             DiagLog.log("[diag] sodium-upload calls=%d bytes=%d us=%d", uploadCalls, uploadBytes, uploadUs);
             uploadCalls = 0;
             uploadBytes = 0;
@@ -301,11 +303,12 @@ public final class MetalSodiumCommandList implements CommandList {
     // volatile 仅为防御（严格讲无需同步）。
 
     private static volatile MetalSodiumActiveState activeSodiumState;
-    // P22（spike 判别）：上传路径累计统计（5s 节流）——uploadDataToOffset 每调用累加。
+    // P22（spike 判别）：上传路径累计统计（5s 时间戳节流）——uploadData 与
+    // uploadDataToOffset 共享（recordUpload）。
     private static long uploadCalls;
     private static long uploadBytes;
     private static long uploadUs;
-    private static long lastReportedUs;
+    private static long lastUploadReportNanos;
 
     public static void setActiveSodiumState(final MetalSodiumActiveState state) {
         activeSodiumState = state;

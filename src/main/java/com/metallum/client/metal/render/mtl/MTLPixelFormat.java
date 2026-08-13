@@ -73,11 +73,16 @@ public enum MTLPixelFormat {
     }
 
     public static MTLPixelFormat from(final com.mojang.blaze3d.textures.TextureFormat format) {
-        // 1.21.11 的 TextureFormat 仅 4 值（26.2 的 GpuFormat 有数十种）
+        // 1.21.11 的 TextureFormat 仅 4 值（26.2 的 GpuFormat 有数十种）。
+        // RED8I = GL_R8I（有符号字节 GL_BYTE=5121——CloudRenderer 编码负 cellX/cellZ
+        // 为 0x80-0xFF；vsh isamplerBuffer 按有符号读，spvc 生成 texture_buffer<int>）
+        // → 必须 R8Sint（P33 云层修复：曾误映射 R8Uint——负字节读回 255 → 云被推到
+        // 6120 块外 → 超 FogCloudsEnd → fog 全杀 → 世界负半区云消失 → 屏幕固定象限）。
+        // 上游 metallum 26.2 正确区分（R8_SINT -> R8Sint）。
         return switch (format) {
             case RGBA8 -> RGBA8Unorm;
             case RED8 -> R8Unorm;
-            case RED8I -> R8Uint;
+            case RED8I -> R8Sint;
             case DEPTH32 -> Depth32Float;
         };
     }

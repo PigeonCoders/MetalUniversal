@@ -5,6 +5,7 @@ import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.functions.DeviceFunctions;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import com.metallum.client.metal.render.DiagLog;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.FunctionProvider;
@@ -99,7 +100,25 @@ public final class MetalRenderDevice implements RenderDevice {
             // check_GLXX 首行短路，槽内容不会被真实使用，但容量必须给足。
             return ctor.newInstance(provider, Set.of(), false, (IntFunction<PointerBuffer>) i -> PointerBuffer.allocateDirect(2228));
         } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("Failed to create fake GLCapabilities", e);
+            // P36.2 兜底：iOS Pojav fork 的 lwjgl-opengl 若缺 4 参构造/签名差异——
+            // Unsafe 分配未初始化实例（全字段类型默认值：boolean=false →
+            // pickBest 得 NONE、long=0、对象字段 null——Sodium 只访问 boolean/long
+            // 字段（字节码实证），无构造器执行故零 GL 调用）。防页面构建期
+            // RenderDevice.<clinit> 的 ExceptionInInitializerError。
+            DiagLog.log("createFakeCapabilities reflection failed (%s) - Unsafe fallback", e.toString());
+            return allocateUninitializedCapabilities();
+        }
+    }
+
+    /** P36.2：Unsafe 分配未初始化的 GLCapabilities（见 createFakeCapabilities 兜底说明）。 */
+    private static GLCapabilities allocateUninitializedCapabilities() {
+        try {
+            java.lang.reflect.Field theUnsafe = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+            theUnsafe.setAccessible(true);
+            sun.misc.Unsafe unsafe = (sun.misc.Unsafe) theUnsafe.get(null);
+            return (GLCapabilities) unsafe.allocateInstance(GLCapabilities.class);
+        } catch (ReflectiveOperationException ex) {
+            throw new RuntimeException("Failed to allocate uninitialized GLCapabilities", ex);
         }
     }
 

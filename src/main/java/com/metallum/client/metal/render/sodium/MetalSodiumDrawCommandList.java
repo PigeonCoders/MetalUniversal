@@ -230,11 +230,10 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
                 throw new IllegalStateException("Sodium native depth state unavailable");
             }
             enc.setDepthStencilState(depthState);
-            // 判别实验（fix13）：Depth32Float 在深度 1.0 附近 ULP≈6e-8——共享边两侧的
-            // 深度插值微差在 LEQUAL 边缘像素判定随旋转抖动（GL 固定点深度会抹平微差）。
-            // constant 加 ~3 ULP 试探：缝隙消失 → 深度边缘竞争确认；仍在 → 排除。
-            float biasConstant = pipeline.depthBiasConstant() + 2.0e-7f;
-            enc.setDepthBias(biasConstant, pipeline.depthBiasScaleFactor(), 0.0f);
+            // P34：回退 fix13 判别实验残留（+2.0e-7f constant bias）——判别已定案
+            // （深度边缘竞争与 bias 无关），且该恒定正向 bias 会在 section 共享边
+            // 放大深度残影（维度切换黑边的次要因素）。回到 pipeline 默认 bias。
+            enc.setDepthBias(pipeline.depthBiasConstant(), pipeline.depthBiasScaleFactor(), 0.0f);
         }
 
         enc.setFrontFacingWinding(MTLWinding.Clockwise);

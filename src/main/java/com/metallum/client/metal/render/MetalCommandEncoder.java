@@ -423,6 +423,18 @@ public final class MetalCommandEncoder implements CommandEncoder {
             DiagLog.log("[diag] sodium encoder rebuilds(last5s)=%d", sodiumEncoderRebuilds);
             sodiumEncoderRebuilds = 0L;
         }
+        // P34（维度切换渲染修复）：清屏必须发生在第一次 draw 之前。materializePendingClear
+        // → MetalRenderPass.renderEncoder 用 clearColor/clearDepth 参数创建编码器
+        // （loadAction=Clear——与天空 pass 路径一致）并清字段（防 close 时重复 clear）。
+        // 此前硬编码 clear=false → 编码器不清屏 → terrain draw 先执行（对上一帧残影渲染）
+        // → metalEnd/close 时 materializePendingClear 的 clearDraw 把地形整体抹掉——
+        // 下界（Skybox.NONE 无天空 pass）/末地龙战（shouldCreateWorldFog 无天空 pass）
+        // 暴露：方块完全不渲染 + 实体可见 + 闪烁 + 深度残影黑边。主世界有天空 pass
+        // 先消费 pending（正确时序）故正常。
+        this.currentRenderPass.materializePendingClear();
+        if (this.currentEncoder instanceof MTLRenderCommandEncoder enc) {
+            return enc;
+        }
         return this.renderCommandEncoder(
                 this.currentRenderPass.sodiumColorTextureView(),
                 this.currentRenderPass.sodiumDepthTextureView(),

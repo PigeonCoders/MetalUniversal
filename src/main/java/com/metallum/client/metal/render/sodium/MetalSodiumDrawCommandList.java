@@ -188,16 +188,20 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
         }
 
         for (int i = 0; i < batch.size; i++) {
-            DrawCommand command = readBatchEntry(batch, i);
+            // P31-3（T13）：内联 readBatchEntry 三值直读——避免每 draw 一个 DrawCommand
+            // record 分配（每帧 500-2400 个）。readBatchEntry 保留（测试/诊断块依赖）。
+            int elementCount = MemoryUtil.memGetInt(batch.pElementCount + (long) i * Integer.BYTES);
+            int baseVertex = MemoryUtil.memGetInt(batch.pBaseVertex + (long) i * Integer.BYTES);
+            long indexOffsetBytes = MemoryUtil.memGetAddress(batch.pElementPointer + ((long) i << Pointer.POINTER_SHIFT));
             // glMultiDrawElementsBaseVertex 等价：indexBuffer 直传 + 字节偏移 + baseVertex
             enc.drawIndexedPrimitives(
                     primitiveType,
-                    command.elementCount(),
+                    elementCount,
                     metalIndexType,
                     indexBuffer.nativeHandle(),
-                    command.indexOffsetBytes(),
+                    indexOffsetBytes,
                     1,
-                    command.baseVertex(),
+                    baseVertex,
                     0
             );
         }

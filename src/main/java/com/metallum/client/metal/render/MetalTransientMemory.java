@@ -57,7 +57,11 @@ public final class MetalTransientMemory {
     }
 
     private MetalGpuBuffer allocateGpuBlock(final long size) {
-        return new MetalGpuBuffer(device, BLOCK_USAGE, size);
+        // P31-1（T18）：big 块（>512KB 独立块）尺寸网格化 256K——exact-size 离散尺寸
+        // 进 pool 后桶永不命中（用后即毁——275 次/分钟 native 释放实测）；网格化后
+        // 尺寸坍缩到少数桶 → 跨帧复用。512KB 固定块已对齐（无变化）；浪费 ≤256K/块。
+        long aligned = (size + 262143L) & ~262143L;
+        return new MetalGpuBuffer(device, BLOCK_USAGE, aligned);
     }
 
     private void freeGpuBlock(final MetalGpuBuffer block) {

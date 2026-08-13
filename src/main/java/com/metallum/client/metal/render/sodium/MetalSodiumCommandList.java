@@ -1,6 +1,7 @@
 package com.metallum.client.metal.render.sodium;
 
 import com.metallum.Metallum;
+import com.metallum.client.metal.render.DiagLog;
 import com.metallum.client.metal.render.MetalBackend;
 import com.metallum.client.metal.render.MetalCommandEncoder;
 import com.metallum.client.metal.render.MetalGpuBuffer;
@@ -86,6 +87,7 @@ public final class MetalSodiumCommandList implements CommandList {
 
     @Override
     public void uploadData(final GlMutableBuffer glBuffer, final ByteBuffer byteBuffer, final GlBufferUsage usage) {
+        long t0 = System.nanoTime();
         MetalGlBufferRegistry.MetalGlBufferEntry entry = entryOf(glBuffer);
         int length = byteBuffer.remaining();
         int mcUsage = SodiumUsageMapper.toMinecraftUsage(usage);
@@ -100,17 +102,34 @@ public final class MetalSodiumCommandList implements CommandList {
             MemoryUtil.memCopy(MemoryUtil.memAddress(byteBuffer), MemoryUtil.memAddress(view.data()), length);
             entry.pushStagingUpload(view.slice());
             glBuffer.setSize(length);
+            recordUpload(length, t0);
             return;
         }
         entry.ensureAllocated(length, mcUsage);
         glBuffer.setSize(length);
         writeBuffer(entry, 0L, byteBuffer.duplicate());
+        recordUpload(length, t0);
+    }
+
+    /** P22 修正（P31-2）：上传路径累计计时（uploadData + uploadDataToOffset 两条 mesh
+     *  上传路径共享字段——5s 节流输出 sodium-upload 行）。 */
+    private static void recordUpload(final long bytes, final long t0) {
+        long elapsedUs = (System.nanoTime() - t0) / 1000L;
+        uploadCalls++;
+        uploadBytes += bytes;
+        uploadUs += elapsedUs;
+        if (uploadUs - lastReportedUs > 5_000_000L) {
+            lastReportedUs = uploadUs;
+            DiagLog.log("[diag] sodium-upload calls=%d bytes=%d us=%d", uploadCalls, uploadBytes, uploadUs);
+            uploadCalls = 0;
+            uploadBytes = 0;
+            uploadUs = 0;
+        }
     }
 
     @Override
     public void uploadDataToOffset(final GlMutableBuffer glBuffer, final int offset, final long pointer, final int size) {
-        // P22（spike 判别）：上传路径累计计时——spike 帧与上传峰值对齐 →
-        // 上传风暴驱动（Sodium 上传侧无预算：完成结果一次全量传）。5s 节流。
+        // P22（spike 判别）：上传路径累计计时（recordUpload——与 uploadData 共享 5s 节流）
         long t0 = System.nanoTime();
         MetalGlBufferRegistry.MetalGlBufferEntry entry = entryOf(glBuffer);
         // glBufferSubData 语义：仅当目标区域超出已分配范围时扩（不缩小现有分配）
@@ -120,18 +139,7 @@ public final class MetalSodiumCommandList implements CommandList {
         }
         ByteBuffer src = MemorySegment.ofAddress(pointer).reinterpret(size).asByteBuffer();
         writeBuffer(entry, offset, src);
-        long t1 = System.nanoTime();
-        uploadCalls++;
-        uploadBytes += size;
-        uploadUs += (t1 - t0) / 1000L;
-        if (uploadUs - lastReportedUs > 5_000_000L) {
-            lastReportedUs = uploadUs;
-            com.metallum.client.metal.render.DiagLog.log("[diag] sodium-upload calls=%d bytes=%d us=%d",
-                    uploadCalls, uploadBytes, uploadUs);
-            uploadCalls = 0;
-            uploadBytes = 0;
-            uploadUs = 0;
-        }
+        recordUpload(size, t0);
     }
 
     @Override

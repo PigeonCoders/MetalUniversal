@@ -84,6 +84,13 @@ public final class MetalSodiumCompiledPipeline implements AutoCloseable {
     private final MemorySegment vertexFunction;
     private final MemorySegment fragmentFunction;
     private final Map<MtlPipelineKey, MemorySegment> pipelineCache = new LinkedHashMap<>();
+    // P31-4（T14）：双字段管道缓存（withDepth/withoutDepth + 最后 colorFormat 校验）——
+    // 消除每 region 2 次 MtlPipelineKey record + boolean 装箱分配（每帧 1000-4800 个对象）。
+    // 实例 = stateSource 固定（key 的 pipeline 维度由实例承载）；colorFormat 帧内恒同
+    // （terrain 三 pass 主目标）——不匹配则重算并覆盖（保留 colorFormat 维度，不丢正确性）。
+    private MemorySegment cachedWithDepth;
+    private MemorySegment cachedWithoutDepth;
+    private MTLPixelFormat cachedColorFormat;
 
     public MetalSodiumCompiledPipeline(
             final MetalDevice device,
@@ -223,31 +230,52 @@ public final class MetalSodiumCompiledPipeline implements AutoCloseable {
 
     @Nullable
     public MemorySegment getNativePipeline(final boolean useDepth, final MTLPixelFormat colorFormat) {
-        MtlPipelineKey key = new MtlPipelineKey(this.stateSource, colorFormat, useDepth);
-        MemorySegment cached = this.pipelineCache.get(key);
-        if (cached != null) {
-            return cached;
+        if (this.cachedColorFormat == colorFormat) {
+            MemorySegment hit = useDepth ? this.cachedWithDepth : this.cachedWithoutDepth;
+            if (hit != null) {
+                return hit;
+            }
         }
         synchronized (this) {
-            cached = this.pipelineCache.get(key);
-            if (cached == null) {
-                MTLPixelFormat depthFormat = useDepth ? MTLPixelFormat.Depth32Float : MTLPixelFormat.Invalid;
-                long writeMask = MTLColorWriteMask.from(this.stateSource.isWriteColor(), this.stateSource.isWriteAlpha());
-                try (MTLVertexDescriptor vertexDescriptor = this.buildVertexDescriptorForPipeline()) {
-                    cached = MetalPipelineSupport.makeRenderPipelineState(
-                            this.device,
-                            this.vertexFunction,
-                            this.fragmentFunction,
-                            vertexDescriptor,
-                            colorFormat,
-                            depthFormat,
-                            this.stateSource.getBlendFunction(),
-                            writeMask,
-                            this.stateSource.getLocation().toString()
-                    );
+            if (this.cachedColorFormat == colorFormat) {
+                MemorySegment hit = useDepth ? this.cachedWithDepth : this.cachedWithoutDepth;
+                if (hit != null) {
+                    return hit;
                 }
-                this.pipelineCache.put(key, cached);
             }
+            MtlPipelineKey key = new MtlPipelineKey(this.stateSource, colorFormat, useDepth);
+            MemorySegment cached = this.pipelineCache.get(key);
+            if (cached != null) {
+                if (useDepth) {
+                    this.cachedWithDepth = cached;
+                } else {
+                    this.cachedWithoutDepth = cached;
+                }
+                this.cachedColorFormat = colorFormat;
+                return cached;
+            }
+            MTLPixelFormat depthFormat = useDepth ? MTLPixelFormat.Depth32Float : MTLPixelFormat.Invalid;
+            long writeMask = MTLColorWriteMask.from(this.stateSource.isWriteColor(), this.stateSource.isWriteAlpha());
+            try (MTLVertexDescriptor vertexDescriptor = this.buildVertexDescriptorForPipeline()) {
+                cached = MetalPipelineSupport.makeRenderPipelineState(
+                        this.device,
+                        this.vertexFunction,
+                        this.fragmentFunction,
+                        vertexDescriptor,
+                        colorFormat,
+                        depthFormat,
+                        this.stateSource.getBlendFunction(),
+                        writeMask,
+                        this.stateSource.getLocation().toString()
+                );
+            }
+            this.pipelineCache.put(key, cached);
+            if (useDepth) {
+                this.cachedWithDepth = cached;
+            } else {
+                this.cachedWithoutDepth = cached;
+            }
+            this.cachedColorFormat = colorFormat;
             return cached;
         }
     }

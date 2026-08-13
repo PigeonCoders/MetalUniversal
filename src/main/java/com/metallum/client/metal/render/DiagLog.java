@@ -27,6 +27,9 @@ public final class DiagLog {
     private static final long START_NANOS = System.nanoTime();
     private static final Object LOCK = new Object();
     private static Path logPath;
+    /** P37 判别：init 前环形缓冲（mixin 应用阶段早于 onInitialize——日志不丢）。 */
+    private static final java.util.ArrayList<String> PRE_INIT_BUFFER = new java.util.ArrayList<>();
+    private static final int PRE_INIT_BUFFER_MAX = 512;
 
     private DiagLog() {
     }
@@ -42,10 +45,33 @@ public final class DiagLog {
             Files.createDirectories(logsDir);
             logPath = logsDir.resolve("metallum-diag.log");
             writeRaw("==== Metallum diag start ====");
+            synchronized (LOCK) {
+                for (String line : PRE_INIT_BUFFER) {
+                    writeRawLocked(line);
+                }
+                PRE_INIT_BUFFER.clear();
+            }
         } catch (IOException e) {
             logPath = null;
             Metallum.LOGGER.error("[diag] DiagLog init failed (fallback: no diag file): {}", e.toString());
         }
+    }
+
+    /**
+     * P37：不受窗口期限制的日志（判别轮关键事件——打开设置屏可能在窗口后）。
+     * 仍受 -Dmetallum.diag=false 总开关控制。
+     */
+    public static void logAlways(final String format, final Object... args) {
+        if (!ENABLED) {
+            return;
+        }
+        String message;
+        try {
+            message = args.length == 0 ? format : String.format(format, args);
+        } catch (RuntimeException e) {
+            message = format + " [diag-format-error: " + e + "]";
+        }
+        writeRawBuffered(LocalTime.now().format(TIME) + " " + message);
     }
 
     /**
@@ -66,16 +92,31 @@ public final class DiagLog {
             // IllegalFormatConversionException 崩渲染线程）
             message = format + " [diag-format-error: " + e + "]";
         }
-        writeRaw(LocalTime.now().format(TIME) + " " + message);
+        writeRawBuffered(LocalTime.now().format(TIME) + " " + message);
+    }
+
+    /** P37：logPath 未初始化时入 PRE_INIT_BUFFER（init 后冲刷）。 */
+    private static void writeRawBuffered(final String line) {
+        synchronized (LOCK) {
+            if (logPath == null) {
+                if (PRE_INIT_BUFFER.size() < PRE_INIT_BUFFER_MAX) {
+                    PRE_INIT_BUFFER.add(line);
+                }
+                return;
+            }
+            writeRawLocked(line);
+        }
     }
 
     private static void writeRaw(final String line) {
+        writeRawBuffered(line);
+    }
+
+    private static void writeRawLocked(final String line) {
         try {
-            synchronized (LOCK) {
-                Files.writeString(logPath, line + System.lineSeparator(),
-                        StandardCharsets.UTF_8,
-                        StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
-            }
+            Files.writeString(logPath, line + System.lineSeparator(),
+                    StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
         } catch (IOException e) {
             logPath = null;
             Metallum.LOGGER.error("[diag] DiagLog write failed (disabled): {}", e.toString());

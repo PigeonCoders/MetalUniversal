@@ -410,11 +410,30 @@ public final class MetalCommandEncoder implements CommandEncoder {
      * applyPipelineState 会全量设置，无残留污染）。
      */
     public @Nullable MTLRenderCommandEncoder ensureActiveRenderEncoder() {
-        if (this.currentEncoder instanceof MTLRenderCommandEncoder enc) {
-            return enc;
-        }
         if (this.currentRenderPass == null) {
             return null;
+        }
+        if (this.currentEncoder instanceof MTLRenderCommandEncoder enc) {
+            // P35（维度高频闪烁修复）：活跃编码器的 attachment 必须与当前 pass 匹配。
+            // 下界/末地龙战（无天空 pass）的 tick 帧："Update light" pass 关闭后其
+            // 16×16 lightmap 编码器保持活跃（MetalRenderPass.close 不 end encoder），
+            // 天空 pass 缺失 → 无主目标 encoder 替换 → 此前第一分支直接返回 lightmap
+            // encoder → chunk draw 全部录进 16×16 lightmap 纹理（颜色格式相同，Metal
+            // 校验通过无报错）→ lightmap 被垃圾覆盖 + tick 帧主目标只剩清屏（地形
+            // 闪没）= 20Hz 高频闪烁。主世界有天空 pass 先建主目标 encoder（attachment
+            // 比对替换）故正常。attachment 不符 → 结束残留 encoder 走重建。
+            boolean colorMatches = MetalPipelineSupport.sameHandle(
+                    this.renderColorAttachment,
+                    this.currentRenderPass.sodiumColorTextureView().nativeHandle());
+            boolean depthMatches = this.currentRenderPass.sodiumDepthTextureView() == null
+                    ? this.renderDepthAttachment == MemorySegment.NULL
+                    : MetalPipelineSupport.sameHandle(
+                            this.renderDepthAttachment,
+                            this.currentRenderPass.sodiumDepthTextureView().nativeHandle());
+            if (colorMatches && depthMatches) {
+                return enc;
+            }
+            this.endEncoder();
         }
         // 诊断（diag）：重建频率——每 region 的 fade blit 都会打断；若每帧重建次数
         // 异常高（> region 数×pass 数）说明有额外的 endEncoder 路径（排查抖动用）。

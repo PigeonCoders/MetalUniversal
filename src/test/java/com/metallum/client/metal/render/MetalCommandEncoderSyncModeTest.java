@@ -35,21 +35,21 @@ class MetalCommandEncoderSyncModeTest {
     @Test
     void fallsBackToDefaultWhenMissing() throws Exception {
         System.clearProperty("metallum.sync");
-        assertEquals(1, parse());
+        assertEquals(3, parse());
     }
 
     @Test
     void fallsBackToDefaultWhenOutOfRange() throws Exception {
         System.setProperty("metallum.sync", "0");
-        assertEquals(1, parse());
+        assertEquals(3, parse());
         System.setProperty("metallum.sync", "99");
-        assertEquals(1, parse());
+        assertEquals(3, parse());
     }
 
     @Test
     void fallsBackToDefaultWhenMalformed() throws Exception {
         System.setProperty("metallum.sync", "abc");
-        assertEquals(1, parse());
+        assertEquals(3, parse());
         System.setProperty("metallum.sync", " 2 ");
         assertEquals(2, parse());
     }

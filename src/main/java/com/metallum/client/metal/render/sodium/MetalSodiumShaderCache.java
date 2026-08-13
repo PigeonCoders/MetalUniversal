@@ -47,12 +47,28 @@ public final class MetalSodiumShaderCache {
     private final MetalDevice device;
     private final Map<ChunkShaderOptions, MetalSodiumCompiledPipeline> pipelines = new HashMap<>();
 
+    /**
+     * P36（Sodium 收尾）：编译结果全局静态缓存——ChunkShaderOptions 是 record
+     * （equals/hashCode 值语义），跨 chunkRenderer 实例（维度切换/世界重载每重建一次）
+     * 命中同一 MSL 时直接复用 pipeline state，消除维度切换首帧的
+     * newRenderPipelineState 100-400ms hitch。pipeline 为纯 GPU 对象
+     * （无 encoder/帧状态依赖），跨 renderer/维度共享安全；常驻 3 个（SOLID/
+     * CUTOUT/TRANSLUCENT），内存几 MB 可接受。close 不再 release（全局持有）。
+     */
+    private static final Map<ChunkShaderOptions, MetalSodiumCompiledPipeline> GLOBAL_PIPELINES = new HashMap<>();
+
     public MetalSodiumShaderCache(final MetalDevice device) {
         this.device = device;
     }
 
     public MetalSodiumCompiledPipeline get(final ChunkShaderOptions options) {
-        return this.pipelines.computeIfAbsent(options, this::compile);
+        MetalSodiumCompiledPipeline cached = GLOBAL_PIPELINES.get(options);
+        if (cached != null) {
+            return cached;
+        }
+        MetalSodiumCompiledPipeline compiled = this.pipelines.computeIfAbsent(options, this::compile);
+        GLOBAL_PIPELINES.putIfAbsent(options, compiled);
+        return compiled;
     }
 
     private MetalSodiumCompiledPipeline compile(final ChunkShaderOptions options) {
@@ -104,9 +120,8 @@ public final class MetalSodiumShaderCache {
     }
 
     public void close() {
-        for (MetalSodiumCompiledPipeline pipeline : this.pipelines.values()) {
-            pipeline.close();
-        }
+        // P36：pipeline 已由 GLOBAL_PIPELINES 持有（跨维度/世界复用），
+        // 不再 release——旧行为会销毁 pipeline state 迫使新 renderer 重编译。
         this.pipelines.clear();
     }
 }

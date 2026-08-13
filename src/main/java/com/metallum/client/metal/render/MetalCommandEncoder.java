@@ -43,12 +43,14 @@ public final class MetalCommandEncoder implements CommandEncoder {
     private static final int SYNC_MODE = parseSyncMode();
 
     private static int parseSyncMode() {
-        String raw = System.getProperty("metallum.sync", "1");
+        // P36（Sodium 收尾）：默认 3（满流水线）。P2/P2.5 staging+uniform ring 已根治
+        // 跨帧竞争（iOS 实测 sync=3 无闪烁），1 的完全串行基线不再需要。
+        String raw = System.getProperty("metallum.sync", "3");
         try {
             int v = Integer.parseInt(raw.trim());
-            return (v >= 1 && v <= 3) ? v : 1;
+            return (v >= 1 && v <= 3) ? v : 3;
         } catch (NumberFormatException e) {
-            return 1;
+            return 3;
         }
     }
 

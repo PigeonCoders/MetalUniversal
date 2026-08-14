@@ -133,18 +133,56 @@ WARNING: Restricted methods will be blocked in a future release unless native ac
 
 Launching Minecraft fabric-loader-0.19.3-1.21.11
 Args init finished. Now starting game
-2026-08-14T14:06:44.858906Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
-2026-08-14T14:06:45.000269Z main ERROR Incompatible mods found!
-net.fabricmc.loader.impl.FormattedException: Some of your mods are incompatible with the game or each other!
-确定了一种可能的解决方法，这样做可能会解决你的问题：
-	 - 将 模组 'Sodium' (sodium) 0.8.13+mc1.21.11 替换为与这一模组兼容的 任意 0.8.x 版本：
-		 - iris 1.10.7+mc1.21.11
-更多信息：
-	 - 模组 'Sodium' (sodium) 0.8.13+mc1.21.11 与 模组 'Iris' (iris) 的 1.10.7 及以下版本 不兼容，但已经安装了的版本是 1.10.7+mc1.21.11！
-	at net.fabricmc.loader.impl.FormattedException.ofLocalized(FormattedException.java:51)
-	at net.fabricmc.loader.impl.FabricLoaderImpl.load(FabricLoaderImpl.java:202)
-	at net.fabricmc.loader.impl.launch.knot.Knot.init(Knot.java:142)
-	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:66)
+2026-08-14T17:54:13.903341Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
+PatchJNAAgent: Replacing class
+Platform.isMac called from com.sun.jna.Native
+Platform.isMac called from com.sun.jna.Native
+Platform.isMac called from com.sun.jna.Native
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+Platform.isMac called from com.sun.jna.NativeLibrary
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:/private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/libraries/org/joml/joml/1.10.8/joml-1.10.8.jar)
+WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+2026-08-14T17:54:18.232139Z main ERROR Mixin apply for mod metallum failed metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum -> net.minecraft.class_276: org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException iris$bindFramebuffer()V in metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum cannot overwrite method in net.minecraft.class_276 because @Overwrite is required by the parent configuration [ -> MAIN Applicator Phase -> metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum -> Apply Methods -> ()V:iris$bindFramebuffer]
+org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException: iris$bindFramebuffer()V in metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum cannot overwrite method in net.minecraft.class_276 because @Overwrite is required by the parent configuration [ -> MAIN Applicator Phase -> metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum -> Apply Methods -> ()V:iris$bindFramebuffer]
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.mergeMethod(MixinApplicatorStandard.java:554)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyNormalMethod(MixinApplicatorStandard.java:526)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyMethods(MixinApplicatorStandard.java:507)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.lambda$runApplicatorPass$0(MixinApplicatorStandard.java:295)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.processMixins(MixinApplicatorStandard.java:381)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.runApplicatorPass(MixinApplicatorStandard.java:283)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:240)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
+	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
+	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.tryLoadClass(KnotClassDelegate.java:336)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:231)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	at knot//net.minecraft.class_12246.<clinit>(class_12246.java:28)
+	at knot//net.minecraft.class_12247$class_12248.<init>(class_12247.java:104)
+	at knot//net.minecraft.class_12247.method_75927(class_12247.java:57)
+	at knot//net.minecraft.class_12249.<clinit>(class_12249.java:43)
+	at knot//net.minecraft.class_4722.<clinit>(class_4722.java:42)
+	at knot//net.minecraft.class_10500$class_10501.<init>(class_10500.java:32)
+	at knot//net.minecraft.class_10517.<clinit>(class_10517.java:91)
+	at knot//net.minecraft.class_10455$class_10456.method_65636(class_10455.java:64)
+	at knot//com.mojang.serialization.codecs.RecordCodecBuilder.mapCodec(RecordCodecBuilder.java:76)
+	at knot//net.minecraft.class_10455$class_10456.<clinit>(class_10455.java:63)
+	at knot//net.minecraft.class_10443.method_65599(class_10443.java:17)
+	at knot//net.minecraft.class_10395.method_65385(class_10395.java:23)
+	at knot//net.minecraft.client.main.Main.main(Main.java:136)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
 	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
@@ -152,4 +190,78 @@ net.fabricmc.loader.impl.FormattedException: Some of your mods are incompatible 
 	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
 	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
 
+2026-08-14T17:54:18.260448Z main ERROR Mixin apply for mod metallum failed metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum -> net.minecraft.class_276: org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException iris$bindFramebuffer()V in metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum cannot overwrite method in net.minecraft.class_276 because @Overwrite is required by the parent configuration [ -> MAIN Applicator Phase -> metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum -> Apply Methods -> ()V:iris$bindFramebuffer]
+org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException: iris$bindFramebuffer()V in metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum cannot overwrite method in net.minecraft.class_276 because @Overwrite is required by the parent configuration [ -> MAIN Applicator Phase -> metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum -> Apply Methods -> ()V:iris$bindFramebuffer]
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.mergeMethod(MixinApplicatorStandard.java:554)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyNormalMethod(MixinApplicatorStandard.java:526)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyMethods(MixinApplicatorStandard.java:507)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.lambda$runApplicatorPass$0(MixinApplicatorStandard.java:295)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.processMixins(MixinApplicatorStandard.java:381)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.runApplicatorPass(MixinApplicatorStandard.java:283)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:240)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
+	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
+	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.tryLoadClass(KnotClassDelegate.java:336)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:231)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	at knot//net.minecraft.client.main.Main.main(Main.java:207)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at net.kdt.pojavlaunch.Tools.launchMinecraft(Tools.java:76)
+	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
+	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
+
+2026-08-14T17:54:18.265126Z main ERROR Minecraft has crashed!
+net.fabricmc.loader.impl.FormattedException: java.lang.RuntimeException: Mixin transformation of net.minecraft.class_276 failed
+	at net.fabricmc.loader.impl.FormattedException.ofLocalized(FormattedException.java:63)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:516)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at net.kdt.pojavlaunch.Tools.launchMinecraft(Tools.java:76)
+	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
+	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
+Caused by: java.lang.RuntimeException: Mixin transformation of net.minecraft.class_276 failed
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:440)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.tryLoadClass(KnotClassDelegate.java:336)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:231)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	at knot//net.minecraft.client.main.Main.main(Main.java:207)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
+	... 7 more
+Caused by: org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError: An unexpected critical error was encountered
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:380)
+	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
+	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
+	... 13 more
+Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum] from phase [DEFAULT] in config [metallum.mixins.json] FAILED during APPLY
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:685)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:636)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:367)
+	... 16 more
+Caused by: org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException: iris$bindFramebuffer()V in metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum cannot overwrite method in net.minecraft.class_276 because @Overwrite is required by the parent configuration [ -> MAIN Applicator Phase -> metallum.mixins.json:iris.RenderTargetIrisMixin from mod metallum -> Apply Methods -> ()V:iris$bindFramebuffer]
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.mergeMethod(MixinApplicatorStandard.java:554)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyNormalMethod(MixinApplicatorStandard.java:526)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyMethods(MixinApplicatorStandard.java:507)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.lambda$runApplicatorPass$0(MixinApplicatorStandard.java:295)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.processMixins(MixinApplicatorStandard.java:381)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.runApplicatorPass(MixinApplicatorStandard.java:283)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:240)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
+	... 16 more
+
 exit(1) called
+

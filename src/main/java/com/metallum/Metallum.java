@@ -25,9 +25,6 @@ public class Metallum implements ModInitializer, PreLaunchEntrypoint {
         // VulkanBackend 的类加载触发初始化，配置就来不及了。
         // 非 iOS 环境下此方法立即返回（isIOS() 检查）。
         MetalNativeBridge.ensureSpvcLibraryConfigured();
-        // P37：DiagLog 提前初始化（幂等）——mixin 应用阶段/早启动日志不丢（环形缓冲冲刷）。
-        com.metallum.client.metal.render.DiagLog.init(
-                net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve("logs"));
     }
 
     @Override

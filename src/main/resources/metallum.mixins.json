@@ -13,7 +13,6 @@
     "render.LevelRendererCameraMixin",
     "render.GameRendererAutoScreenshotMixin",
     "render.MouseHandlerNormalizeMixin",
-    "render.GuiRendererCullMixin",
     "sodium.GlBufferMixin",
     "sodium.PostLaunchChecksMixin",
     "sodium.GLRenderDeviceMixin",

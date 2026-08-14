@@ -242,12 +242,6 @@ public final class MetalRenderPass implements RenderPass {
             MTLRenderCommandEncoder enc = renderEncoder();
             if (scissorDirty || vertexBuffersDirty || dirtyDescriptorMask != 0L || pipelineDirty) {
         bindDrawState(enc);
-        // P38 兜底（GUI 后段丢失防御）：顶点绑定不信赖跨 draw 的 encoder 状态保持，
-        // 每个 draw 无条件重推（幂等——同 handle 同 offset 重复 setBuffer 无害）。
-        // 代价 = 每 draw 1 次 FFM 调用（~0.1µs 级），GUI 规模可忽略。
-        if (ALWAYS_PUSH_VERTEX && compiledPipeline.vertexBufferCount() > 0) {
-            pushVertexBuffers(enc);
-        }
             }
             MetalGpuBuffer nativeIndexBuffer = (MetalGpuBuffer) indexBuffer;
             // 1.21.11 的 Draw 无 baseVertex 字段：顶点偏移恒为 0
@@ -549,10 +543,6 @@ public final class MetalRenderPass implements RenderPass {
 
         dirtyDescriptorMask = 0L;
     }
-
-    /** P38 兜底开关：drawIndexed 每 draw 无条件重推顶点缓冲（默认开——GUI 后段丢失防御）。 */
-    private static final boolean ALWAYS_PUSH_VERTEX =
-            Boolean.parseBoolean(System.getProperty("metallum.gui.alwaysPushVertex", "true"));
 
     private MTLPrimitiveType primitiveTopology() {
         if (compiledPipeline == null) {

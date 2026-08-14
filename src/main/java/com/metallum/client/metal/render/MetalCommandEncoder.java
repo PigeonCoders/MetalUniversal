@@ -950,35 +950,6 @@ public final class MetalCommandEncoder implements CommandEncoder {
         if (write && (buffer.usage() & GpuBuffer.USAGE_MAP_WRITE) == 0) {
             throw new IllegalStateException("Buffer is not writable");
         }
-        if (buffer.isShadowUploaded() && write && !read) {
-            // P38（GUI 后段丢失修复）：Private 缓冲无 contents——CPU 写影子缓冲，
-            // close 时经 writeToBuffer（staging+blit）上传——与世界渲染已实证的
-            // 每帧上传路径一致（blit 在 render encoder 前被 fence 排序）。
-            int len = Math.toIntExact(slice.length());
-            ByteBuffer shadow = MemoryUtil.memAlloc(len);
-            return new GpuBuffer.MappedView() {
-                private boolean closed;
-
-                @Override
-                public ByteBuffer data() {
-                    return shadow;
-                }
-
-                @Override
-                public void close() {
-                    if (closed) {
-                        return;
-                    }
-                    closed = true;
-                    try {
-                        shadow.clear();
-                        writeToBuffer(slice, shadow);
-                    } finally {
-                        MemoryUtil.memFree(shadow);
-                    }
-                }
-            };
-        }
         ByteBuffer mapped = buffer.sliceStorage(slice.offset(), slice.length());
         return new GpuBuffer.MappedView() {
             @Override

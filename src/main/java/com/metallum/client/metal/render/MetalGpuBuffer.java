@@ -20,6 +20,7 @@ public class MetalGpuBuffer extends GpuBuffer {
     private final MetalDevice device;
     private final boolean cpuAccessible;
     private final boolean dynamic;
+    private final boolean shadowUpload;
     private final long resourceOptions;
     private final long allocationSize;
     @Nullable
@@ -33,8 +34,9 @@ public class MetalGpuBuffer extends GpuBuffer {
         this.device = device;
 
         this.dynamic = isDynamic(usage);
-        this.cpuAccessible = isCpuAccessible(usage) || this.dynamic;
-        this.resourceOptions = toMtlResourceOptions(usage);
+        this.shadowUpload = isShadowUploaded(usage);
+        this.cpuAccessible = (isCpuAccessible(usage) || this.dynamic) && !this.shadowUpload;
+        this.resourceOptions = toMtlResourceOptions(usage, this.shadowUpload);
         if (size <= 0L) {
             throw new IllegalArgumentException("Metal buffer size must be > 0 (got " + size + ")");
         }
@@ -86,6 +88,7 @@ public class MetalGpuBuffer extends GpuBuffer {
         this.device = device;
         this.cpuAccessible = false;
         this.dynamic = false;
+        this.shadowUpload = false;
         this.resourceOptions = 0L;
         this.allocationSize = size;
         this.nativeHandle = wrappedHandle;
@@ -120,6 +123,11 @@ public class MetalGpuBuffer extends GpuBuffer {
      */
     public boolean isCpuAccessible() {
         return this.cpuAccessible;
+    }
+
+    /** P38（GUI 后段丢失修复）：本缓冲是否走"影子缓冲 + blit 上传"路径（见 isShadowUploaded）。 */
+    public boolean isShadowUploaded() {
+        return this.shadowUpload;
     }
 
     public long allocationSize() {
@@ -171,12 +179,36 @@ public class MetalGpuBuffer extends GpuBuffer {
                 || (usage & GpuBuffer.USAGE_HINT_CLIENT_STORAGE) != 0;
     }
 
+    /**
+     * P38（GUI 后段丢失修复）：MC 1.21.11 中 usage=MAP_WRITE|VERTEX（34）仅 GuiRenderer
+     * 的 GUI 顶点环形缓冲一处使用——它是以 Shared 存储被 GPU 顶点级直读的后端唯一
+     * 路径（世界网格/实体全部 Private+blit，uniform Shared 但极小）。iOS TBDR 上该
+     * 路径从未在规模（Sodium 设置屏每帧 ~1300 元素）下实证，怀疑驱动级顶点取数边角
+     * 导致后段 mesh 丢失。改为 Private + 影子上传（mapBuffer 写影子、close 时
+     * staging+blit——与世界渲染已实证的同路径）。开关
+     * -Dmetallum.gui.privateVertexBuffer=false 可回退旧行为（分离家族用）。
+     */
+    private static final boolean SHADOW_UPLOAD_ENABLED =
+            Boolean.parseBoolean(System.getProperty("metallum.gui.privateVertexBuffer", "true"));
+
+    private static boolean isShadowUploaded(final int usage) {
+        return SHADOW_UPLOAD_ENABLED
+                && (usage & GpuBuffer.USAGE_VERTEX) != 0
+                && (usage & GpuBuffer.USAGE_MAP_WRITE) != 0
+                && (usage & GpuBuffer.USAGE_MAP_READ) == 0;
+    }
+
     private static boolean isDynamic(final int usage) {
         return (usage & GpuBuffer.USAGE_UNIFORM) != 0 && (usage & GpuBuffer.USAGE_COPY_DST) != 0;
     }
 
-    private static long toMtlResourceOptions(final int usage) {
-        MTLStorageMode storageMode = isCpuAccessible(usage) || isDynamic(usage) ? MTLStorageMode.Shared : MTLStorageMode.Private;
+    private static long toMtlResourceOptions(final int usage, final boolean shadowUpload) {
+        MTLStorageMode storageMode;
+        if (shadowUpload) {
+            storageMode = MTLStorageMode.Private;
+        } else {
+            storageMode = isCpuAccessible(usage) || isDynamic(usage) ? MTLStorageMode.Shared : MTLStorageMode.Private;
+        }
         return MTLResourceOptions.of(storageMode, MTLHazardTrackingMode.Untracked);
     }
 }

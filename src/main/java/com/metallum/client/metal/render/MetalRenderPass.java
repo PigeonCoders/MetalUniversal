@@ -196,17 +196,6 @@ public final class MetalRenderPass implements RenderPass {
         MTLRenderCommandEncoder enc = renderEncoder();
 
         bindDrawState(enc);
-        // P37 判别（Sodium 设置屏后段丢失）：本 pass 的 draw 统计（5s 节流）——
-        // 打开设置屏时 draw 总数与 baseVertex 最大值揭示后段 draw 是否执行/顶点偏移。
-        guiDrawCount++;
-        if (baseVertex > guiMaxBaseVertex) {
-            guiMaxBaseVertex = baseVertex;
-        }
-        if (Diagnostics.shouldRun("gui-draw", 5_000L)) {
-            DiagLog.logAlways("[diag] gui-draw pass draws=%d maxBaseVertex=%d (last base=%d idx=%d)", guiDrawCount, guiMaxBaseVertex, baseVertex, indexCount);
-            guiDrawCount = 0;
-            guiMaxBaseVertex = 0;
-        }
         // E13：云 draw 执行层观测——indexCount + index buffer 前 8 项（顺序索引应 0,1,2,3...）
         if (this.boundCloudFaces) {
             scanCloudFaces(indexCount);
@@ -252,7 +241,13 @@ public final class MetalRenderPass implements RenderPass {
 
             MTLRenderCommandEncoder enc = renderEncoder();
             if (scissorDirty || vertexBuffersDirty || dirtyDescriptorMask != 0L || pipelineDirty) {
-                bindDrawState(enc);
+        bindDrawState(enc);
+        // P38 兜底（GUI 后段丢失防御）：顶点绑定不信赖跨 draw 的 encoder 状态保持，
+        // 每个 draw 无条件重推（幂等——同 handle 同 offset 重复 setBuffer 无害）。
+        // 代价 = 每 draw 1 次 FFM 调用（~0.1µs 级），GUI 规模可忽略。
+        if (ALWAYS_PUSH_VERTEX && compiledPipeline.vertexBufferCount() > 0) {
+            pushVertexBuffers(enc);
+        }
             }
             MetalGpuBuffer nativeIndexBuffer = (MetalGpuBuffer) indexBuffer;
             // 1.21.11 的 Draw 无 baseVertex 字段：顶点偏移恒为 0
@@ -555,13 +550,9 @@ public final class MetalRenderPass implements RenderPass {
         dirtyDescriptorMask = 0L;
     }
 
-    /** P37 判别：drawIndexed 统计（5s 节流——GUI 后段丢失判别）。 */
-    private long guiDrawCount;
-    private int guiMaxBaseVertex;
-
-    /** P37 判别：scissor 打点（去重——同 rect 只打一次；零面积无条件）。 */
-    private int lastScissorX = Integer.MIN_VALUE, lastScissorY, lastScissorW, lastScissorH;
-    private boolean lastScissorEnabled;
+    /** P38 兜底开关：drawIndexed 每 draw 无条件重推顶点缓冲（默认开——GUI 后段丢失防御）。 */
+    private static final boolean ALWAYS_PUSH_VERTEX =
+            Boolean.parseBoolean(System.getProperty("metallum.gui.alwaysPushVertex", "true"));
 
     private MTLPrimitiveType primitiveTopology() {
         if (compiledPipeline == null) {
@@ -576,7 +567,6 @@ public final class MetalRenderPass implements RenderPass {
         int height = colorTexture.getHeight(0);
         if (!scissorState.enabled()) {
             enc.setScissorRect(0L, 0L, width, height);
-            diagScissor(0, 0, width, height, false);
             return;
         }
 
@@ -586,27 +576,8 @@ public final class MetalRenderPass implements RenderPass {
         int bottom = Math.min(height, scissorState.y() + scissorState.height());
         if (right <= left || bottom <= top) {
             enc.setScissorRect(0, 0, 0, 0);
-            diagScissor(left, top, right - left, bottom - top, true);
         } else {
             enc.setScissorRect(left, top, right - left, bottom - top);
-            diagScissor(left, top, right - left, bottom - top, true);
-        }
-    }
-
-    /** P37 判别：scissor 打点（同 rect 去重——零面积/新矩形才输出）。 */
-    private void diagScissor(final int x, final int y, final int w, final int h, final boolean enabled) {
-        if (x == lastScissorX && y == lastScissorY && w == lastScissorW && h == lastScissorH
-                && enabled == lastScissorEnabled) {
-            return;
-        }
-        lastScissorX = x;
-        lastScissorY = y;
-        lastScissorW = w;
-        lastScissorH = h;
-        lastScissorEnabled = enabled;
-        if (w <= 0 || h <= 0 || Diagnostics.shouldRun("scissor-diag", 5_000L)) {
-            DiagLog.logAlways("[diag] scissor enabled=%b rect=(%d,%d,%d,%d) passSize=(%d,%d)",
-                    enabled, x, y, w, h, colorTexture.getWidth(0), colorTexture.getHeight(0));
         }
     }
 

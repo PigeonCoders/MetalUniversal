@@ -1,6 +1,5 @@
 package com.metallum.mixin.iris;
 
-import net.irisshaders.iris.gl.IrisRenderSystem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * 值安全。有 pack 的渲染路径由后续阶段（阶段 5 的 shadow 投影 UBO 适配）提供
  * 等价物后再放开。
  */
-@Mixin(value = IrisRenderSystem.class, remap = false)
+@Mixin(targets = "net.irisshaders.iris.gl.IrisRenderSystem", remap = false)
 public abstract class IrisRenderSystemInitMixin {
     @Inject(method = "initRenderer", at = @At("HEAD"), cancellable = true, remap = false)
     private static void metallum$skipInitRenderer(CallbackInfo ci) {

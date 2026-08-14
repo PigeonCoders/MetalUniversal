@@ -1,7 +1,6 @@
 package com.metallum.mixin.iris;
 
 import com.metallum.client.metal.render.sodium.MetalRenderDevice;
-import net.irisshaders.iris.Iris;
 import org.lwjgl.opengl.GLCapabilities;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * 方法体其余部分（PBRTextureManager + VertexSerializerRegistry 注册 +
  * loadShaderpack）是纯 Java，保留执行。
  */
-@Mixin(value = Iris.class, remap = false)
+@Mixin(targets = "net.irisshaders.iris.Iris", remap = false)
 public abstract class IrisOnRenderSystemInitMixin {
     @Redirect(
             method = "onRenderSystemInit",

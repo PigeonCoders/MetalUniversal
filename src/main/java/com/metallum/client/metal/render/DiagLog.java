@@ -16,13 +16,14 @@ import java.time.format.DateTimeFormatter;
  *
  * <p>窗口控制（-Dmetallum.diag.window=秒，默认 120）：启动后仅窗口期内写文件，
  * 测试"进世界看 2 分钟"即可产出全部诊断；0 表示不限。
- * 总开关 -Dmetallum.diag=false 可关闭（与 Diagnostics 一致）。
+ * 总开关 -Dmetallum.diag（默认 false——正式发布版默认不产生诊断日志，
+ * 需要诊断时用 -Dmetallum.diag=true 开启；与 Diagnostics 共享开关）。
  *
  * <p>核心层不依赖 mod loader：日志目录由胶水层（Metallum.onInitialize）注入。
  */
 public final class DiagLog {
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-    private static final boolean ENABLED = Boolean.parseBoolean(System.getProperty("metallum.diag", "true"));
+    private static final boolean ENABLED = Boolean.parseBoolean(System.getProperty("metallum.diag", "false"));
     private static final long WINDOW_SECONDS = Long.parseLong(System.getProperty("metallum.diag.window", "120"));
     private static final long START_NANOS = System.nanoTime();
     private static final Object LOCK = new Object();

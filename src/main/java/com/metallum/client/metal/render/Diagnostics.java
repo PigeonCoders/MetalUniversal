@@ -12,10 +12,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * 日志，iOS 上控制台输出开销导致卡死。目标（纹理/pass/present 源）数量有限，
  * 每个目标打一次即可覆盖"首次渲染链是否成立、目标是否一致"的诊断意图。
  *
- * <p>开关：-Dmetallum.diag=false 可关闭全部诊断日志（默认开启）。
+ * <p>开关：-Dmetallum.diag=true 开启全部诊断日志（默认关闭——正式发布版
+ * 不产生诊断输出，需要诊断时开启）。
  */
 public final class Diagnostics {
-    private static final boolean ENABLED = Boolean.parseBoolean(System.getProperty("metallum.diag", "true"));
+    private static final boolean ENABLED = Boolean.parseBoolean(System.getProperty("metallum.diag", "false"));
     private static final Set<String> ONCE = ConcurrentHashMap.newKeySet();
     private static final java.util.concurrent.ConcurrentHashMap<String, Long> LAST_RUN = new java.util.concurrent.ConcurrentHashMap<>();
 

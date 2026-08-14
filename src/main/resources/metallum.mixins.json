@@ -23,7 +23,8 @@
     "sodium.SodiumConfigBuilderMixin",
     "iris.IrisRenderSystemInitMixin",
     "iris.IrisOnRenderSystemInitMixin",
-    "iris.VanillaRenderingPipelineMixin"
+    "iris.VanillaRenderingPipelineMixin",
+    "iris.MetalGpuTextureIrisMixin"
   ],
   "injectors": {
     "defaultRequire": 1

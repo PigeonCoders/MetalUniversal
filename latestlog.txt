@@ -9,7 +9,8 @@
 * com.apple.private.security.no-sandbox: NO
 [Debugging] Debug log enabled: YES
 [Pre-init] Restored game directory preference (Fabric-noOtherMods-1.21.11)
-[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/versions/1.21.11/1.21.11.json, have to assume it's good.
+[VersionList] Got 908 versions
+[MCDL] SHA1 passed for 1.21.11.json
 [MCDL] insertSafety: how to insert assetIndex?
 [MCDL] insertSafety: how to insert assets?
 [MCDL] Warning: JNA version required by fabric-loader-0.19.3-1.21.11 is 5.17.0 > 5.13.0, skipping JNA replacement.
@@ -85,7 +86,6 @@
 [MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/net/fabricmc/intermediary/1.21.11/intermediary-1.21.11.jar, have to assume it's good.
 [MCDL] Unknown artifact object for net.fabricmc:fabric-loader:0.19.3, attempting to generate one
 [MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/net/fabricmc/fabric-loader/0.19.3/fabric-loader-0.19.3.jar, have to assume it's good.
-[VersionList] Got 907 versions
 [JavaLauncher] Beginning JVM launch
 [JavaLauncher] Reading custom environment variables
 [JavaLauncher] Warning: skipped empty value custom env variable: 
@@ -103,14 +103,8 @@
 [Bisect] About to dlopen libjli at /private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/java_runtimes/java-25-openjdk/lib/libjli.dylib
 [Bisect] dlopen returned 0x3bf6e3b80
 [JavaLauncher] Reading custom JVM flags
-[JavaLauncher] Added custom JVM flag: -Dmetallum.sync=3
-[JavaLauncher] Added custom JVM flag: -Dmetallum.diag.window=0
 [Init] Found JLI lib
 [Init] Calling JLI_Launch
-Input: Mouse connected!
-Input: Got mouse Mouse
-Input: Mouse connected!
-Input: Got mouse Mouse
 Input: Mouse connected!
 Input: Got mouse Mouse
 Input: Mouse connected!
@@ -138,7 +132,32 @@ WARNING: Restricted methods will be blocked in a future release unless native ac
 
 Launching Minecraft fabric-loader-0.19.3-1.21.11
 Args init finished. Now starting game
-2026-08-12T08:30:34.005716Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
+2026-08-14T13:46:23.960420Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
+2026-08-14T13:46:24.398992Z main ERROR Error while launching GUI: 
+java.lang.RuntimeException: Operation not permitted
+	at java.base/java.lang.ProcessHandleImpl$Info.info0(Native Method)
+	at java.base/java.lang.ProcessHandleImpl$Info.info(Unknown Source)
+	at java.base/java.lang.ProcessHandleImpl.info(Unknown Source)
+	at knot//dev.kostromdan.mods.crash_assistant.common_config.utils.ProcessHelperProcessHandleImpl.getCurrentProcessStartTime(ProcessHelperProcessHandleImpl.java:90)
+	at knot//dev.kostromdan.mods.crash_assistant.common_config.utils.ProcessHelper.getCurrentProcessStartTime(ProcessHelper.java:68)
+	at knot//dev.kostromdan.mods.crash_assistant.common_config.loading_utils.JarInJarHelper.launchCrashAssistantApp(JarInJarHelper.java:51)
+	at knot//dev.kostromdan.mods.crash_assistant.fabric.entrypoint.CrashAssistantLanguageAdapter$SetupRunner.run(CrashAssistantLanguageAdapter.java:163)
+	at knot//dev.kostromdan.mods.crash_assistant.fabric.entrypoint.CrashAssistantLanguageAdapter.<init>(CrashAssistantLanguageAdapter.java:42)
+	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(Unknown Source)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Unknown Source)
+	at java.base/java.lang.reflect.Constructor.newInstance(Unknown Source)
+	at net.fabricmc.loader.impl.FabricLoaderImpl.setupLanguageAdapters(FabricLoaderImpl.java:497)
+	at net.fabricmc.loader.impl.FabricLoaderImpl.finishModLoading(FabricLoaderImpl.java:377)
+	at net.fabricmc.loader.impl.FabricLoaderImpl.freeze(FabricLoaderImpl.java:117)
+	at net.fabricmc.loader.impl.launch.knot.Knot.init(Knot.java:143)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:66)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at net.kdt.pojavlaunch.Tools.launchMinecraft(Tools.java:76)
+	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
+	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
+
 PatchJNAAgent: Replacing class
 Platform.isMac called from com.sun.jna.Native
 Platform.isMac called from com.sun.jna.Native
@@ -175,54 +194,27 @@ Not Detected GL_EXT_multi_draw_indirect!
 multidrawMode = Auto
     -> DrawElements (Auto detected)
 EGLBridge: Binding to OpenGL ES
-2026-08-12 16:30:38.277 AngelAuraAmethyst[4520:1024935] [Metallum] +[SurfaceViewController surface] returned <GameSurfaceView: 0x10eebee80; frame = (0 0; 1180 820); layer = <CAMetalLayer: 0x10addcc60>>
-2026-08-12 16:30:38.278 AngelAuraAmethyst[4520:1024935] [Metallum] Using existing view.layer as CAMetalLayer (frame=(0.0, 0.0, 1180.0, 820.0), contentsScale=2.0, drawsAsynchronously=YES)
-2026-08-12T08:30:38.482959Z Render thread ERROR Mixin apply for mod metallum failed metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum -> net.minecraft.class_761: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Invalid descriptor on metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V! Expected (Lnet/minecraft/class_9922;Lnet/minecraft/class_9779;ZLnet/minecraft/class_4184;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V but found (Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V]
-org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Invalid descriptor on metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V! Expected (Lnet/minecraft/class_9922;Lnet/minecraft/class_9779;ZLnet/minecraft/class_4184;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V but found (Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V]
-	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:563)
-	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:493)
-	at org.spongepowered.asm.mixin.injection.code.Injector.inject(Injector.java:284)
-	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.inject(InjectionInfo.java:508)
-	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.applyInjections(MixinTargetContext.java:1470)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyInjections(MixinApplicatorStandard.java:832)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.lambda$runApplicatorPass$7(MixinApplicatorStandard.java:362)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.processMixins(MixinApplicatorStandard.java:381)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.runApplicatorPass(MixinApplicatorStandard.java:360)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:240)
-	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
-	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
-	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
-	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
-	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
-	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.tryLoadClass(KnotClassDelegate.java:336)
-	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:231)
-	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
-	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
-	at knot//net.minecraft.class_310.<init>(class_310.java:648)
-	at knot//net.minecraft.client.main.Main.main(Main.java:234)
-	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
-	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
-	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
-	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
-	at net.kdt.pojavlaunch.Tools.launchMinecraft(Tools.java:76)
-	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
-	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
-
+2026-08-14 21:46:30.006 AngelAuraAmethyst[7642:2174118] [Metallum] +[SurfaceViewController surface] returned <GameSurfaceView: 0x142ef3600; frame = (0 0; 1180 820); layer = <CAMetalLayer: 0x142e6a040>>
+2026-08-14 21:46:30.007 AngelAuraAmethyst[7642:2174118] [Metallum] Using existing view.layer as CAMetalLayer (frame=(0.0, 0.0, 1180.0, 820.0), contentsScale=2.0, drawsAsynchronously=YES)
 ---- Minecraft Crash Report ----
-// Ouch. That hurt :(
+// Would you like a cupcake?
 
-Time: 2026-08-12 16:30:38
+Time: 2026-08-14 21:46:30
 Description: Initializing game
 
-java.lang.RuntimeException: Mixin transformation of net.minecraft.class_761 failed
-	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:440)
-	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.tryLoadClass(KnotClassDelegate.java:336)
-	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:231)
-	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
-	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
-	at knot//net.minecraft.class_310.<init>(class_310.java:648)
+java.lang.AssertionError: Why.
+	at knot//com.mojang.blaze3d.textures.GpuTexture.iris$getGlId(GpuTexture.java:511)
+	at knot//net.minecraft.class_1044.handler$cgg000$iris$afterGenerateId(class_1044.java:532)
+	at knot//net.minecraft.class_1044.method_68004(class_1044.java:32)
+	at knot//net.minecraft.class_380.method_2022(class_380.java:45)
+	at knot//net.minecraft.class_11642.method_72797(class_11642.java:52)
+	at knot//net.minecraft.class_7191.method_73407(class_7191.java:55)
+	at knot//net.minecraft.class_377.method_57038(class_377.java:97)
+	at knot//net.minecraft.class_377.method_57036(class_377.java:88)
+	at knot//net.minecraft.class_377.method_2004(class_377.java:83)
+	at knot//net.minecraft.class_378.method_72785(class_378.java:83)
+	at knot//net.minecraft.class_378.<init>(class_378.java:76)
+	at knot//net.minecraft.class_310.<init>(class_310.java:581)
 	at knot//net.minecraft.client.main.Main.main(Main.java:234)
 	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
@@ -232,32 +224,6 @@ java.lang.RuntimeException: Mixin transformation of net.minecraft.class_761 fail
 	at net.kdt.pojavlaunch.Tools.launchMinecraft(Tools.java:76)
 	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
 	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
-Caused by: org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError: An unexpected critical error was encountered
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:380)
-	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
-	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
-	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
-	... 14 more
-Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum] from phase [DEFAULT] in config [metallum.mixins.json] FAILED during APPLY
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:685)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:636)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:367)
-	... 17 more
-Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Invalid descriptor on metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V! Expected (Lnet/minecraft/class_9922;Lnet/minecraft/class_9779;ZLnet/minecraft/class_4184;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V but found (Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.LevelRendererCameraMixin from mod metallum->@Inject::metallum$snapshotCamera(Lnet/minecraft/class_9779;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V]
-	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:563)
-	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:493)
-	at org.spongepowered.asm.mixin.injection.code.Injector.inject(Injector.java:284)
-	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.inject(InjectionInfo.java:508)
-	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.applyInjections(MixinTargetContext.java:1470)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyInjections(MixinApplicatorStandard.java:832)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.lambda$runApplicatorPass$7(MixinApplicatorStandard.java:362)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.processMixins(MixinApplicatorStandard.java:381)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.runApplicatorPass(MixinApplicatorStandard.java:360)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:240)
-	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
-	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
-	... 17 more
 
 
 A detailed walkthrough of the error, its code path and all known details is as follows:
@@ -266,12 +232,18 @@ A detailed walkthrough of the error, its code path and all known details is as f
 -- Head --
 Thread: Render thread
 Stacktrace:
-	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:440)
-	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.tryLoadClass(KnotClassDelegate.java:336)
-	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:231)
-	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
-	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
-	at knot//net.minecraft.class_310.<init>(class_310.java:648)
+	at knot//com.mojang.blaze3d.textures.GpuTexture.iris$getGlId(GpuTexture.java:511)
+	at knot//net.minecraft.class_1044.handler$cgg000$iris$afterGenerateId(class_1044.java:532)
+	at knot//net.minecraft.class_1044.method_68004(class_1044.java:32)
+	at knot//net.minecraft.class_380.method_2022(class_380.java:45)
+Mixins in Stacktrace:
+	com.mojang.blaze3d.textures.GpuTexture:
+		net.irisshaders.iris.mixin.MixinGpuTexture2 (mixins.iris.json)
+	net.minecraft.class_1044:
+		org.redlance.dima_dencep.mods.rrls.mixins.workaround.textures.AbstractTextureMixin (rrls.mixins.json)
+		net.irisshaders.iris.mixin.texture.MixinAbstractTexture (mixins.iris.json)
+	net.minecraft.class_380:
+		net.raphimc.immediatelyfast.injection.mixins.font_atlas_resizing.MixinFontTexture (immediatelyfast-common.mixins.json)
 
 -- Initialization --
 Details:
@@ -286,6 +258,90 @@ Stacktrace:
 	at net.kdt.pojavlaunch.Tools.launchMinecraft(Tools.java:76)
 	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
 	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
+Mixins in Stacktrace:
+	net.minecraft.client.main.Main:
+		dev.kir.cubeswithoutborders.client.mixin.MainMixin (cubes-without-borders.mixins.json)
+
+-- Dynamic Lighting --
+Details:
+	Description: This section contains information related to dynamic lighting, this may not be related to your crash.
+	Mode: fastest
+	Dynamic Light Sources: 0
+	Spatial Hash Occupancy: 0 / 1024
+Stacktrace:
+	at knot//dev.lambdaurora.lambdynlights.LambDynLights.lambda$onInitializeClient$0(LambDynLights.java:132)
+	at knot//dev.yumi.mc.core.api.CrashReportEvents.lambda$static$0(CrashReportEvents.java:43)
+	at knot//net.minecraft.class_128.handler$eeo000$yumi_mc_core$yumi$onCrashReportCreate(class_128.java:1527)
+	at knot//net.minecraft.class_128.method_555(class_128.java)
+	at knot//net.minecraft.class_128.method_60921(class_128.java:132)
+	at knot//net.minecraft.class_128.method_60920(class_128.java:138)
+	at knot//net.minecraft.class_310.method_61962(class_310.java:1045)
+	at knot//net.minecraft.class_310.method_1565(class_310.java:1061)
+	at knot//net.minecraft.client.main.Main.main(Main.java:244)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at net.kdt.pojavlaunch.Tools.launchMinecraft(Tools.java:76)
+	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
+	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
+Mixins in Stacktrace:
+	net.minecraft.class_128:
+		link.infra.mixintrace.mixin.MixinCrashReport (mixintrace.mixins.json)
+		dev.isxander.debugify.mixins.errorhandler.CrashReportMixin (debugify.mixins.json)
+		dev.yumi.mc.core.mixin.crash.CrashReportMixin (yumi_mc_core.mixins.json)
+	net.minecraft.class_310:
+		dev.isxander.controlify.mixins.feature.input.MinecraftMixin (controlify.mixins.json)
+		net.fabricmc.fabric.mixin.registry.sync.client.MinecraftMixin (fabric-registry-sync-v0.client.mixins.json)
+		de.dafuqs.paginatedadvancements.mixin.MinecraftClientMixin (paginatedadvancements.mixins.json)
+		betterblockentities.mixin.core.MinecraftMixin (betterblockentities.mixins.json)
+		net.caffeinemc.mods.sodium.mixin.features.gui.hooks.debug.MinecraftRenderFrameMixin (sodium-common.mixins.json)
+		dev.isxander.zoomify.mixins.hooks.MinecraftClientMixin (zoomify.mixins.json)
+		dev.kostromdan.mods.crash_assistant.common.mixin.MinecraftMixin (crash_assistant.mixins.json)
+		net.fabricmc.fabric.mixin.event.interaction.client.MinecraftMixin (fabric-events-interaction-v0.client.mixins.json)
+		dev.tr7zw.transition.mixin.MinecraftMixin (transition.mixins.json)
+		dev.isxander.controlify.mixins.feature.rumble.MinecraftMixin (controlify.mixins.json)
+		net.caffeinemc.mods.sodium.mixin.core.MinecraftMixin (sodium-common.mixins.json)
+		net.caffeinemc.mods.sodium.mixin.workarounds.window_minimized_state.MinecraftMixin (sodium-common.mixins.json)
+		net.irisshaders.iris.mixin.MixinMinecraft_PipelineManagement (mixins.iris.json)
+		ca.fxco.moreculling.mixin.blockstates.Minecraft_loadBlocksMixin (moreculling.mixins.json)
+		net.mehvahdjukaar.polytone.mixins.MinecraftMixin (polytone-common.mixins.json)
+		me.flashyreese.mods.sodiumextra.mixin.gui.MixinMinecraftClient (sodium-extra.mixins.json)
+		traben.entity_texture_features.mixin.mixins.reloading.MixinMinecraftClient (entity_texture_features.mixins.json)
+		me.flashyreese.mods.sodiumextra.mixin.gui.MinecraftClientAccessor (sodium-extra.mixins.json)
+		dev.lambdaurora.spruceui.mixin.MinecraftClientMixin (spruceui.mixins.json)
+		dev.isxander.controlify.mixins.core.MinecraftMixin (controlify.mixins.json)
+		net.irisshaders.iris.mixin.MixinMinecraft_Images (mixins.iris.json)
+		net.fabricmc.fabric.mixin.datagen.client.MinecraftMixin (fabric-data-generation-api-v1.client.mixins.json)
+		com.aizistral.nochatreports.fabric.mixins.client.MixinMinecraft (mixins/fabric/nochatreports-fabric.mixins.json)
+		net.fabricmc.fabric.mixin.screen.MinecraftMixin (fabric-screen-api-v1.mixins.json)
+		ca.fxco.moreculling.mixin.Minecraft_managersMixin (moreculling.mixins.json)
+		org.redlance.dima_dencep.mods.rrls.mixins.MinecraftClientMixin (rrls.mixins.json)
+		net.fabricmc.fabric.mixin.networking.client.accessor.MinecraftAccessor (fabric-networking-api-v1.client.mixins.json)
+		dev.isxander.controlify.mixins.feature.screenop.MinecraftMixin (controlify.mixins.json)
+		opekope2.optigui.mixin.MinecraftClientMixin (optigui.mixins.json)
+		dev.isxander.controlify.mixins.feature.bind.MinecraftMixin (controlify.mixins.json)
+		dynamic_fps.impl.mixin.MinecraftMixin (dynamic_fps-common.mixins.json)
+		dev.isxander.yacl3.mixin.MinecraftMixin (yacl.mixins.json)
+		dev.isxander.controlify.mixins.feature.virtualmouse.MinecraftMixin (controlify.mixins.json)
+		traben.entity_texture_features.mixin.mixins.reloading.MixinResourceReload (entity_texture_features.mixins.json)
+		dev.lambdaurora.lambdynlights.mixin.MinecraftClientMixin (lambdynlights.mixins.json)
+		me.contaria.fastquit.mixin.MinecraftClientAccessor (fastquit.mixins.json)
+		ca.fxco.moreculling.mixin.Minecraft_registerReloadListenersMixin (moreculling.fabric.mixins.json)
+		net.irisshaders.iris.mixin.MixinOptions_Entrypoint (mixins.iris.json)
+		net.fabricmc.fabric.mixin.event.lifecycle.client.MinecraftMixin (fabric-lifecycle-events-v1.client.mixins.json)
+		me.ramidzkh.fabrishot.mixins.MinecraftClientMixin (mixins.fabrishot.json)
+		net.raphimc.immediatelyfast.injection.mixins.core.MixinMinecraft (immediatelyfast-common.mixins.json)
+		net.irisshaders.iris.mixin.MixinMinecraft_Keybinds (mixins.iris.json)
+		dev.yumi.mc.core.mixin.client.MinecraftClientMixin (yumi_mc_core.mixins.json)
+		traben.entity_model_features.mixin.mixins.MixinResourceReloadStart (entity_model_features.mixins.json)
+		traben.entity_model_features.mixin.mixins.accessor.MinecraftClientAccessor (entity_model_features.mixins.json)
+		com.aizistral.nochatreports.common.mixins.client.MixinMinecraft (mixins/common/nochatreports.mixins.json)
+		traben.entity_model_features.mixin.mixins.MixinResourceReloadEnd (entity_model_features.mixins.json)
+		me.contaria.fastquit.mixin.MinecraftClientMixin (fastquit.mixins.json)
+	net.minecraft.client.main.Main:
+		dev.kir.cubeswithoutborders.client.mixin.MainMixin (cubes-without-borders.mixins.json)
 
 -- System Details --
 Details:
@@ -294,7 +350,7 @@ Details:
 	Operating System: Mac OS X (aarch64) version 18.4
 	Java Version: 25.0.1-internal, N/A
 	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode), Oracle Corporation
-	Memory: 129915960 bytes (123 MiB) / 503316480 bytes (480 MiB) up to 4303355904 bytes (4104 MiB)
+	Memory: 160262888 bytes (152 MiB) / 511705088 bytes (488 MiB) up to 4303355904 bytes (4104 MiB)
 	CPUs: 8
 	Processor Vendor: 
 	Processor Name: 
@@ -313,21 +369,43 @@ Details:
 	Memory slot #0 clockSpeed (GHz): 0.00
 	Memory slot #0 type: unknown
 	Virtual memory max (MiB): 7644.84
-	Virtual memory used (MiB): 4468.72
+	Virtual memory used (MiB): 4943.83
 	Swap memory total (MiB): 0.00
 	Swap memory used (MiB): 0.00
 	Space in storage for jna.tmpdir (MiB): <path not set>
 	Space in storage for org.lwjgl.system.SharedLibraryExtractPath (MiB): <path not set>
 	Space in storage for io.netty.native.workdir (MiB): <path not set>
-	Space in storage for java.io.tmpdir (MiB): available: 84542.95, total: 243805.58
-	Space in storage for workdir (MiB): available: 84542.95, total: 243805.58
+	Space in storage for java.io.tmpdir (MiB): available: 79447.23, total: 243805.58
+	Space in storage for workdir (MiB): available: 79447.23, total: 243805.58
 	JVM Flags: 6 total; -Xms128M -Xmx4103M -XX:+UnlockExperimentalVMOptions -XX:+DisablePrimordialThreadGuardPages -Xbootclasspath/a:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-shared-1.18-SNAPSHOT.jar:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-tta-1.18-SNAPSHOT.jar -XX:-UseCompressedClassPointers
 	Debug Flags: 0 total; 
 	Fabric Mods: 
-		betterf3: BetterF3 17.0.0
+		animatica: Animatica 0.6.1+1.21.5
+		betterblockentities: BBE 1.3.4+mc1.21.11
+		bettergrass: BetterGrassify 1.8.6+fabric.1.21.11
+		bettermounthud: Better Mount HUD 1.2.6
+		cape-provider: Cape Provider 5.1.0
 		cloth-config: Cloth Config v20 21.11.153
 			cloth-basic-math: cloth-basic-math 0.6.1
-		fabric-api: Fabric API 0.141.6+1.21.11
+		config_manager: Config Manager 1.1.1
+		continuity: Continuity 3.0.1-beta.1+1.21.11
+		controlify: Controlify 3.0.0+lts+1.21.11-fabric
+			dev_isxander_libsdl4j: libsdl4j 3.2.18.release-3.2.18-79
+			dev_isxander_steamdeck4j: steamdeck4j 1.1.7
+			org_hid4java_hid4java: hid4java 0.8.0
+		crash_assistant: Crash Assistant 1.11.9
+		cubes-without-borders: Cubes Without Borders 3.0.0-build.14+mc1.21.11
+		debugify: Debugify 1.21.11+1.1
+		dynamic_fps: Dynamic FPS 3.11.6
+			net_lostluma_battery: battery 2.0.0
+		e4mc: e4mc 6.1.1
+			folk_sisby_kaleido-config: kaleido-config 0.3.3+1.3.2
+		entity_model_features: Entity Model Features 3.2.4
+		entity_texture_features: Entity Texture Features 7.1
+		entityculling: EntityCulling 1.10.2
+			transition: TRansition 1.0.19
+			trender: TRender 1.0.13
+		fabric-api: Fabric API 0.141.4+1.21.11
 			fabric-api-base: Fabric API Base 1.0.5+4ebb5c083e
 			fabric-api-lookup-api-v1: Fabric API Lookup API (v1) 1.6.114+20dc27073e
 			fabric-biome-api-v1: Fabric Biome API (v1) 17.1.1+4fc5413f3e
@@ -339,12 +417,12 @@ Details:
 			fabric-convention-tags-v2: Fabric Convention Tags (v2) 2.17.3+8ef948ba3e
 			fabric-crash-report-info-v1: Fabric Crash Report Info (v1) 0.3.23+4ebb5c083e
 			fabric-data-attachment-api-v1: Fabric Data Attachment API (v1) 1.8.48+eed0806f3e
-			fabric-data-generation-api-v1: Fabric Data Generation API (v1) 23.5.0+88d7da613e
+			fabric-data-generation-api-v1: Fabric Data Generation API (v1) 23.4.1+69974c4e3e
 			fabric-dimensions-v1: Fabric Dimensions API (v1) 4.0.28+4fc5413f3e
 			fabric-entity-events-v1: Fabric Entity Events (v1) 3.1.1+1d0ab4303e
 			fabric-events-interaction-v0: Fabric Events Interaction (v0) 4.1.1+3b89ecf63e
 			fabric-game-rule-api-v1: Fabric Game Rule API (v1) 2.0.3+4fc5413f3e
-			fabric-item-api-v1: Fabric Item API (v1) 11.6.0+67f17bb43e
+			fabric-item-api-v1: Fabric Item API (v1) 11.5.20+d0c46b9e3e
 			fabric-item-group-api-v1: Fabric Item Group API (v1) 4.2.36+4fc5413f3e
 			fabric-key-binding-api-v1: Fabric Key Binding API (v1) 1.1.7+4fc5413f3e
 			fabric-lifecycle-events-v1: Fabric Lifecycle Events (v1) 2.6.15+4ebb5c083e
@@ -368,17 +446,89 @@ Details:
 			fabric-screen-handler-api-v1: Fabric Screen Handler API (v1) 1.3.162+4fc5413f3e
 			fabric-serialization-api-v1: Fabric Serialization API (v1) 1.0.5+4ebb5c083e
 			fabric-sound-api-v1: Fabric Sound API (v1) 1.0.51+4fc5413f3e
-			fabric-tag-api-v1: Fabric Tag API (v1) 1.3.0+88d7da613e
+			fabric-tag-api-v1: Fabric Tag API (v1) 1.2.20+4fc5413f3e
 			fabric-transfer-api-v1: Fabric Transfer API (v1) 6.0.25+4fc5413f3e
 			fabric-transitive-access-wideners-v1: Fabric Transitive Access Wideners (v1) 7.1.0+014c8cec3e
+		fabric-language-kotlin: Fabric Language Kotlin 1.13.12+kotlin.2.4.0
+			org_jetbrains_kotlin_kotlin-reflect: kotlin-reflect 2.4.0
+			org_jetbrains_kotlin_kotlin-stdlib: kotlin-stdlib 2.4.0
+			org_jetbrains_kotlin_kotlin-stdlib-jdk7: kotlin-stdlib-jdk7 2.4.0
+			org_jetbrains_kotlin_kotlin-stdlib-jdk8: kotlin-stdlib-jdk8 2.4.0
+			org_jetbrains_kotlinx_atomicfu-jvm: atomicfu-jvm 0.33.0
+			org_jetbrains_kotlinx_kotlinx-coroutines-core-jvm: kotlinx-coroutines-core-jvm 1.11.0
+			org_jetbrains_kotlinx_kotlinx-coroutines-jdk8: kotlinx-coroutines-jdk8 1.11.0
+			org_jetbrains_kotlinx_kotlinx-datetime-jvm: kotlinx-datetime-jvm 0.8.0
+			org_jetbrains_kotlinx_kotlinx-io-bytestring-jvm: kotlinx-io-bytestring-jvm 0.9.0
+			org_jetbrains_kotlinx_kotlinx-io-core-jvm: kotlinx-io-core-jvm 0.9.0
+			org_jetbrains_kotlinx_kotlinx-serialization-cbor-jvm: kotlinx-serialization-cbor-jvm 1.11.0
+			org_jetbrains_kotlinx_kotlinx-serialization-core-jvm: kotlinx-serialization-core-jvm 1.11.0
+			org_jetbrains_kotlinx_kotlinx-serialization-json-jvm: kotlinx-serialization-json-jvm 1.11.0
 		fabricloader: Fabric Loader 0.19.3
+			mixinextras: MixinExtras 0.5.4
+		fabrishot: Fabrishot 1.16.4
+		fastquit: FastQuit 3.1.3+mc1.21.11
+		ferritecore: FerriteCore 8.2.0
+		forgeconfigapiport: Forge Config API Port 21.11.1
+			com_electronwill_night-config_core: core 3.8.3
+			com_electronwill_night-config_toml: toml 3.8.3
+		immediatelyfast: ImmediatelyFast 1.14.2+1.21.11
+			net_lenni0451_reflect: Reflect 1.6.1+curseforge
+		iris: Iris 1.10.7+mc1.21.11
+			io_github_douira_glsl-transformer: glsl-transformer 3.0.0-pre3
+			org_anarres_jcpp: jcpp 1.4.14
+			org_antlr_antlr4-runtime: antlr4-runtime 4.13.1
+		isxander-main-menu-credits: Main Menu Credits 1.2.0
+		ixeris: Ixeris 4.4.1+1.21.11-fabric
 		java: OpenJDK 64-Bit Server VM 25
+		lambdynlights: LambDynamicLights 4.9.1+1.21.11
+			lambdynlights_runtime: LambDynamicLights (Runtime) 4.9.1+1.21.11
+				lambdynlights_api: LambDynamicLights (API) 4.9.1+1.21.11
+					yumi_commons_collections: Yumi Commons: Collections 1.0.0
+					yumi_commons_core: Yumi Commons: Core 1.0.0
+					yumi_commons_event: Yumi Commons: Event 1.0.0
+				pride: Pride Lib 1.5.1+1.21.11
+				spruceui: SpruceUI 9.1.0+1.21.11
+				yumi_mc_core: Yumi Minecraft Libraries: Foundation 1.0.0-beta.1+1.21.11
+		languagereload: Language Reload 1.7.6+1.21.11
+		lithium: Lithium 0.21.4+mc1.21.11
 		metallum: MetalUniversal 1.1.0
 		minecraft: Minecraft 1.21.11
-		mixinextras: MixinExtras 0.5.0
+		mixintrace: MixinTrace 1.1.1+1.17
 		modmenu: Mod Menu 17.0.0
-		placeholder-api: Placeholder API 2.8.2+1.21.10
-		sodium: Sodium 0.8.13+mc1.21.11
+			placeholder-api: Placeholder API 2.8.2+1.21.10
+		morechathistory: More Chat History 1.3.1
+		moreculling: More Culling 1.6.2
+			conditional-mixin: conditional mixin 0.6.3
+		nochatreports: No Chat Reports 1.21.11-v2.18.0
+		optigui: OptiGUI 2.3.0-beta.10+1.21.9
+			org_apache_commons_commons-text: commons-text 1.12.0
+			org_ini4j_ini4j: ini4j 0.5.4
+		paginatedadvancements: Paginated Advancements 2.8.0+1.21.11
+		polytone: Polytone 1.21.11-5.7.2
+			net_objecthunter_exp4j: exp4j 0.4.8
+			org_mvel_mvel2: mvel2 2.5.2
+		puzzle: Puzzle 2.3.0
+			midnightlib: MidnightLib 1.9.2
+		reeses-sodium-options: Reese's Sodium Options 2.0.3+mc1.21.11
+		rrls: Remove Reloading Screen 5.1.15+mc.1.21.11
+		skyboxify: Skyboxify 2.8
+			com_moulberry_mixinconstraints: mixinconstraints 1.1.0
+			mixinsquared: MixinSquared 0.2.0
+		sodium: Sodium 0.8.12+mc1.21.11
+		sodium-extra: Sodium Extra 0.8.3+mc1.21.11
+		sspb: Sodium Shadowy Path Blocks 6.0.0
+		yet_another_config_lib_v3: YetAnotherConfigLib 3.8.2+1.21.11-fabric
+			com_twelvemonkeys_common_common-image: common-image 3.12.0
+			com_twelvemonkeys_common_common-io: common-io 3.12.0
+			com_twelvemonkeys_common_common-lang: common-lang 3.12.0
+			com_twelvemonkeys_imageio_imageio-core: imageio-core 3.12.0
+			com_twelvemonkeys_imageio_imageio-metadata: imageio-metadata 3.12.0
+			com_twelvemonkeys_imageio_imageio-webp: imageio-webp 3.12.0
+			org_quiltmc_parsers_gson: gson 0.2.1
+			org_quiltmc_parsers_json: json 0.2.1
+		zoomify: Zoomify 2.15.2+1.21.11
+			com_akuleshov7_ktoml-core-jvm: ktoml-core-jvm 0.7.1
+	Yumi MC Core: 1.0.0-beta.1+1.21.11
 	Launched Version: 1.21.11
 	Backend library: LWJGL version 3.3.3-snapshot
 	Backend API: Apple M3 GPU (iOS 18.4)
@@ -393,5 +543,5 @@ Details:
 	System encoding: UTF-8
 	File encoding: UTF-8
 	CPU: 8x 
-#@!@# Game crashed! Crash report saved to: #@!@# /var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/crash-reports/crash-2026-08-12_16.30.38-client.txt
+#@!@# Game crashed! Crash report saved to: #@!@# /var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/custom_gamedir/fabulously_optimized/crash-reports/crash-2026-08-14_21.46.30-client.txt
 exit(-1) called

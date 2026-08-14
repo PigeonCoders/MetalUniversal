@@ -24,7 +24,9 @@
     "iris.IrisRenderSystemInitMixin",
     "iris.IrisOnRenderSystemInitMixin",
     "iris.VanillaRenderingPipelineMixin",
-    "iris.MetalGpuTextureIrisMixin"
+    "iris.MetalGpuTextureIrisMixin",
+    "iris.MetalRenderPassIrisMixin",
+    "iris.RenderTargetIrisMixin"
   ],
   "injectors": {
     "defaultRequire": 1

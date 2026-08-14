@@ -20,7 +20,10 @@
     "sodium.GlContextInfoMixin",
     "sodium.ShaderChunkRendererMixin",
     "sodium.SodiumWorldRendererRotationMixin",
-    "sodium.SodiumConfigBuilderMixin"
+    "sodium.SodiumConfigBuilderMixin",
+    "iris.IrisRenderSystemInitMixin",
+    "iris.IrisOnRenderSystemInitMixin",
+    "iris.VanillaRenderingPipelineMixin"
   ],
   "injectors": {
     "defaultRequire": 1

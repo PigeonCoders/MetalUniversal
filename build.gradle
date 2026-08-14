@@ -75,6 +75,11 @@ dependencies {
 	}
 	dependencies {
 		modImplementation files(sodiumRepackedJar)
+
+	// Iris 1.10.7（compileOnly——仅编译期签名：Iris mixin 目标类引用；运行期类由用户
+	// mods 目录的 Iris jar 提供）。Iris 自有包（net.irisshaders）不经 remap，直接可用；
+	// 不经 loom 处理（避免 repack 校验——与 sodium modImplementation 不同）。
+	compileOnly files(".gradle/iris-cache/iris-fabric-1.10.7.jar")
 		runtimeOnly files(sodiumRepackedJar)
 		testImplementation files(sodiumRepackedJar)
 	}

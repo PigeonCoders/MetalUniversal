@@ -50,6 +50,10 @@ public final class MetallumMixinConfigPlugin implements IMixinConfigPlugin {
             // sodium 适配 mixin 仅 Metal 主机 + sodium 已加载时应用（GL 主机回归原行为）
             return this.isMetalHost && FabricLoader.getInstance().isModLoaded("sodium");
         }
+        if (mixinClassName.contains(".mixin.iris.")) {
+            // Iris 适配 mixin 仅 Metal 主机 + iris 已加载时应用
+            return this.isMetalHost && FabricLoader.getInstance().isModLoaded("iris");
+        }
         // 阶段 5：LevelRendererDiagMixin 与 Sodium LevelRendererMixin 的
         // @Overwrite cullTerrain 硬冲突（同一方法不能同时 @Overwrite + @Inject，
         // 应用器报错 → 游戏启动失败）——sodium 加载时禁用（代价：失去

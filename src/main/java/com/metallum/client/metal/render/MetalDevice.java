@@ -207,19 +207,16 @@ public final class MetalDevice implements GpuDevice {
 
     @Override
     public @NonNull CompiledRenderPipeline precompilePipeline(final @NonNull RenderPipeline pipeline, final @Nullable ShaderSource shaderSource) {
-        ShaderSource effectiveSource = shaderSource == null ? this.defaultShaderSource : shaderSource;
-        if (effectiveSource == null) {
-            throw new IllegalStateException("No shader source available for pipeline " + pipeline.getLocation());
-        }
-        try {
-            return this.compilePipelineCached(pipeline, effectiveSource);
-        } catch (Throwable t) {
-            // 编译失败（资源包 shader 语法错误等）→ invalid 占位：MC 的
-            // ShaderManager.apply 据此收集失败列表并抛明确错误（MC 显示资源包
-            // 错误界面），而非异常中止 reload 造成 pipeline/纹理半新半旧的花屏。
-            Metallum.LOGGER.error("[Metal] Failed to compile pipeline {}: {}", pipeline.getLocation(), t.toString());
-            return InvalidCompiledPipeline.INSTANCE;
-        }
+        // 惰性占位：MC 的 ShaderManager.apply 只检查 isValid()（CompilationCache
+        // 不缓存 precompile 结果——渲染路径走 getOrCompilePipeline，已实证）。
+        // 不在此编译的原因：precompile 传入的是 ShaderManager 源（MC
+        // GlslPreprocessor.process 展开），与本项目渲染路径使用的直读源
+        // （readShaderFromResources + expandMojImports）展开结果不同——生成的
+        // MSL 的 vertex attribute 布局与 MTLVertexDescriptor 不兼容，AGX
+        // makeRenderPipelineState 报 "Compiler encountered an internal error"
+        // （gui_textured 启动崩溃）。且 reload 时全量编译 ~100+ 静态 pipeline
+        // 造成主线程 10-20 秒"卡加载页"。零编译占位同时根治两者。
+        return PipelinePlaceholder.INSTANCE;
     }
 
     /**
@@ -390,7 +387,17 @@ public final class MetalDevice implements GpuDevice {
     }
 
     MetalCompiledRenderPipeline getOrCompilePipeline(final RenderPipeline pipeline) {
-        return this.compiledPipelines.computeIfAbsent(pipeline, p -> this.compilePipelineCached(p, this.defaultShaderSource));
+        return this.compiledPipelines.computeIfAbsent(pipeline, p -> {
+            try {
+                return this.compilePipelineCached(p, this.defaultShaderSource);
+            } catch (Throwable t) {
+                // 运行期编译失败（坏 shader 资源包）——留明确日志后重抛。
+                // 正常启动/正常资源包永不触发（precompile 已是零编译占位，
+                // 运行期用直读源——与改动前一致且已被验证可渲染）。
+                Metallum.LOGGER.error("[Metal] Failed to compile pipeline {}: {}", pipeline.getLocation(), t.toString());
+                throw t instanceof RuntimeException re ? re : new IllegalStateException(t);
+            }
+        });
     }
 
     /**
@@ -502,15 +509,15 @@ public final class MetalDevice implements GpuDevice {
      * 编译失败占位——isValid=false。MC 的 ShaderManager.apply 据此收集失败
      * pipeline 并抛明确错误（显示资源包错误界面），而非半状态渲染花屏。
      */
-    static final class InvalidCompiledPipeline implements CompiledRenderPipeline {
-        static final InvalidCompiledPipeline INSTANCE = new InvalidCompiledPipeline();
+    static final class PipelinePlaceholder implements CompiledRenderPipeline {
+        static final PipelinePlaceholder INSTANCE = new PipelinePlaceholder();
 
-        private InvalidCompiledPipeline() {
+        private PipelinePlaceholder() {
         }
 
         @Override
         public boolean isValid() {
-            return false;
+            return true;
         }
     }
 

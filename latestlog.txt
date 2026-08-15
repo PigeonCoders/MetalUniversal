@@ -110,6 +110,10 @@ Input: Mouse connected!
 Input: Got mouse Mouse
 Input: Mouse connected!
 Input: Got mouse Mouse
+Input: Mouse connected!
+Input: Got mouse Mouse
+Input: Mouse connected!
+Input: Got mouse Mouse
 OpenJDK 64-Bit Server VM warning: Option UseCompressedClassPointers was deprecated in version 25.0 and will likely be removed in a future release.
 WARNING: Unknown module: cpw.mods.bootstraplauncher specified to --add-exports
 WARNING: package sun.security.action not in java.base
@@ -133,7 +137,7 @@ WARNING: Restricted methods will be blocked in a future release unless native ac
 
 Launching Minecraft fabric-loader-0.19.3-1.21.11
 Args init finished. Now starting game
-2026-08-14T18:19:08.456030Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
+2026-08-15T03:24:13.609256Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
 PatchJNAAgent: Replacing class
 Platform.isMac called from com.sun.jna.Native
 Platform.isMac called from com.sun.jna.Native
@@ -170,17 +174,20 @@ Not Detected GL_EXT_multi_draw_indirect!
 multidrawMode = Auto
     -> DrawElements (Auto detected)
 EGLBridge: Binding to OpenGL ES
-2026-08-15 02:19:12.820 AngelAuraAmethyst[8344:2328903] [Metallum] +[SurfaceViewController surface] returned <GameSurfaceView: 0x107713480; frame = (0 0; 1180 820); layer = <CAMetalLayer: 0x11ccdb930>>
-2026-08-15 02:19:12.821 AngelAuraAmethyst[8344:2328903] [Metallum] Using existing view.layer as CAMetalLayer (frame=(0.0, 0.0, 1180.0, 820.0), contentsScale=2.0, drawsAsynchronously=YES)
-2026-08-15 02:19:13.528 AngelAuraAmethyst[8344:2328903] [Metallum] P20 drawable: slow>1ms=1 slow>5ms=0 totalWait=1ms maxWait=1ms nil=0
-2026-08-15 02:19:18.542 AngelAuraAmethyst[8344:2328903] [Metallum] P20 drawable: slow>1ms=104 slow>5ms=104 totalWait=755ms maxWait=8ms nil=0
-2026-08-15 02:19:23.558 AngelAuraAmethyst[8344:2328903] [Metallum] P20 drawable: slow>1ms=206 slow>5ms=191 totalWait=1634ms maxWait=12ms nil=0
-2026-08-14T18:19:24.112961Z Render thread ERROR Unreported exception thrown!
-java.lang.NullPointerException: Cannot invoke "net.irisshaders.iris.gl.GLDebug$DebugState.pushGroup(int, String)" because "net.irisshaders.iris.gl.GLDebug.debugState" is null
-	at knot//net.irisshaders.iris.gl.GLDebug.pushGroup(GLDebug.java:318)
-	at knot//net.minecraft.class_329.wrapMethod$bgb000$iris$handleHudHidingScreens(class_329.java:3054)
-	at knot//net.minecraft.class_329.method_1753(class_329.java)
-	at knot//net.minecraft.class_757.method_3192(class_757.java:522)
+2026-08-15 11:24:17.838 AngelAuraAmethyst[8822:2518279] [Metallum] +[SurfaceViewController surface] returned <GameSurfaceView: 0x140f7a100; frame = (0 0; 1180 820); layer = <CAMetalLayer: 0x140e6ab50>>
+2026-08-15 11:24:17.839 AngelAuraAmethyst[8822:2518279] [Metallum] Using existing view.layer as CAMetalLayer (frame=(0.0, 0.0, 1180.0, 820.0), contentsScale=2.0, drawsAsynchronously=YES)
+2026-08-15 11:24:18.478 AngelAuraAmethyst[8822:2518279] [Metallum] P20 drawable: slow>1ms=1 slow>5ms=0 totalWait=1ms maxWait=1ms nil=0
+2026-08-15 11:24:22.903 AngelAuraAmethyst[8822:2518279] [metallum] Failed to create render pipeline state: Error Domain=AGXMetalG15G_C0 Code=3 "Compiler encountered an internal error" UserInfo={NSLocalizedDescription=Compiler encountered an internal error}
+2026-08-15T03:24:22.907650Z Render thread ERROR [metallum] Pipeline minecraft:pipeline/gui_textured failed to build with depth format Depth32Float
+2026-08-15T03:24:22.907936Z Render thread ERROR Unreported exception thrown!
+java.lang.IllegalStateException: Native pipeline is unavailable
+	at knot//com.metallum.client.metal.render.MetalRenderPass.bindDrawState(MetalRenderPass.java:485)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.drawIndexed(MetalRenderPass.java:198)
+	at knot//net.minecraft.class_11228.method_70886(class_11228.java:603)
+	at knot//net.minecraft.class_11228.method_71289(class_11228.java:274)
+	at knot//net.minecraft.class_11228.method_71291(class_11228.java:254)
+	at knot//net.minecraft.class_11228.method_70890(class_11228.java:170)
+	at knot//net.minecraft.class_757.method_3192(class_757.java:585)
 	at knot//net.minecraft.class_310.method_1523(class_310.java:1393)
 	at knot//net.minecraft.class_310.method_1514(class_310.java:966)
 	at knot//net.minecraft.client.main.Main.main(Main.java:250)
@@ -194,16 +201,19 @@ java.lang.NullPointerException: Cannot invoke "net.irisshaders.iris.gl.GLDebug$D
 	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
 
 ---- Minecraft Crash Report ----
-// Hi. I'm Minecraft, and I'm a crashaholic.
+// I'm sorry, Dave.
 
-Time: 2026-08-15 02:19:24
+Time: 2026-08-15 11:24:23
 Description: Unexpected error
 
-java.lang.NullPointerException: Cannot invoke "net.irisshaders.iris.gl.GLDebug$DebugState.pushGroup(int, String)" because "net.irisshaders.iris.gl.GLDebug.debugState" is null
-	at knot//net.irisshaders.iris.gl.GLDebug.pushGroup(GLDebug.java:318)
-	at knot//net.minecraft.class_329.wrapMethod$bgb000$iris$handleHudHidingScreens(class_329.java:3054)
-	at knot//net.minecraft.class_329.method_1753(class_329.java)
-	at knot//net.minecraft.class_757.method_3192(class_757.java:522)
+java.lang.IllegalStateException: Native pipeline is unavailable
+	at knot//com.metallum.client.metal.render.MetalRenderPass.bindDrawState(MetalRenderPass.java:485)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.drawIndexed(MetalRenderPass.java:198)
+	at knot//net.minecraft.class_11228.method_70886(class_11228.java:603)
+	at knot//net.minecraft.class_11228.method_71289(class_11228.java:274)
+	at knot//net.minecraft.class_11228.method_71291(class_11228.java:254)
+	at knot//net.minecraft.class_11228.method_70890(class_11228.java:170)
+	at knot//net.minecraft.class_757.method_3192(class_757.java:585)
 	at knot//net.minecraft.class_310.method_1523(class_310.java:1393)
 	at knot//net.minecraft.class_310.method_1514(class_310.java:966)
 	at knot//net.minecraft.client.main.Main.main(Main.java:250)
@@ -223,16 +233,19 @@ A detailed walkthrough of the error, its code path and all known details is as f
 -- Head --
 Thread: Render thread
 Stacktrace:
-	at knot//net.irisshaders.iris.gl.GLDebug.pushGroup(GLDebug.java:318)
-	at knot//net.minecraft.class_329.wrapMethod$bgb000$iris$handleHudHidingScreens(class_329.java:3054)
-	at knot//net.minecraft.class_329.method_1753(class_329.java)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.bindDrawState(MetalRenderPass.java:485)
+	at knot//com.metallum.client.metal.render.MetalRenderPass.drawIndexed(MetalRenderPass.java:198)
+	at knot//net.minecraft.class_11228.method_70886(class_11228.java:603)
+	at knot//net.minecraft.class_11228.method_71289(class_11228.java:274)
+	at knot//net.minecraft.class_11228.method_71291(class_11228.java:254)
+	at knot//net.minecraft.class_11228.method_70890(class_11228.java:170)
 
 -- Uptime --
 Details:
-	JVM uptime: 16.682s
-	Wall uptime: 12.292s
-	High-res time: 11.674s
-	Client ticks: 173 ticks / 8.650s
+	JVM uptime: 10.311s
+	Wall uptime: 6.053s
+	High-res time: 5.431s
+	Client ticks: 61 ticks / 3.050s
 Stacktrace:
 	at knot//net.minecraft.class_310.method_1587(class_310.java:2477)
 	at knot//net.minecraft.class_310.method_54580(class_310.java:1035)
@@ -247,23 +260,12 @@ Stacktrace:
 	at net.kdt.pojavlaunch.PojavLauncher.launchMinecraft(PojavLauncher.java:104)
 	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
 
--- Affected level --
-Details:
-	All players: 1 total; class_746{name=NIUNIU3303, id=95, pos=(-40.938663779675394, 104.0, 104.87911747224764), mode=CREATIVE, permission=permission level: OWNERS}
-	Chunk stats: 961, 25
-	Level dimension: minecraft:overworld
-	Level spawn location: World: (0,80,16), Section: (at 0,0,0 in 0,5,1; chunk contains blocks 0,-64,16 to 15,319,31), Region: (0,0; contains chunks 0,0 to 31,31, blocks 0,-64,0 to 511,319,511)
-	Level time: 142547 game time, 7763 day time
-	Server brand: fabric
-	Server type: Integrated singleplayer server
-	Tracked entity count: 39
-
 -- Last reload --
 Details:
 	Reload number: 1
 	Reload reason: initial
 	Finished: Yes
-	Packs: vanilla, betterf3, cloth-config, fabric-api, fabric-api-base, fabric-api-lookup-api-v1, fabric-biome-api-v1, fabric-block-api-v1, fabric-block-view-api-v2, fabric-command-api-v2, fabric-content-registries-v0, fabric-convention-tags-v1, fabric-convention-tags-v2, fabric-crash-report-info-v1, fabric-data-attachment-api-v1, fabric-data-generation-api-v1, fabric-dimensions-v1, fabric-entity-events-v1, fabric-events-interaction-v0, fabric-game-rule-api-v1, fabric-item-api-v1, fabric-item-group-api-v1, fabric-key-binding-api-v1, fabric-lifecycle-events-v1, fabric-loot-api-v2, fabric-loot-api-v3, fabric-message-api-v1, fabric-model-loading-api-v1, fabric-networking-api-v1, fabric-object-builder-api-v1, fabric-particles-v1, fabric-recipe-api-v1, fabric-registry-sync-v0, fabric-renderer-api-v1, fabric-renderer-indigo, fabric-rendering-fluids-v1, fabric-rendering-v1, fabric-resource-conditions-api-v1, fabric-resource-loader-v0, fabric-resource-loader-v1, fabric-screen-api-v1, fabric-screen-handler-api-v1, fabric-serialization-api-v1, fabric-sound-api-v1, fabric-tag-api-v1, fabric-transfer-api-v1, fabric-transitive-access-wideners-v1, fabricloader, iris, metallum, modmenu, placeholder-api, sodium
+	Packs: vanilla, betterf3, cloth-config, fabric-api, fabric-api-base, fabric-api-lookup-api-v1, fabric-biome-api-v1, fabric-block-api-v1, fabric-block-view-api-v2, fabric-command-api-v2, fabric-content-registries-v0, fabric-convention-tags-v1, fabric-convention-tags-v2, fabric-crash-report-info-v1, fabric-data-attachment-api-v1, fabric-data-generation-api-v1, fabric-dimensions-v1, fabric-entity-events-v1, fabric-events-interaction-v0, fabric-game-rule-api-v1, fabric-item-api-v1, fabric-item-group-api-v1, fabric-key-binding-api-v1, fabric-lifecycle-events-v1, fabric-loot-api-v2, fabric-loot-api-v3, fabric-message-api-v1, fabric-model-loading-api-v1, fabric-networking-api-v1, fabric-object-builder-api-v1, fabric-particles-v1, fabric-recipe-api-v1, fabric-registry-sync-v0, fabric-renderer-api-v1, fabric-renderer-indigo, fabric-rendering-fluids-v1, fabric-rendering-v1, fabric-resource-conditions-api-v1, fabric-resource-loader-v0, fabric-resource-loader-v1, fabric-screen-api-v1, fabric-screen-handler-api-v1, fabric-serialization-api-v1, fabric-sound-api-v1, fabric-tag-api-v1, fabric-transfer-api-v1, fabric-transitive-access-wideners-v1, fabricloader, metallum, modmenu, placeholder-api, sodium
 
 -- System Details --
 Details:
@@ -272,7 +274,7 @@ Details:
 	Operating System: Mac OS X (aarch64) version 18.4
 	Java Version: 25.0.1-internal, N/A
 	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode), Oracle Corporation
-	Memory: 222937568 bytes (212 MiB) / 624951296 bytes (596 MiB) up to 4303355904 bytes (4104 MiB)
+	Memory: 140461800 bytes (133 MiB) / 570425344 bytes (544 MiB) up to 4303355904 bytes (4104 MiB)
 	CPUs: 8
 	Processor Vendor: 
 	Processor Name: 
@@ -291,14 +293,14 @@ Details:
 	Memory slot #0 clockSpeed (GHz): 0.00
 	Memory slot #0 type: unknown
 	Virtual memory max (MiB): 7644.84
-	Virtual memory used (MiB): 5379.98
+	Virtual memory used (MiB): 4903.03
 	Swap memory total (MiB): 0.00
 	Swap memory used (MiB): 0.00
 	Space in storage for jna.tmpdir (MiB): <path not set>
 	Space in storage for org.lwjgl.system.SharedLibraryExtractPath (MiB): <path not set>
 	Space in storage for io.netty.native.workdir (MiB): <path not set>
-	Space in storage for java.io.tmpdir (MiB): available: 80943.11, total: 243805.58
-	Space in storage for workdir (MiB): available: 80943.11, total: 243805.58
+	Space in storage for java.io.tmpdir (MiB): available: 80841.70, total: 243805.58
+	Space in storage for workdir (MiB): available: 80841.70, total: 243805.58
 	JVM Flags: 6 total; -Xms128M -Xmx4103M -XX:+UnlockExperimentalVMOptions -XX:+DisablePrimordialThreadGuardPages -Xbootclasspath/a:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-shared-1.18-SNAPSHOT.jar:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-tta-1.18-SNAPSHOT.jar -XX:-UseCompressedClassPointers
 	Debug Flags: 0 total; 
 	Fabric Mods: 
@@ -350,10 +352,6 @@ Details:
 			fabric-transfer-api-v1: Fabric Transfer API (v1) 6.0.25+4fc5413f3e
 			fabric-transitive-access-wideners-v1: Fabric Transitive Access Wideners (v1) 7.1.0+014c8cec3e
 		fabricloader: Fabric Loader 0.19.3
-		iris: Iris 1.10.7+mc1.21.11
-			io_github_douira_glsl-transformer: glsl-transformer 3.0.0-pre3
-			org_anarres_jcpp: jcpp 1.4.14
-			org_antlr_antlr4-runtime: antlr4-runtime 4.13.1
 		java: OpenJDK 64-Bit Server VM 25
 		metallum: MetalUniversal 1.1.0
 		minecraft: Minecraft 1.21.11
@@ -368,25 +366,17 @@ Details:
 	GFLW Platform: x11
 	Render Extensions: CAMetalLayer, MTLDevice
 	GL debug messages: <debugging unavailable>
-	Is Modded: Definitely; Client brand changed to 'fabric'; Server brand changed to 'fabric'
+	Is Modded: Definitely; Client brand changed to 'fabric'
 	Universe: 400921fb54442d18
-	Type: Integrated Server (map_client.txt)
+	Type: Client (map_client.txt)
 	Transparency: regular
 	Render Distance: 12/12 chunks
-	Resource Packs: vanilla, betterf3, cloth-config, fabric-api, fabric-api-base, fabric-api-lookup-api-v1, fabric-biome-api-v1, fabric-block-api-v1, fabric-block-view-api-v2, fabric-command-api-v2, fabric-content-registries-v0, fabric-convention-tags-v1, fabric-convention-tags-v2, fabric-crash-report-info-v1, fabric-data-attachment-api-v1, fabric-data-generation-api-v1, fabric-dimensions-v1, fabric-entity-events-v1, fabric-events-interaction-v0, fabric-game-rule-api-v1, fabric-item-api-v1, fabric-item-group-api-v1, fabric-key-binding-api-v1, fabric-lifecycle-events-v1, fabric-loot-api-v2, fabric-loot-api-v3, fabric-message-api-v1, fabric-model-loading-api-v1, fabric-networking-api-v1, fabric-object-builder-api-v1, fabric-particles-v1, fabric-recipe-api-v1, fabric-registry-sync-v0, fabric-renderer-api-v1, fabric-renderer-indigo, fabric-rendering-fluids-v1, fabric-rendering-v1, fabric-resource-conditions-api-v1, fabric-resource-loader-v0, fabric-resource-loader-v1, fabric-screen-api-v1, fabric-screen-handler-api-v1, fabric-serialization-api-v1, fabric-sound-api-v1, fabric-tag-api-v1, fabric-transfer-api-v1, fabric-transitive-access-wideners-v1, fabricloader, iris, metallum, modmenu, placeholder-api, sodium
+	Resource Packs: vanilla, betterf3, cloth-config, fabric-api, fabric-api-base, fabric-api-lookup-api-v1, fabric-biome-api-v1, fabric-block-api-v1, fabric-block-view-api-v2, fabric-command-api-v2, fabric-content-registries-v0, fabric-convention-tags-v1, fabric-convention-tags-v2, fabric-crash-report-info-v1, fabric-data-attachment-api-v1, fabric-data-generation-api-v1, fabric-dimensions-v1, fabric-entity-events-v1, fabric-events-interaction-v0, fabric-game-rule-api-v1, fabric-item-api-v1, fabric-item-group-api-v1, fabric-key-binding-api-v1, fabric-lifecycle-events-v1, fabric-loot-api-v2, fabric-loot-api-v3, fabric-message-api-v1, fabric-model-loading-api-v1, fabric-networking-api-v1, fabric-object-builder-api-v1, fabric-particles-v1, fabric-recipe-api-v1, fabric-registry-sync-v0, fabric-renderer-api-v1, fabric-renderer-indigo, fabric-rendering-fluids-v1, fabric-rendering-v1, fabric-resource-conditions-api-v1, fabric-resource-loader-v0, fabric-resource-loader-v1, fabric-screen-api-v1, fabric-screen-handler-api-v1, fabric-serialization-api-v1, fabric-sound-api-v1, fabric-tag-api-v1, fabric-transfer-api-v1, fabric-transitive-access-wideners-v1, fabricloader, metallum, modmenu, placeholder-api, sodium
 	Current Language: zh_cn
 	Locale: zh_CN_#Hans
 	System encoding: UTF-8
 	File encoding: UTF-8
 	CPU: 8x 
-	Server Running: true
-	Player Count: 1 / 8; [class_3222['NIUNIU3303'/95, l='ServerLevel[新的世界]', x=-40.94, y=104.00, z=104.88]]
-	Active Data Packs: vanilla, fabric-convention-tags-v2
-	Available Data Packs: fabric-convention-tags-v2, minecart_improvements, redstone_experiments, trade_rebalance, vanilla
-	Enabled Feature Flags: minecraft:vanilla
-	World Generation: Stable
-	World Seed: -3023404124156431293
-	Suppressed Exceptions: ~~NONE~~
-#@!@# Game crashed! Crash report saved to: #@!@# /var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/crash-reports/crash-2026-08-15_02.19.24-client.txt
+#@!@# Game crashed! Crash report saved to: #@!@# /var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/crash-reports/crash-2026-08-15_11.24.23-client.txt
 exit(-1) called
 

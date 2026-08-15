@@ -22,6 +22,7 @@ public final class MetallumMixinConfigPlugin implements IMixinConfigPlugin {
     private static final String LEVEL_RENDERER_CAMERA_MIXIN = "com.metallum.mixin.render.LevelRendererCameraMixin";
     private static final String GAME_RENDERER_AUTO_SCREENSHOT_MIXIN = "com.metallum.mixin.render.GameRendererAutoScreenshotMixin";
     private static final String MOUSE_HANDLER_NORMALIZE_MIXIN = "com.metallum.mixin.render.MouseHandlerNormalizeMixin";
+    private static final String TEXTURE_ATLAS_MIP_VIEW_FIX_MIXIN = "com.metallum.mixin.render.TextureAtlasMipViewFixMixin";
 
     private boolean isMetalHost;
 
@@ -63,6 +64,7 @@ public final class MetallumMixinConfigPlugin implements IMixinConfigPlugin {
                 || GLFW_TERMINATE_MIXIN.equals(mixinClassName) || RENDER_SYSTEM_GLOBALS_MIXIN.equals(mixinClassName)
                 || LEVEL_RENDERER_CAMERA_MIXIN.equals(mixinClassName) || GAME_RENDERER_AUTO_SCREENSHOT_MIXIN.equals(mixinClassName)
                 || MOUSE_HANDLER_NORMALIZE_MIXIN.equals(mixinClassName)
+                || TEXTURE_ATLAS_MIP_VIEW_FIX_MIXIN.equals(mixinClassName)
                 || (LEVEL_RENDERER_DIAG_MIXIN.equals(mixinClassName) && !sodiumLoaded);
     }
 

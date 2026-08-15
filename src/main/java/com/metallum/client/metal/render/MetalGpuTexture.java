@@ -52,6 +52,11 @@ final class MetalGpuTexture extends GpuTexture {
                 MTLStorageMode.Private,
                 label
         );
+        if (MetalNativeBridge.isNullHandle(this.nativeHandle)) {
+            throw new IllegalStateException(
+                    "Failed to create Metal texture " + width + "x" + height
+                            + " (" + format + ", mipLevels=" + mipLevels + ")");
+        }
     }
 
     int pixelSize() {

@@ -780,26 +780,42 @@ public final class MetalCommandEncoder implements CommandEncoder {
         MetalGpuTexture metalDst = (MetalGpuTexture) destination;
         flushPendingClearForWrite(metalDst);
 
-        // 1.21.11 的 NativeImage.Format 无 componentCount 映射：MC 纹理统一 RGBA8
+        // 字体 CJK 字形（UnihexProvider——唯一调用者）为紧凑 RGBA 行布局——
+        // Metal blit sourceBytesPerRow 要求 16 字节对齐，重打包到对齐行距缓冲。
+        // （只改 rowBytes 对齐会导致 blit 读越界/错位：source 容量 < 对齐后的
+        // bytesPerImage，每行按 rowBytes 读会跨到下一行数据。）
         int pixelSize = 4;
-        int rowBytes = width * pixelSize;
+        int srcRowBytes = width * pixelSize;
+        int rowBytes = (width * pixelSize + 15) & ~15;
         int bytesPerImage = rowBytes * height;
-        GpuBufferSlice slice = transientMemory.uploadStaging(source.duplicate().limit(bytesPerImage), pixelSize, GpuBuffer.USAGE_COPY_SRC, 0L, 1L);
+        ByteBuffer region = MemoryUtil.memAlloc(bytesPerImage);
+        try {
+            ByteBuffer src = source.duplicate();
+            for (int row = 0; row < height; row++) {
+                src.position(row * srcRowBytes).limit(row * srcRowBytes + srcRowBytes);
+                region.position(row * rowBytes);
+                region.put(src);
+            }
+            region.position(0).limit(bytesPerImage);
+            GpuBufferSlice slice = transientMemory.uploadStaging(region, pixelSize, GpuBuffer.USAGE_COPY_SRC, 0L, 1L);
 
-        MTLBlitCommandEncoder blit = blitCommandEncoder();
-        blit.copyFromBufferToTexture(
-                ((MetalGpuBuffer) slice.buffer()).nativeHandle(),
-                slice.offset(),
-                metalDst.nativeHandle(),
-                mipLevel,
-                depthOrLayer,
-                destX,
-                destY,
-                 width,
-                height,
-                rowBytes,
-                bytesPerImage
-        );
+            MTLBlitCommandEncoder blit = blitCommandEncoder();
+            blit.copyFromBufferToTexture(
+                    ((MetalGpuBuffer) slice.buffer()).nativeHandle(),
+                    slice.offset(),
+                    metalDst.nativeHandle(),
+                    mipLevel,
+                    depthOrLayer,
+                    destX,
+                    destY,
+                    width,
+                    height,
+                    rowBytes,
+                    bytesPerImage
+            );
+        } finally {
+            MemoryUtil.memFree(region);
+        }
         // P24-1：blit 挂起（帧内合并——endEncoder 由 render/submit 路径统一兜底）
     }
 

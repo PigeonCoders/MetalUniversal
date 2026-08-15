@@ -203,6 +203,16 @@ public final class MetalCommandEncoder implements CommandEncoder {
     }
 
     /**
+     * reload（clearPipelineCache）时调用：状态缓存（Sodium pass 去重）跨 reload 失效。
+     * reload 期间主线程不渲染（无 endEncoder）→ epoch 不递增 → 静态状态缓存
+     * 跨 reload 残留（旧纹理 handle 与 reload 后地址复用的新纹理相同 → 跳过
+     * 重绑 → 绑定缺失 → 崩溃）。
+     */
+    public static void invalidateStateCache() {
+        encoderEpoch++;
+    }
+
+    /**
      * 1.21.11 的 CommandEncoder 无 submit() 接口方法：提交时机由 presentTexture
      * （每帧末）与 waitForSubmittedGpuWork（资源释放前）驱动。
      */
@@ -814,7 +824,11 @@ public final class MetalCommandEncoder implements CommandEncoder {
         // 匹配目标纹理字节/像素——按格式分支。
         boolean luminance = image.format() == com.mojang.blaze3d.platform.NativeImage.Format.LUMINANCE;
         int bytesPerPixel = luminance ? 1 : 4;
-        int rowBytes = width * bytesPerPixel;
+        // Metal blit 的 sourceBytesPerRow 要求 16 字节对齐（iOS 严格校验）：
+        // glyph 宽度任意（如 17 像素）→ 未对齐行距 blit 失败/数据错乱
+        // （语言切换字体重建时渲染出错）。行尾多余字节无需清零（blit 按
+        // rowBytes 读，纹理侧行距由 Metal 纹理自身管理）。
+        int rowBytes = (width * bytesPerPixel + 15) & ~15;
         int bytesPerImage = rowBytes * height;
         ByteBuffer region = MemoryUtil.memAlloc(bytesPerImage);
         try {

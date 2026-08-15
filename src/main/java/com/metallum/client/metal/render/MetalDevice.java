@@ -257,6 +257,9 @@ public final class MetalDevice implements GpuDevice {
     @Override
     public void clearPipelineCache() {
         this.waitForSubmittedGpuWork();
+        // reload 期间无 endEncoder → epoch 不递增 → Sodium 静态状态缓存跨 reload
+        // 残留（纹理 handle 地址复用命中 → 跳过重绑 → 崩）——显式失效。
+        MetalCommandEncoder.invalidateStateCache();
         // 跨 reload 保留 shaderSourceCache/functionCache/sourcePipelineCache：
         // ① shaderSourceCache——reload 后首次 draw 若 miss 会在主线程逐个重读
         //    ~100+ 静态 pipeline 的源文件并 expandMojImports 展开（每个 5-20ms

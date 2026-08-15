@@ -44,6 +44,14 @@ public final class MetalDevice implements GpuDevice {
     private final Map<RenderPipeline, MetalCompiledRenderPipeline> compiledPipelines = new IdentityHashMap<>();
     private final Map<ShaderCompilationKey, String> shaderSourceCache = new HashMap<>();
     private final Map<MslFunctionKey, MemorySegment> functionCache = new HashMap<>();
+    /**
+     * 跨 reload 的编译产物缓存（key = pipeline 配置摘要 + 预处理后 GLSL 源文本）。
+     * clearPipelineCache（资源包重载时 MC 的 ShaderManager.apply 调用）不清此缓存：
+     * 源未变的 pipeline 直接复用 MTLRenderPipelineState，避免 reload 时 ~100+ 静态
+     * pipeline 全量重编译（主线程 10-20 秒"卡加载页"）。key 含源文本 → 资源包
+     * 改 shader 时必然重编译，无陈旧风险。
+     */
+    private final Map<String, MetalCompiledRenderPipeline> sourcePipelineCache = new HashMap<>();
     private static final int MAX_POOLED_BUFFER_BUCKETS = 32;
     private static final int MAX_POOLED_BUFFERS_PER_SIZE = 8;
     private final Map<Long, Deque<MemorySegment>> bufferPool = new LinkedHashMap<>(16, 0.75f, true) {
@@ -203,7 +211,50 @@ public final class MetalDevice implements GpuDevice {
         if (effectiveSource == null) {
             throw new IllegalStateException("No shader source available for pipeline " + pipeline.getLocation());
         }
-        return this.compiledPipelines.computeIfAbsent(pipeline, p -> MetalCrossShaderCompiler.compile(this, p, effectiveSource));
+        try {
+            return this.compilePipelineCached(pipeline, effectiveSource);
+        } catch (Throwable t) {
+            // 编译失败（资源包 shader 语法错误等）→ invalid 占位：MC 的
+            // ShaderManager.apply 据此收集失败列表并抛明确错误（MC 显示资源包
+            // 错误界面），而非异常中止 reload 造成 pipeline/纹理半新半旧的花屏。
+            Metallum.LOGGER.error("[Metal] Failed to compile pipeline {}: {}", pipeline.getLocation(), t.toString());
+            return InvalidCompiledPipeline.INSTANCE;
+        }
+    }
+
+    /**
+     * 编译（带跨 reload 缓存）。key 含预处理后源文本——源变必重编译；源不变
+     * （纯纹理资源包 reload）命中缓存秒过。
+     */
+    private MetalCompiledRenderPipeline compilePipelineCached(final RenderPipeline pipeline, final ShaderSource source) {
+        String key = pipelineCacheKey(pipeline, source);
+        MetalCompiledRenderPipeline cached = this.sourcePipelineCache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        MetalCompiledRenderPipeline compiled = MetalCrossShaderCompiler.compile(this, pipeline, source);
+        this.sourcePipelineCache.putIfAbsent(key, compiled);
+        return compiled;
+    }
+
+    private String pipelineCacheKey(final RenderPipeline pipeline, final ShaderSource source) {
+        String vertex = getOrCompileShaderSource(pipeline.getVertexShader(), ShaderType.VERTEX, pipeline.getShaderDefines(), source);
+        String fragment = getOrCompileShaderSource(pipeline.getFragmentShader(), ShaderType.FRAGMENT, pipeline.getShaderDefines(), source);
+        if (vertex == null || fragment == null) {
+            return pipeline.getLocation() + "|(no-source)";
+        }
+        StringBuilder key = new StringBuilder(vertex.length() + fragment.length() + 128);
+        key.append(pipeline.getLocation()).append('|');
+        key.append(pipeline.getVertexFormatMode()).append('|');
+        key.append(pipeline.getDepthTestFunction()).append('|');
+        key.append(pipeline.isCull()).append('|');
+        key.append(pipeline.isWriteColor()).append('|');
+        key.append(pipeline.isWriteAlpha()).append('|');
+        key.append(pipeline.isWriteDepth()).append('|');
+        key.append(pipeline.getBlendFunction()).append('|');
+        key.append(vertex).append('\n');
+        key.append(fragment);
+        return key.toString();
     }
 
     @Override
@@ -339,7 +390,7 @@ public final class MetalDevice implements GpuDevice {
     }
 
     MetalCompiledRenderPipeline getOrCompilePipeline(final RenderPipeline pipeline) {
-        return this.compiledPipelines.computeIfAbsent(pipeline, p -> MetalCrossShaderCompiler.compile(this, p, this.defaultShaderSource));
+        return this.compiledPipelines.computeIfAbsent(pipeline, p -> this.compilePipelineCached(p, this.defaultShaderSource));
     }
 
     /**
@@ -445,6 +496,22 @@ public final class MetalDevice implements GpuDevice {
     }
 
     private record MslFunctionKey(String msl, String entryPoint) {
+    }
+
+    /**
+     * 编译失败占位——isValid=false。MC 的 ShaderManager.apply 据此收集失败
+     * pipeline 并抛明确错误（显示资源包错误界面），而非半状态渲染花屏。
+     */
+    static final class InvalidCompiledPipeline implements CompiledRenderPipeline {
+        static final InvalidCompiledPipeline INSTANCE = new InvalidCompiledPipeline();
+
+        private InvalidCompiledPipeline() {
+        }
+
+        @Override
+        public boolean isValid() {
+            return false;
+        }
     }
 
     @Nullable

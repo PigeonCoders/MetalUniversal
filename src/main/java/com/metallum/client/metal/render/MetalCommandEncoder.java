@@ -1085,7 +1085,11 @@ public final class MetalCommandEncoder implements CommandEncoder {
         }
         long latestSubmit = currentSubmitIndex - 1L;
         if (latestSubmit >= MAX_SUBMITS_IN_FLIGHT) {
-            awaitSubmitCompletion(latestSubmit, Long.MAX_VALUE);
+            // 有界超时：GPU 异常（commandBuffer error）时防止永久楔死主线程
+            // （reload 后画面冻结的定位依赖 Swift 侧 CB error 日志，这里只兜底）。
+            if (!awaitSubmitCompletion(latestSubmit, 10_000L)) {
+                DiagLog.log("[diag] waitForSubmittedGpuWork timeout awaiting submit " + latestSubmit);
+            }
         }
     }
 

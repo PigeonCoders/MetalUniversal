@@ -701,6 +701,11 @@ public func metallum_MTLCommandBuffer_commitWithSignal(_ commandBuffer: MTLComma
     while semaphore.wait(timeout: .now()) == .success {}
     commandBuffer.addCompletedHandler { _ in
         semaphore.signal()
+        // 画面冻结（present 不生效）但帧循环照常空转 = commandBuffer error。
+        // error 详情点名失效资源（纹理/pipeline/buffer）——停滞定位的关键日志。
+        if commandBuffer.status == .error {
+            NSLog("[Metallum] CB status=error: %@", String(describing: commandBuffer.error))
+        }
     }
     commandBuffer.commit()
 }
@@ -1526,6 +1531,10 @@ public func metallum_MTLCommandBuffer_encodePresentTextureToDrawable(
         renderPass.colorAttachments[0].storeAction = .store
 
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPass) else {
+            // 防 drawable 池泄漏：已获取的 drawable 必须 present（否则永久占池一格，
+            // 3 次即池枯竭 → 画面永久冻结）。K3 独立调查确认此路径。
+            NSLog("[Metallum] WARNING: present encoder creation failed, presenting drawable anyway")
+            commandBuffer.present(drawable)
             return
         }
 

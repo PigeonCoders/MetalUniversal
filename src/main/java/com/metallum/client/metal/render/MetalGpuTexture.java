@@ -57,6 +57,11 @@ final class MetalGpuTexture extends GpuTexture {
                     "Failed to create Metal texture " + width + "x" + height
                             + " (" + format + ", mipLevels=" + mipLevels + ")");
         }
+        // P-hang 诊断：创建日志——与 queueRelease/destroyQueue release 按 handle
+        // 交叉比对，判定「释放后新对象是否复用同一地址」（两次 reload 风暴
+        // handle 列表完全相同的解释：地址确定性复用 vs 旧对象未释放）。
+        DiagLog.log("[diag] createTexture handle=%s w=%d h=%d fmt=%s",
+                "0x" + Long.toHexString(this.nativeHandle.address()), width, height, format);
     }
 
     int pixelSize() {

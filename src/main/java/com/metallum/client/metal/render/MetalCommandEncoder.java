@@ -288,15 +288,14 @@ public final class MetalCommandEncoder implements CommandEncoder {
         // 3 帧 50ms）——大 CB 执行期间后续帧 rotate 释放 staging 块 → GPU 读悬垂
         // → hang。大 blit 帧提交后同步等待本帧完成（GPU 读完 staging 才让后续
         // 帧释放）——上传期画面被 LoadingOverlay 遮住，1.5s 等待可接受。
-        // 实验 A（b33bb67）：阈值 >100 → >0——任何含 blit 的帧提交后都等待自身
-        // 完成，覆盖 51-blit 亚阈值帧（reload 后 hang 候选：blit 帧低于旧阈值
-        // 逃过等待 → 后续帧 rotate 提前释放其 staging/纹理）。await 超时仅打
-        // DiagLog 告警，流程照常继续（不阻塞后续帧）。
+        // 实验 A 回退：阈值曾改 >0（覆盖 51-blit 亚阈值帧），实机证伪——hang 依旧
+        // 复现（Code=2/1/4 错误链，零 backpressure TIMEOUT），staging 释放时序
+        // 非根因。恢复 b33bb67 原始值 >100；TIMEOUT 告警日志保留（观测用）。
         // 时序说明：currentSubmitIndex 在提交后递增——刚提交的本帧索引 =
         // currentSubmitIndex - 1（inFlight 已注册，await 不触发
         // "Cannot wait on the current submit"）。必须放在 transientMemory/
         // destroyQueue.rotate()（staging 释放点）之前。
-        if (this.frameBlitEncoders > 0) {
+        if (this.frameBlitEncoders > 100) {
             long latest = currentSubmitIndex - 1L;
             if (latest >= MAX_SUBMITS_IN_FLIGHT) {
                 if (!awaitSubmitCompletion(latest, 10_000L)) {
@@ -327,6 +326,16 @@ public final class MetalCommandEncoder implements CommandEncoder {
 
         if (toClose != null) {
             toClose.buffer.close();
+        }
+
+        // 实验 B：释放前 GPU 全排空——rotate 执行任何 native 释放前，先等最近已
+        // 提交帧完成。验证「释放与 GPU 进度脱钩」是否根因（destroyQueue 3 帧轮转
+        // 不核对 GPU 实际进度：reload 风暴 500+ 纹理入队释放可能与在飞 GPU 引用
+        // 重叠）。空帧（commandBuffer==null）未注册 inFlight → await 恒 true 不
+        // 阻塞（已有 empty-frame 日志标记，可接受）。必须放在 transientMemory/
+        // destroyQueue.rotate()（释放执行点）之前。
+        if (!awaitSubmitCompletion(currentSubmitIndex - 1L, 10_000L)) {
+            DiagLog.log("[diag] expB-drain TIMEOUT frame=%d", currentSubmitIndex - 1L);
         }
 
         transientMemory.rotate();

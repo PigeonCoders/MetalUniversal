@@ -41,6 +41,11 @@ public final class MetalGpuTextureView extends GpuTextureView {
                 );
             }
             this.nativeHandle = viewHandle;
+            // P-hang 诊断：view handle 创建日志（仅 sub-mip view 有独立 handle；
+            // full-view 优化路径直接返回 texture handle，不会到达此处）——与
+            // queueRelease 按 handle 交叉比对，判定地址复用。
+            DiagLog.log("[diag] createTextureView handle=%s baseMip=%d mips=%d",
+                    "0x" + Long.toHexString(viewHandle.address()), this.baseMipLevel(), this.mipLevels());
         }
         return this.nativeHandle;
     }

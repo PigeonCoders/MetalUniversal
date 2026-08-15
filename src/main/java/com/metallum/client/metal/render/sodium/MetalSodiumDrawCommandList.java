@@ -306,6 +306,11 @@ public final class MetalSodiumDrawCommandList implements DrawCommandList {
                     if (ChunkDataMissingWarned.compareAndSet(false, true)) {
                         Metallum.LOGGER.error("[metallum][sodium] ChunkData uniform buffer missing, skipping binding");
                     }
+                    // null 跳过也必须推进槽位——否则后续 binding 与缓存槽位错位
+                    // （错位比较可能假命中 → 跳过 setBuffer → 绑定缺失）。
+                    if (uniformSlot < UNIFORM_CACHE_SLOTS) {
+                        uniformSlot++;
+                    }
                     continue;
                 }
                 // P29-2：per-pass buffer 缓存（u_RegionOffset/u_CurrentTime 走 region 专属

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Environment(EnvType.CLIENT)
 final class MetalCompiledRenderPipeline implements CompiledRenderPipeline, AutoCloseable {
@@ -51,8 +52,12 @@ final class MetalCompiledRenderPipeline implements CompiledRenderPipeline, AutoC
     private final int depthWrite;
 
     private final MemorySegment depthStencilState;
-    private volatile MemorySegment withDepthPipeline;
-    private volatile MemorySegment withoutDepthPipeline;
+    // 按 (useDepth, colorFormat) 惰性缓存 MTLPSO——旧双字段只按 useDepth 区分，
+    // 同一 pipeline 跨 colorFormat 复用错误 PSO（主目标切格式后渲染错）。
+    // ConcurrentHashMap 读免锁（保留原 volatile 快路径语义），创建在
+    // synchronized 内去重；值可为 NULL segment（创建失败），调用方守卫。
+    private final Map<MTLPixelFormat, MemorySegment> withDepthPipelines = new ConcurrentHashMap<>();
+    private final Map<MTLPixelFormat, MemorySegment> withoutDepthPipelines = new ConcurrentHashMap<>();
     private final MetalDevice device;
     private final RenderPipeline pipeline;
     private final MemorySegment vertexFunction;
@@ -121,29 +126,18 @@ final class MetalCompiledRenderPipeline implements CompiledRenderPipeline, AutoC
      * 从渲染目标纹理推导，pipeline 状态因此按需创建并缓存（每种 colorFormat 一份）。
      */
     MemorySegment getNativePipeline(final boolean useDepth, final MTLPixelFormat colorFormat) {
-        if (useDepth) {
-            MemorySegment cached = this.withDepthPipeline;
-            if (cached != null) {
-                return cached;
-            }
-            synchronized (this) {
-                cached = this.withDepthPipeline;
-                if (cached == null) {
-                    cached = createPipeline(colorFormat, MTLPixelFormat.Depth32Float);
-                    this.withDepthPipeline = cached;
-                }
-                return cached;
-            }
-        }
-        MemorySegment cached = this.withoutDepthPipeline;
+        Map<MTLPixelFormat, MemorySegment> cache = useDepth ? this.withDepthPipelines : this.withoutDepthPipelines;
+        MemorySegment cached = cache.get(colorFormat);
         if (cached != null) {
             return cached;
         }
         synchronized (this) {
-            cached = this.withoutDepthPipeline;
+            cached = cache.get(colorFormat);
             if (cached == null) {
-                cached = createPipeline(colorFormat, MTLPixelFormat.Invalid);
-                this.withoutDepthPipeline = cached;
+                cached = createPipeline(colorFormat, useDepth ? MTLPixelFormat.Depth32Float : MTLPixelFormat.Invalid);
+                if (cached != null) {
+                    cache.put(colorFormat, cached);
+                }
             }
             return cached;
         }
@@ -294,17 +288,18 @@ final class MetalCompiledRenderPipeline implements CompiledRenderPipeline, AutoC
 
     @Override
     public void close() {
-        MemorySegment withDepth = this.withDepthPipeline;
-        if (withDepth != null && !MetalNativeBridge.isNullHandle(withDepth)) {
-            MetalNativeBridge.metallum_release_object(withDepth);
-            // 幂等化：置 null——compiledPipelines 与 sourcePipelineCache 共享对象，
-            // MetalDevice.close 时两处都 close（双 release 会崩溃）。
-            this.withDepthPipeline = null;
+        releaseAll(this.withDepthPipelines);
+        releaseAll(this.withoutDepthPipelines);
+    }
+
+    private static void releaseAll(final Map<MTLPixelFormat, MemorySegment> cache) {
+        for (MemorySegment handle : cache.values()) {
+            if (handle != null && !MetalNativeBridge.isNullHandle(handle)) {
+                MetalNativeBridge.metallum_release_object(handle);
+            }
         }
-        MemorySegment withoutDepth = this.withoutDepthPipeline;
-        if (withoutDepth != null && !MetalNativeBridge.isNullHandle(withoutDepth)) {
-            MetalNativeBridge.metallum_release_object(withoutDepth);
-            this.withoutDepthPipeline = null;
-        }
+        // 幂等化：clear——compiledPipelines 与 sourcePipelineCache 共享对象，
+        // MetalDevice.close 时两处都 close（双 release 会崩溃）。
+        cache.clear();
     }
 }

@@ -223,18 +223,6 @@ public final class MetalCommandEncoder implements CommandEncoder {
         if (Diagnostics.shouldRun("submit-cmds", 1_000L) || frameBlitEncoders > 0) {
             DiagLog.log("submit blitEnc=%d", this.frameBlitEncoders);
         }
-        // 上传风暴背压：单帧巨量 blit（reload 上传——实测 blitEnc=4216）使单
-        // command buffer GPU 执行超时（iOS 看门狗 hang——CB Discarded 实锤，
-        // 画面永久冻结但帧循环空转）。大 blit 帧提交前等待 in-flight 排空——
-        // GPU 空闲执行大 CB，防积压超时。（上传期画面被 LoadingOverlay 遮住，
-        // 慢可接受；GPU 串行执行最终完成，不再 hang。）
-        if (this.frameBlitEncoders > 100) {
-            long latest = currentSubmitIndex - 1L;
-            if (latest >= MAX_SUBMITS_IN_FLIGHT) {
-                awaitSubmitCompletion(latest, 10_000L);
-            }
-        }
-        this.frameBlitEncoders = 0;
         InFlight toClose = null;
         if (commandBuffer != null) {
             submitRenderPass();
@@ -282,6 +270,23 @@ public final class MetalCommandEncoder implements CommandEncoder {
             skipNextFrameSample = true;
         }
         currentSubmitIndex++;
+
+        // 上传风暴时序修复：transient staging 块 3 帧延迟释放（destroyQueue 按
+        // 帧轮转）小于大 CB 的 GPU 执行时间（实测 4216 blit 单 CB 执行 1.5s ≫
+        // 3 帧 50ms）——大 CB 执行期间后续帧 rotate 释放 staging 块 → GPU 读悬垂
+        // → hang。大 blit 帧提交后同步等待本帧完成（GPU 读完 staging 才让后续
+        // 帧释放）——上传期画面被 LoadingOverlay 遮住，1.5s 等待可接受。
+        // 时序说明：currentSubmitIndex 在提交后递增——刚提交的本帧索引 =
+        // currentSubmitIndex - 1（inFlight 已注册，await 不触发
+        // "Cannot wait on the current submit"）。必须放在 transientMemory/
+        // destroyQueue.rotate()（staging 释放点）之前。
+        if (this.frameBlitEncoders > 100) {
+            long latest = currentSubmitIndex - 1L;
+            if (latest >= MAX_SUBMITS_IN_FLIGHT) {
+                awaitSubmitCompletion(latest, 10_000L);
+            }
+        }
+        this.frameBlitEncoders = 0;
 
         // P6 卡顿判别：await 阻塞时长观测 + gpuBehind 修复。模型：SYNC_MODE=3 时
         // 阻塞量 = max(0, T_g - 33.3ms)（GPU 重帧 → CPU 等在 submit）。isCompleted 检查

@@ -257,15 +257,20 @@ public final class MetalDevice implements GpuDevice {
     @Override
     public void clearPipelineCache() {
         this.waitForSubmittedGpuWork();
-        // 不 close/release 任何 GPU 对象：compiledPipelines 与 sourcePipelineCache
-        // 共享 MetalCompiledRenderPipeline，functionCache 的 MTLFunction 被
-        // sourcePipelineCache 对象持有——close/release 后跨 reload 复用即悬垂
-        // 句柄（Metal 原生层崩、无 Java 堆栈——切资源包崩溃根因）。资源常驻
-        // 几 MB（P36 GLOBAL_PIPELINES 先例验证安全），由 MetalDevice.close
+        // 跨 reload 保留 shaderSourceCache/functionCache/sourcePipelineCache：
+        // ① shaderSourceCache——reload 后首次 draw 若 miss 会在主线程逐个重读
+        //    ~100+ 静态 pipeline 的源文件并 expandMojImports 展开（每个 5-20ms
+        //    IO），造成数秒渲染停滞；保留后不改 shader 的资源包直接用旧源文本
+        //    命中 sourcePipelineCache（秒过）。取舍：改 shader 的资源包渲染旧源
+        //    （视觉差异不卡——失效检测后续用异步预读优化）。
+        // ② functionCache——sourcePipelineCache 对象持有其 MTLFunction，清引用
+        //    后源变重编译会触发 AGX 重新编译（慢）。
+        // ③ compiledPipelines 只清引用（对象 key 缓存失效，运行期经
+        //    sourcePipelineCache 重新解析）；值对象与 sourcePipelineCache 共享，
+        //    不 close/release（悬垂句柄崩溃根因，已修复）。
+        // 资源常驻几 MB（P36 GLOBAL_PIPELINES 先例验证安全），由 MetalDevice.close
         // 统一释放。
         this.compiledPipelines.clear();
-        this.shaderSourceCache.clear();
-        this.functionCache.clear();
     }
 
     @Override

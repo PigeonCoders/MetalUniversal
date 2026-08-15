@@ -257,14 +257,14 @@ public final class MetalDevice implements GpuDevice {
     @Override
     public void clearPipelineCache() {
         this.waitForSubmittedGpuWork();
-        this.compiledPipelines.values().forEach(MetalCompiledRenderPipeline::close);
+        // 不 close/release 任何 GPU 对象：compiledPipelines 与 sourcePipelineCache
+        // 共享 MetalCompiledRenderPipeline，functionCache 的 MTLFunction 被
+        // sourcePipelineCache 对象持有——close/release 后跨 reload 复用即悬垂
+        // 句柄（Metal 原生层崩、无 Java 堆栈——切资源包崩溃根因）。资源常驻
+        // 几 MB（P36 GLOBAL_PIPELINES 先例验证安全），由 MetalDevice.close
+        // 统一释放。
         this.compiledPipelines.clear();
         this.shaderSourceCache.clear();
-        for (MemorySegment function : this.functionCache.values()) {
-            if (!MetalNativeBridge.isNullHandle(function)) {
-                MetalNativeBridge.metallum_release_object(function);
-            }
-        }
         this.functionCache.clear();
     }
 
@@ -272,7 +272,17 @@ public final class MetalDevice implements GpuDevice {
     public void close() {
         this.waitForSubmittedGpuWork();
         this.commandEncoder.close();
-        this.clearPipelineCache();
+        this.compiledPipelines.values().forEach(MetalCompiledRenderPipeline::close);
+        this.compiledPipelines.clear();
+        this.sourcePipelineCache.values().forEach(MetalCompiledRenderPipeline::close);
+        this.sourcePipelineCache.clear();
+        for (MemorySegment function : this.functionCache.values()) {
+            if (!MetalNativeBridge.isNullHandle(function)) {
+                MetalNativeBridge.metallum_release_object(function);
+            }
+        }
+        this.functionCache.clear();
+        this.shaderSourceCache.clear();
         this.drainBufferPool();
         try {
             MetalNativeBridge.metallum_NSView_clearLayer(this.cocoaView);

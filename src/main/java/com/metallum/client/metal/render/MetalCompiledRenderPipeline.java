@@ -297,10 +297,14 @@ final class MetalCompiledRenderPipeline implements CompiledRenderPipeline, AutoC
         MemorySegment withDepth = this.withDepthPipeline;
         if (withDepth != null && !MetalNativeBridge.isNullHandle(withDepth)) {
             MetalNativeBridge.metallum_release_object(withDepth);
+            // 幂等化：置 null——compiledPipelines 与 sourcePipelineCache 共享对象，
+            // MetalDevice.close 时两处都 close（双 release 会崩溃）。
+            this.withDepthPipeline = null;
         }
         MemorySegment withoutDepth = this.withoutDepthPipeline;
         if (withoutDepth != null && !MetalNativeBridge.isNullHandle(withoutDepth)) {
             MetalNativeBridge.metallum_release_object(withoutDepth);
+            this.withoutDepthPipeline = null;
         }
     }
 }

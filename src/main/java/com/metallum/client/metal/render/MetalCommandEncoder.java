@@ -223,6 +223,17 @@ public final class MetalCommandEncoder implements CommandEncoder {
         if (Diagnostics.shouldRun("submit-cmds", 1_000L) || frameBlitEncoders > 0) {
             DiagLog.log("submit blitEnc=%d", this.frameBlitEncoders);
         }
+        // 上传风暴背压：单帧巨量 blit（reload 上传——实测 blitEnc=4216）使单
+        // command buffer GPU 执行超时（iOS 看门狗 hang——CB Discarded 实锤，
+        // 画面永久冻结但帧循环空转）。大 blit 帧提交前等待 in-flight 排空——
+        // GPU 空闲执行大 CB，防积压超时。（上传期画面被 LoadingOverlay 遮住，
+        // 慢可接受；GPU 串行执行最终完成，不再 hang。）
+        if (this.frameBlitEncoders > 100) {
+            long latest = currentSubmitIndex - 1L;
+            if (latest >= MAX_SUBMITS_IN_FLIGHT) {
+                awaitSubmitCompletion(latest, 10_000L);
+            }
+        }
         this.frameBlitEncoders = 0;
         InFlight toClose = null;
         if (commandBuffer != null) {

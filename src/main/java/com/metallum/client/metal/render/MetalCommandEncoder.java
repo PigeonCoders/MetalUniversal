@@ -809,23 +809,32 @@ public final class MetalCommandEncoder implements CommandEncoder {
         MetalGpuTexture metalDst = (MetalGpuTexture) destination;
         flushPendingClearForWrite(metalDst);
 
-        // 1.21.11 的 NativeImage 无 getPixels()：逐像素 getPixel（javap 实证返回 ARGB 0xAARRGGBB）
-        int rowBytes = width * 4;
+        // 1.21.11 字体 glyph 上传是 LUMINANCE 图（1 分量灰度 → R8Unorm 纹理）：
+        // getPixel 对非 RGBA 图抛 IllegalArgumentException（实证），且行距必须
+        // 匹配目标纹理字节/像素——按格式分支。
+        boolean luminance = image.format() == com.mojang.blaze3d.platform.NativeImage.Format.LUMINANCE;
+        int bytesPerPixel = luminance ? 1 : 4;
+        int rowBytes = width * bytesPerPixel;
         int bytesPerImage = rowBytes * height;
         ByteBuffer region = MemoryUtil.memAlloc(bytesPerImage);
         try {
             for (int row = 0; row < height; row++) {
-                // region 是目标区域缓冲（height*width*4），行从 0 排布；
-                // 源坐标 (sourceX/sourceY) 仅用于 getPixel 取样，不得乘进行距
+                // region 是目标区域缓冲（height*rowBytes），行从 0 排布；
+                // 源坐标 (sourceX/sourceY) 仅用于取样，不得乘进行距
                 int rowStart = row * rowBytes;
                 for (int col = 0; col < width; col++) {
-                    int argb = image.getPixel(sourceX + col, sourceY + row);
-                    int pos = rowStart + col * 4;
-                    // ARGB → RGBA 字节序（Metal RGBA8Unorm 期望 R,G,B,A）
-                    region.put(pos, (byte) ((argb >> 16) & 0xFF));
-                    region.put(pos + 1, (byte) ((argb >> 8) & 0xFF));
-                    region.put(pos + 2, (byte) (argb & 0xFF));
-                    region.put(pos + 3, (byte) ((argb >> 24) & 0xFF));
+                    int pos = rowStart + col * bytesPerPixel;
+                    if (luminance) {
+                        // 灰度单字节——LUMINANCE 图的 getLuminanceOrAlpha
+                        region.put(pos, (byte) image.getLuminanceOrAlpha(sourceX + col, sourceY + row));
+                    } else {
+                        int argb = image.getPixel(sourceX + col, sourceY + row);
+                        // ARGB → RGBA 字节序（Metal RGBA8Unorm 期望 R,G,B,A）
+                        region.put(pos, (byte) ((argb >> 16) & 0xFF));
+                        region.put(pos + 1, (byte) ((argb >> 8) & 0xFF));
+                        region.put(pos + 2, (byte) (argb & 0xFF));
+                        region.put(pos + 3, (byte) ((argb >> 24) & 0xFF));
+                    }
                 }
             }
             region.position(0).limit(bytesPerImage);

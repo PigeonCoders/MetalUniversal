@@ -9,7 +9,8 @@
 * com.apple.private.security.no-sandbox: NO
 [Debugging] Debug log enabled: YES
 [Pre-init] Restored game directory preference (Fabric-noOtherMods-1.21.11)
-[MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/versions/1.21.11/1.21.11.json, have to assume it's good.
+[VersionList] Got 908 versions
+[MCDL] SHA1 passed for 1.21.11.json
 [MCDL] insertSafety: how to insert assetIndex?
 [MCDL] insertSafety: how to insert assets?
 [MCDL] Warning: JNA version required by fabric-loader-0.19.3-1.21.11 is 5.17.0 > 5.13.0, skipping JNA replacement.
@@ -85,7 +86,6 @@
 [MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/net/fabricmc/intermediary/1.21.11/intermediary-1.21.11.jar, have to assume it's good.
 [MCDL] Unknown artifact object for net.fabricmc:fabric-loader:0.19.3, attempting to generate one
 [MCDL] Warning: couldn't find SHA for /private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/Library/Application Support/minecraft/libraries/net/fabricmc/fabric-loader/0.19.3/fabric-loader-0.19.3.jar, have to assume it's good.
-[VersionList] Got 908 versions
 [JavaLauncher] Beginning JVM launch
 [JavaLauncher] Reading custom environment variables
 [JavaLauncher] Warning: skipped empty value custom env variable: 
@@ -137,7 +137,7 @@ WARNING: Restricted methods will be blocked in a future release unless native ac
 
 Launching Minecraft fabric-loader-0.19.3-1.21.11
 Args init finished. Now starting game
-2026-08-15T05:50:11.190530Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
+2026-08-15T05:58:57.304404Z main ERROR Reconfiguration failed: No configuration found for '693fe6c9' at 'null' in 'null'
 PatchJNAAgent: Replacing class
 Platform.isMac called from com.sun.jna.Native
 Platform.isMac called from com.sun.jna.Native
@@ -153,12 +153,10 @@ WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
 WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:/private/var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/libraries/org/joml/joml/1.10.8/joml-1.10.8.jar)
 WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
 WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-2026-08-15T05:50:14.495564Z main ERROR Mixin apply for mod metallum failed metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum -> net.minecraft.class_1059: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException @Redirect field setter method net/minecraft/class_1059::metallum$closeOldMipViews from metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum has an invalid signature. Found unexpected return type com.mojang.blaze3d.textures.GpuTextureView[], expected void. Handler signature: ([Lcom/mojang/blaze3d/textures/GpuTextureView;)[Lcom/mojang/blaze3d/textures/GpuTextureView; Expected signature: (Lnet/minecraft/class_1059;[Lcom/mojang/blaze3d/textures/GpuTextureView;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum->@Redirect::metallum$closeOldMipViews([Lcom/mojang/blaze3d/textures/GpuTextureView;)[Lcom/mojang/blaze3d/textures/GpuTextureView;]
-org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: @Redirect field setter method net/minecraft/class_1059::metallum$closeOldMipViews from metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum has an invalid signature. Found unexpected return type com.mojang.blaze3d.textures.GpuTextureView[], expected void. Handler signature: ([Lcom/mojang/blaze3d/textures/GpuTextureView;)[Lcom/mojang/blaze3d/textures/GpuTextureView; Expected signature: (Lnet/minecraft/class_1059;[Lcom/mojang/blaze3d/textures/GpuTextureView;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum->@Redirect::metallum$closeOldMipViews([Lcom/mojang/blaze3d/textures/GpuTextureView;)[Lcom/mojang/blaze3d/textures/GpuTextureView;]
-	at org.spongepowered.asm.mixin.injection.code.Injector.validateParams(Injector.java:623)
-	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.injectAtPutField(RedirectInjector.java:589)
-	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.injectAtScalarField(RedirectInjector.java:542)
-	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.injectAtFieldAccess(RedirectInjector.java:431)
+2026-08-15T05:59:00.625615Z main ERROR Mixin apply for mod metallum failed metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum -> net.minecraft.class_1059: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Unspported opcode PUTFIELD for array access metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum->@Redirect::metallum$closeOldMipViews([Lcom/mojang/blaze3d/textures/GpuTextureView;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum->@Redirect::metallum$closeOldMipViews([Lcom/mojang/blaze3d/textures/GpuTextureView;)V]
+org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Unspported opcode PUTFIELD for array access metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum->@Redirect::metallum$closeOldMipViews([Lcom/mojang/blaze3d/textures/GpuTextureView;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum->@Redirect::metallum$closeOldMipViews([Lcom/mojang/blaze3d/textures/GpuTextureView;)V]
+	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.injectAtArrayField(RedirectInjector.java:441)
+	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.injectAtFieldAccess(RedirectInjector.java:429)
 	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.inject(RedirectInjector.java:339)
 	at org.spongepowered.asm.mixin.injection.code.Injector.inject(Injector.java:284)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.inject(InjectionInfo.java:508)
@@ -198,9 +196,9 @@ org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: @Red
 	at net.kdt.pojavlaunch.PojavLauncher.main(PojavLauncher.java:53)
 
 ---- Minecraft Crash Report ----
-// Hi. I'm Minecraft, and I'm a crashaholic.
+// Oh - I know what I did wrong!
 
-Time: 2026-08-15 13:50:14
+Time: 2026-08-15 13:59:00
 Description: Bootstrap
 
 java.lang.ExceptionInInitializerError
@@ -240,11 +238,9 @@ Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [metall
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:636)
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:367)
 	... 25 more
-Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: @Redirect field setter method net/minecraft/class_1059::metallum$closeOldMipViews from metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum has an invalid signature. Found unexpected return type com.mojang.blaze3d.textures.GpuTextureView[], expected void. Handler signature: ([Lcom/mojang/blaze3d/textures/GpuTextureView;)[Lcom/mojang/blaze3d/textures/GpuTextureView; Expected signature: (Lnet/minecraft/class_1059;[Lcom/mojang/blaze3d/textures/GpuTextureView;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum->@Redirect::metallum$closeOldMipViews([Lcom/mojang/blaze3d/textures/GpuTextureView;)[Lcom/mojang/blaze3d/textures/GpuTextureView;]
-	at org.spongepowered.asm.mixin.injection.code.Injector.validateParams(Injector.java:623)
-	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.injectAtPutField(RedirectInjector.java:589)
-	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.injectAtScalarField(RedirectInjector.java:542)
-	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.injectAtFieldAccess(RedirectInjector.java:431)
+Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Unspported opcode PUTFIELD for array access metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum->@Redirect::metallum$closeOldMipViews([Lcom/mojang/blaze3d/textures/GpuTextureView;)V [INJECT_APPLY Applicator Phase -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum -> Apply Injections ->  -> Inject -> metallum.mixins.json:render.TextureAtlasMipViewFixMixin from mod metallum->@Redirect::metallum$closeOldMipViews([Lcom/mojang/blaze3d/textures/GpuTextureView;)V]
+	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.injectAtArrayField(RedirectInjector.java:441)
+	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.injectAtFieldAccess(RedirectInjector.java:429)
 	at org.spongepowered.asm.mixin.injection.invoke.RedirectInjector.inject(RedirectInjector.java:339)
 	at org.spongepowered.asm.mixin.injection.code.Injector.inject(Injector.java:284)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.inject(InjectionInfo.java:508)
@@ -296,7 +292,7 @@ Details:
 	Operating System: Mac OS X (aarch64) version 18.4
 	Java Version: 25.0.1-internal, N/A
 	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode), Oracle Corporation
-	Memory: 203075112 bytes (193 MiB) / 494927872 bytes (472 MiB) up to 4303355904 bytes (4104 MiB)
+	Memory: 374371936 bytes (357 MiB) / 616562688 bytes (588 MiB) up to 4303355904 bytes (4104 MiB)
 	CPUs: 8
 	Processor Vendor: 
 	Processor Name: 
@@ -315,14 +311,14 @@ Details:
 	Memory slot #0 clockSpeed (GHz): 0.00
 	Memory slot #0 type: unknown
 	Virtual memory max (MiB): 7644.84
-	Virtual memory used (MiB): 4668.06
+	Virtual memory used (MiB): 4663.84
 	Swap memory total (MiB): 0.00
 	Swap memory used (MiB): 0.00
 	Space in storage for jna.tmpdir (MiB): <path not set>
 	Space in storage for org.lwjgl.system.SharedLibraryExtractPath (MiB): <path not set>
 	Space in storage for io.netty.native.workdir (MiB): <path not set>
-	Space in storage for java.io.tmpdir (MiB): available: 80866.22, total: 243805.58
-	Space in storage for workdir (MiB): available: 80866.22, total: 243805.58
+	Space in storage for java.io.tmpdir (MiB): available: 80840.64, total: 243805.58
+	Space in storage for workdir (MiB): available: 80840.64, total: 243805.58
 	JVM Flags: 6 total; -Xms128M -Xmx4103M -XX:+UnlockExperimentalVMOptions -XX:+DisablePrimordialThreadGuardPages -Xbootclasspath/a:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-shared-1.18-SNAPSHOT.jar:/private/var/containers/Bundle/Application/C7CDAB4F-93C3-4BF6-9577-CE1F82263696/App.app/libs_caciocavallo17/cacio-tta-1.18-SNAPSHOT.jar -XX:-UseCompressedClassPointers
 	Debug Flags: 0 total; 
 	Fabric Mods: 
@@ -395,6 +391,6 @@ Details:
 	System encoding: UTF-8
 	File encoding: UTF-8
 	CPU: 8x 
-#@!@# Game crashed! Crash report saved to: #@!@# /var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/crash-reports/crash-2026-08-15_13.50.14-client.txt
+#@!@# Game crashed! Crash report saved to: #@!@# /var/mobile/Containers/Data/Application/9B2B9BA4-3CE5-4C45-8C61-3C449694D4F6/Documents/instances/Fabric-noOtherMods-1.21.11/crash-reports/crash-2026-08-15_13.59.00-client.txt
 exit(-1) called
 

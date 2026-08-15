@@ -13,6 +13,7 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.joml.Vector4f;
@@ -93,6 +94,14 @@ public final class MetalCommandEncoder implements CommandEncoder {
     private long frameTimeNotDone = 0;
     /** 帧内 blit 编码器创建计数（P-hang 诊断：submit 行定位 hang CB 的命令构成——blit 多=上传链，0=draw/present 链）。 */
     private int frameBlitEncoders;
+    /**
+     * P-hang 诊断：本帧 blit 引用的纹理 native handle（去重集合）——submit 行列出，
+     * 与 destroyQueue/queueRelease 日志按 handle 交叉比对，钉死「资源释放时刻 vs
+     * GPU 引用时刻」时序。帧末随 frameBlitEncoders 一起清零。
+     */
+    private final LongOpenHashSet frameBlitTextureHandles = new LongOpenHashSet();
+    /** P-hang 诊断：本帧 destroyQueue 入队计数（queueForDestroy 递增，submit 聚合输出后清零）。 */
+    private int frameDestroyEnqueues;
     /**
      * P0 帧分类：本帧是否"移动"（Sodium 层 metalBegin 每帧经 markFrameMoving 标记，
      * submit() 采样后重置）。用于区分「常态低帧率 vs 移动尖峰」——frame_time 行按
@@ -221,7 +230,7 @@ public final class MetalCommandEncoder implements CommandEncoder {
      */
     void submit() {
         if (Diagnostics.shouldRun("submit-cmds", 1_000L) || frameBlitEncoders > 0) {
-            DiagLog.log("submit blitEnc=%d", this.frameBlitEncoders);
+            DiagLog.log("submit blitEnc=%d%s", this.frameBlitEncoders, frameBlitTextureHandlesSummary());
         }
         InFlight toClose = null;
         if (commandBuffer != null) {
@@ -268,6 +277,9 @@ public final class MetalCommandEncoder implements CommandEncoder {
         } else {
             // 空帧（无命令缓冲）：不推进时间基准，下次提交的间隔若跨越空帧则跳过采样
             skipNextFrameSample = true;
+            // P-hang 诊断：空帧仍推进 submitIndex 并 rotate destroyQueue（释放
+            // staging/资源），但无本帧 GPU 等待——结构性风险点，逐帧记录。
+            DiagLog.log("[diag] empty-frame submitIndex=%d rotate-without-gpu-wait", currentSubmitIndex);
         }
         currentSubmitIndex++;
 
@@ -276,17 +288,30 @@ public final class MetalCommandEncoder implements CommandEncoder {
         // 3 帧 50ms）——大 CB 执行期间后续帧 rotate 释放 staging 块 → GPU 读悬垂
         // → hang。大 blit 帧提交后同步等待本帧完成（GPU 读完 staging 才让后续
         // 帧释放）——上传期画面被 LoadingOverlay 遮住，1.5s 等待可接受。
+        // 实验 A（b33bb67）：阈值 >100 → >0——任何含 blit 的帧提交后都等待自身
+        // 完成，覆盖 51-blit 亚阈值帧（reload 后 hang 候选：blit 帧低于旧阈值
+        // 逃过等待 → 后续帧 rotate 提前释放其 staging/纹理）。await 超时仅打
+        // DiagLog 告警，流程照常继续（不阻塞后续帧）。
         // 时序说明：currentSubmitIndex 在提交后递增——刚提交的本帧索引 =
         // currentSubmitIndex - 1（inFlight 已注册，await 不触发
         // "Cannot wait on the current submit"）。必须放在 transientMemory/
         // destroyQueue.rotate()（staging 释放点）之前。
-        if (this.frameBlitEncoders > 100) {
+        if (this.frameBlitEncoders > 0) {
             long latest = currentSubmitIndex - 1L;
             if (latest >= MAX_SUBMITS_IN_FLIGHT) {
-                awaitSubmitCompletion(latest, 10_000L);
+                if (!awaitSubmitCompletion(latest, 10_000L)) {
+                    DiagLog.log("[diag] backpressure await TIMEOUT frame=%d blitEnc=%d",
+                            latest, this.frameBlitEncoders);
+                }
             }
         }
         this.frameBlitEncoders = 0;
+        this.frameBlitTextureHandles.clear();
+        if (this.frameDestroyEnqueues > 0) {
+            DiagLog.log("[diag] destroy enqueued frame=%d count=%d",
+                    currentSubmitIndex - 1L, this.frameDestroyEnqueues);
+            this.frameDestroyEnqueues = 0;
+        }
 
         // P6 卡顿判别：await 阻塞时长观测 + gpuBehind 修复。模型：SYNC_MODE=3 时
         // 阻塞量 = max(0, T_g - 33.3ms)（GPU 重帧 → CPU 等在 submit）。isCompleted 检查
@@ -348,6 +373,33 @@ public final class MetalCommandEncoder implements CommandEncoder {
 
         // P0：帧末重置移动标记（下一帧由渲染路径重新标记）
         frameMoving = false;
+    }
+
+    /**
+     * P-hang 诊断：本帧 blit 引用纹理 handle 摘要（逗号分隔 hex，>16 个截断加 ...）。
+     * 空集合返回空串——submit 行仅在非空时追加 tex=。
+     */
+    private String frameBlitTextureHandlesSummary() {
+        if (frameBlitTextureHandles.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(" tex=");
+        int count = 0;
+        it.unimi.dsi.fastutil.longs.LongIterator it = frameBlitTextureHandles.iterator();
+        while (it.hasNext()) {
+            long handle = it.nextLong();
+            if (count > 0) {
+                sb.append(',');
+            }
+            sb.append("0x").append(Long.toHexString(handle));
+            if (++count >= 16) {
+                break;
+            }
+        }
+        if (frameBlitTextureHandles.size() > 16) {
+            sb.append("...");
+        }
+        return sb.toString();
     }
 
     MTLRenderCommandEncoder renderCommandEncoder(
@@ -823,6 +875,7 @@ public final class MetalCommandEncoder implements CommandEncoder {
             GpuBufferSlice slice = transientMemory.uploadStaging(region, pixelSize, GpuBuffer.USAGE_COPY_SRC, 0L, 1L);
 
             MTLBlitCommandEncoder blit = blitCommandEncoder();
+            frameBlitTextureHandles.add(metalDst.nativeHandle().address());
             blit.copyFromBufferToTexture(
                     ((MetalGpuBuffer) slice.buffer()).nativeHandle(),
                     slice.offset(),
@@ -893,6 +946,7 @@ public final class MetalCommandEncoder implements CommandEncoder {
             region.position(0).limit(bytesPerImage);
             GpuBufferSlice slice = transientMemory.uploadStaging(region, 4L, GpuBuffer.USAGE_COPY_SRC, 0L, 1L);
             MTLBlitCommandEncoder blit = blitCommandEncoder();
+            frameBlitTextureHandles.add(metalDst.nativeHandle().address());
             blit.copyFromBufferToTexture(
                     ((MetalGpuBuffer) slice.buffer()).nativeHandle(),
                     slice.offset(),
@@ -943,6 +997,7 @@ public final class MetalCommandEncoder implements CommandEncoder {
         int bytesPerImage = rowBytes * height;
 
         MTLBlitCommandEncoder blit = blitCommandEncoder();
+        frameBlitTextureHandles.add(texture.nativeHandle().address());
         blit.copyFromTextureToBuffer(
                 texture.nativeHandle(),
                 buffer.nativeHandle(),
@@ -977,6 +1032,8 @@ public final class MetalCommandEncoder implements CommandEncoder {
         flushPendingClear(srcTexture);
         flushPendingClearForWrite(dstTexture);
         MTLBlitCommandEncoder blit = blitCommandEncoder();
+        frameBlitTextureHandles.add(srcTexture.nativeHandle().address());
+        frameBlitTextureHandles.add(dstTexture.nativeHandle().address());
         blit.copyFromTextureToTexture(
                 srcTexture.nativeHandle(),
                 dstTexture.nativeHandle(),
@@ -1051,6 +1108,7 @@ public final class MetalCommandEncoder implements CommandEncoder {
     }
 
     void queueForDestroy(final Runnable destroyAction) {
+        this.frameDestroyEnqueues++;
         destroyQueue.add(destroyAction);
     }
 

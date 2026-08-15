@@ -81,7 +81,9 @@ public final class MetalDevice implements GpuDevice {
         this.cocoaView = cocoaView;
         this.deviceName = deviceName;
         this.defaultShaderSource = defaultShaderSource;
-        MetalNativeBridge.metallum_set_debug_labels_enabled(false);
+        // P-hang 诊断：启用 CB debug label（label 含帧号，hang 时错误日志/系统
+        // GPU 报告能点名 CB）。Swift 侧 NativeState.debugLabelsEnabled 默认亦为 true。
+        MetalNativeBridge.metallum_set_debug_labels_enabled(true);
         this.commandQueue = MTLCommandQueue.create(metalDeviceHandle);
         MetalNativeBridge.metallum_init_pipelines(metalDeviceHandle);
         this.commandEncoder = new MetalCommandEncoder(this);
@@ -202,7 +204,10 @@ public final class MetalDevice implements GpuDevice {
     }
 
     boolean useLabels() {
-        return false;
+        // P-hang 诊断：原硬编码 false（label 恒 null）。启用后 CB label =
+        // "Metallum frame N"（MetalCommandEncoder.commandBuffer）、纹理 label、
+        // render pass debug group——hang 诊断点名 CB/资源所需。
+        return true;
     }
 
     @Override
@@ -256,7 +261,12 @@ public final class MetalDevice implements GpuDevice {
 
     @Override
     public void clearPipelineCache() {
+        // P-hang 诊断：reload 时间戳——帧号（currentFrameIndex）+ wait 前后各一行，
+        // 与 queueRelease/destroyQueue 日志对齐「reload 触发 vs 资源释放」时序。
+        DiagLog.log("[diag] clearPipelineCache frame=%d", MetalCommandEncoder.currentFrameIndex());
+        DiagLog.log("[diag] clearPipelineCache waitForSubmittedGpuWork-start frame=%d", MetalCommandEncoder.currentFrameIndex());
         this.waitForSubmittedGpuWork();
+        DiagLog.log("[diag] clearPipelineCache waitForSubmittedGpuWork-done frame=%d", MetalCommandEncoder.currentFrameIndex());
         // reload 期间无 endEncoder → epoch 不递增 → Sodium 静态状态缓存跨 reload
         // 残留（纹理 handle 地址复用命中 → 跳过重绑 → 崩）——显式失效。
         MetalCommandEncoder.invalidateStateCache();
@@ -364,6 +374,12 @@ public final class MetalDevice implements GpuDevice {
     }
 
     void queueResourceRelease(final MemorySegment handle) {
+        // P-hang 诊断：入队时打日志（帧号 + handle）——与 destroyQueue rotate 的
+        // 释放日志按 handle 交叉比对，推出「第几帧入队、第几帧真正 native 释放」。
+        // type=resource：此处为通用漏斗（texture/textureView 的细分类型日志见
+        // MetalGpuTexture.removeView / MetalGpuTextureView.close；sampler/fence 亦经此）。
+        DiagLog.log("[diag] queueRelease frame=%d type=resource handle=%s",
+                MetalCommandEncoder.currentFrameIndex(), hexHandle(handle));
         this.commandEncoder.queueForDestroy(() -> MetalNativeBridge.metallum_release_object(handle));
     }
 
@@ -379,6 +395,9 @@ public final class MetalDevice implements GpuDevice {
     }
 
     void queueBufferRelease(final MemorySegment handle, final long size, final long resourceOptions) {
+        // P-hang 诊断：buffer 入池/释放入队日志（帧号 + handle）。
+        DiagLog.log("[diag] queueRelease frame=%d type=buffer handle=%s",
+                MetalCommandEncoder.currentFrameIndex(), hexHandle(handle));
         this.commandEncoder.queueForDestroy(() -> {
             long key = composePoolKey(size, resourceOptions);
             Deque<MemorySegment> bucket = bufferPool.computeIfAbsent(key, k -> new ArrayDeque<>());
@@ -393,6 +412,11 @@ public final class MetalDevice implements GpuDevice {
 
     static long composePoolKey(final long size, final long resourceOptions) {
         return (size << 12) | (resourceOptions & 0xFFFL);
+    }
+
+    /** P-hang 诊断：native handle → "0x…" hex 字符串（跨日志行按 handle 比对）。 */
+    private static String hexHandle(final MemorySegment handle) {
+        return "0x" + Long.toHexString(handle.address());
     }
 
     private void drainBufferPool() {

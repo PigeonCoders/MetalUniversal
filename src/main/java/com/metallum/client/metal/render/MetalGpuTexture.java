@@ -91,6 +91,10 @@ final class MetalGpuTexture extends GpuTexture {
     }
 
     void queueNativeRelease(final MemorySegment handle) {
+        // P-hang 诊断：本方法唯一调用方是 MetalGpuTextureView.close（view 自身
+        // handle 的释放漏斗）——故 type=textureView。texture 本身的释放走
+        // removeView（type=texture）。与 destroyQueue rotate 日志按 handle 比对时序。
+        DiagLog.log("[diag] queueRelease type=textureView handle=%s", "0x" + Long.toHexString(handle.address()));
         this.device.queueResourceRelease(handle);
     }
 
@@ -106,6 +110,8 @@ final class MetalGpuTexture extends GpuTexture {
         if (this.closed && this.views == 0 && this.nativeHandle != null) {
             MemorySegment handle = this.nativeHandle;
             this.nativeHandle = null;
+            // P-hang 诊断：texture 本体 native 释放入队（与 textureView 释放区分）。
+            DiagLog.log("[diag] queueRelease type=texture handle=%s", "0x" + Long.toHexString(handle.address()));
             this.device.queueResourceRelease(handle);
         }
     }

@@ -44,7 +44,9 @@ private struct PipelineVariantKey: Hashable {
 }
 
 private enum NativeState {
-    static var debugLabelsEnabled = false
+    // P-hang 诊断：默认启用 CB debug label（帧号点名 hang CB）。Java 侧
+    // MetalDevice 构造时亦调用 metallum_set_debug_labels_enabled(true) 强制启用。
+    static var debugLabelsEnabled = true
     static var depthStencilStates: [DepthStencilKey: MTLDepthStencilState] = [:]
     static var clearPipelines: [PipelineVariantKey: MTLRenderPipelineState] = [:]
     static var presentPipeline: MTLRenderPipelineState!

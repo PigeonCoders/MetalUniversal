@@ -91,6 +91,8 @@ public final class MetalCommandEncoder implements CommandEncoder {
     private long frameTimeSumUs = 0;
     private long frameTimeMaxUs = 0;
     private long frameTimeNotDone = 0;
+    /** 帧内 blit 编码器创建计数（P-hang 诊断：submit 行定位 hang CB 的命令构成——blit 多=上传链，0=draw/present 链）。 */
+    private int frameBlitEncoders;
     /**
      * P0 帧分类：本帧是否"移动"（Sodium 层 metalBegin 每帧经 markFrameMoving 标记，
      * submit() 采样后重置）。用于区分「常态低帧率 vs 移动尖峰」——frame_time 行按
@@ -156,6 +158,7 @@ public final class MetalCommandEncoder implements CommandEncoder {
     }
 
     MTLBlitCommandEncoder blitCommandEncoder() {
+        this.frameBlitEncoders++;
         // P24-1（上传合并）：挂起 blit 复用——帧内多次 blit 共享一个编码器
         // （一次创建/一次 end/fence 两次）。任何 render encoder 创建前必先
         // endEncoder 杀挂起 blit（renderCommandEncoder/flushPendingClear/
@@ -217,6 +220,10 @@ public final class MetalCommandEncoder implements CommandEncoder {
      * （每帧末）与 waitForSubmittedGpuWork（资源释放前）驱动。
      */
     void submit() {
+        if (Diagnostics.shouldRun("submit-cmds", 1_000L) || frameBlitEncoders > 0) {
+            DiagLog.log("submit blitEnc=%d", this.frameBlitEncoders);
+        }
+        this.frameBlitEncoders = 0;
         InFlight toClose = null;
         if (commandBuffer != null) {
             submitRenderPass();

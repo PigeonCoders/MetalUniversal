@@ -31,6 +31,8 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 
 @Environment(EnvType.CLIENT)
@@ -288,9 +290,15 @@ public final class MetalCommandEncoder implements CommandEncoder {
         // 3 帧 50ms）——大 CB 执行期间后续帧 rotate 释放 staging 块 → GPU 读悬垂
         // → hang。大 blit 帧提交后同步等待本帧完成（GPU 读完 staging 才让后续
         // 帧释放）——上传期画面被 LoadingOverlay 遮住，1.5s 等待可接受。
-        // 实验 A 回退：阈值曾改 >0（覆盖 51-blit 亚阈值帧），实机证伪——hang 依旧
-        // 复现（Code=2/1/4 错误链，零 backpressure TIMEOUT），staging 释放时序
-        // 非根因。恢复 b33bb67 原始值 >100；TIMEOUT 告警日志保留（观测用）。
+        //
+        // P-hang 根因修正（v1.1.0-fix-release-drain）：实验 A/B 都栽在同一个底层
+        // 缺陷——submitSemaphores 每 3 帧复用，旧 CB 的 completion signal 与下一
+        // 代 CB 的 drain 存在竞态；awaitSubmitCompletion 只信 semaphore 计数时会把
+        // 旧信号当成新 CB 完成。日志实证：frame=607 的 4285 个释放动作在大 CB
+        // （blitEnc=4216）提交后 39ms 就执行，而该 CB 正常需 ~3.2s——标准
+        // SYNC_MODE=3 在释放点本应等 frame=607 完成，却被 stale signal 骗过。
+        // awaitSubmitCompletion 现在以 MTLCommandBuffer.status 为最终判据
+        // （semaphore 只作阻塞提示，signal 后仍核对 status，不符则降级为轮询）。
         // 时序说明：currentSubmitIndex 在提交后递增——刚提交的本帧索引 =
         // currentSubmitIndex - 1（inFlight 已注册，await 不触发
         // "Cannot wait on the current submit"）。必须放在 transientMemory/
@@ -318,7 +326,10 @@ public final class MetalCommandEncoder implements CommandEncoder {
         // 原位置恒 false 是结构性盲）。
         boolean behindBeforeAwait = toClose != null && !toClose.buffer.isCompleted();
         long awaitStartNanos = System.nanoTime();
-        awaitSubmitCompletion(currentSubmitIndex - SYNC_MODE, 5000L);
+        if (!awaitSubmitCompletion(currentSubmitIndex - SYNC_MODE, 5000L)) {
+            DiagLog.log("[diag] sync await TIMEOUT frame=%d syncMode=%d",
+                    currentSubmitIndex - SYNC_MODE, SYNC_MODE);
+        }
         lastAwaitUs = (System.nanoTime() - awaitStartNanos) / 1000L;
         if (behindBeforeAwait) {
             frameTimeNotDone++;
@@ -328,16 +339,11 @@ public final class MetalCommandEncoder implements CommandEncoder {
             toClose.buffer.close();
         }
 
-        // 实验 B：释放前 GPU 全排空——rotate 执行任何 native 释放前，先等最近已
-        // 提交帧完成。验证「释放与 GPU 进度脱钩」是否根因（destroyQueue 3 帧轮转
-        // 不核对 GPU 实际进度：reload 风暴 500+ 纹理入队释放可能与在飞 GPU 引用
-        // 重叠）。空帧（commandBuffer==null）未注册 inFlight → await 恒 true 不
-        // 阻塞（已有 empty-frame 日志标记，可接受）。必须放在 transientMemory/
-        // destroyQueue.rotate()（释放执行点）之前。
-        if (!awaitSubmitCompletion(currentSubmitIndex - 1L, 10_000L)) {
-            DiagLog.log("[diag] expB-drain TIMEOUT frame=%d", currentSubmitIndex - 1L);
-        }
-
+        // 释放安全网：destroyQueue 在 submit F 入队的资源到 submit F+2 才真正
+        // native 释放；此时上面的标准等待目标正是 frame=F（F+3-SYNC_MODE=F，
+        // SYNC_MODE=3），且 FIFO 队列保证更早帧必然先完成。只要
+        // awaitSubmitCompletion 可靠，就无需实验 B 的「每帧等最近帧」——那会把
+        // sync=3 流水线退化为完全串行。此处不再做额外等待。
         transientMemory.rotate();
         destroyQueue.rotate();
 
@@ -1128,12 +1134,43 @@ public final class MetalCommandEncoder implements CommandEncoder {
             }
             throw new IllegalStateException("Cannot wait on a fence for the current submit");
         }
+        InFlight target = null;
         for (InFlight f : inFlight) {
             if (f != null && f.index == submitIndex) {
-                return MetalNativeBridge.metallum_semaphore_wait(f.completedSemaphore, Math.max(timeoutMs, 0L)) == 0;
+                target = f;
+                break;
             }
         }
-        return true;
+        if (target == null) {
+            return true;
+        }
+        if (timeoutMs <= 0L) {
+            return target.buffer.isCompleted();
+        }
+
+        // submitSemaphores 每 3 帧复用：旧 CB 的 completion signal 可能在新 CB 的
+        // drain 之后才到达，导致 semaphore_wait 立刻返回 success 而新 CB 仍在执行
+        // （P-hang 根因——frame=607 的 4285 个 native 释放在大 CB 提交后 39ms 执行）。
+        // 因此 semaphore 只当阻塞提示：拿到 signal 后必须再核对 MTLCommandBuffer.status；
+        // 若为 stale signal，降级为 status 轮询直到超时。
+        long deadlineNanos = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
+        if (deadlineNanos < 0L) {
+            deadlineNanos = Long.MAX_VALUE;
+        }
+        if (MetalNativeBridge.metallum_semaphore_wait(target.completedSemaphore, timeoutMs) == 0
+                && target.buffer.isCompleted()) {
+            return true;
+        }
+        while (true) {
+            if (target.buffer.isCompleted()) {
+                return true;
+            }
+            long remainingNanos = deadlineNanos - System.nanoTime();
+            if (remainingNanos <= 0L) {
+                return false;
+            }
+            LockSupport.parkNanos(Math.min(500_000L, remainingNanos));
+        }
     }
 
     void close() {

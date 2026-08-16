@@ -701,12 +701,15 @@ public func metallum_create_semaphore() -> UnsafeMutableRawPointer? {
 @_cdecl("metallum_MTLCommandBuffer_commitWithSignal")
 public func metallum_MTLCommandBuffer_commitWithSignal(_ commandBuffer: MTLCommandBuffer, _ semaphore: DispatchSemaphore) {
     while semaphore.wait(timeout: .now()) == .success {}
+    let label = commandBuffer.label
     commandBuffer.addCompletedHandler { _ in
         semaphore.signal()
         // 画面冻结（present 不生效）但帧循环照常空转 = commandBuffer error。
-        // error 详情点名失效资源（纹理/pipeline/buffer）——停滞定位的关键日志。
+        // error 详情点名失效资源（纹理/pipeline/buffer）——停滞定位的关键日志；
+        // label 为 "Metallum frame N"，可把 error 精确钉到提交帧号。
         if commandBuffer.status == .error {
-            NSLog("[Metallum] CB status=error: %@", String(describing: commandBuffer.error))
+            NSLog("[Metallum] CB status=error label=%@: %@",
+                  label ?? "(unlabeled)", String(describing: commandBuffer.error))
         }
     }
     commandBuffer.commit()

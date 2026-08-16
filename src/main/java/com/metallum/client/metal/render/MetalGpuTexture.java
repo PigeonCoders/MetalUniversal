@@ -89,7 +89,10 @@ final class MetalGpuTexture extends GpuTexture {
     }
 
     MemorySegment nativeHandle() {
-        if (this.nativeHandle == null) {
+        // close() 时若还有 view 存活，nativeHandle 会暂时保留到最后一个 view 关闭；
+        // 但 close 语义下纹理已不可用，必须一并拦截（否则 reload 窗口期可能把已
+        // close 的纹理继续编码进新 CB，为悬垂释放创造条件）。
+        if (this.closed || this.nativeHandle == null) {
             throw new IllegalStateException("Native Metal texture is closed");
         }
         return this.nativeHandle;
